@@ -2,7 +2,7 @@ require 'uri'
 require 'net/http'
 require 'rexml/document'
 
-module Rest
+module RestClient
 	def self.get(url)
 		uri = parse_url(url)
 		transmit uri, Net::HTTP::Get.new(uri.path, headers)
