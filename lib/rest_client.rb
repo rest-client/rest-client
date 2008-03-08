@@ -35,9 +35,9 @@ module RestClient
 		URI.parse(url)
 	end
 
-	def self.transmit(uri, req, payload=nil)
+	def self.transmit(uri, req, payload)
 		Net::HTTP.start(uri.host, uri.port) do |http|
-			process_result http.request(req, payload)
+			process_result http.request(req, payload || "")
 		end
 	end
 
