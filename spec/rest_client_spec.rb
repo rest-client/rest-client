@@ -1,6 +1,28 @@
 require File.dirname(__FILE__) + '/base'
 
 describe RestClient do
+	context "public API" do
+		it "GET" do
+			RestClient.should_receive(:do_request).with(:get, 'http://some/resource')
+			RestClient.get('http://some/resource')
+		end
+
+		it "POST" do
+			RestClient.should_receive(:do_request).with(:post, 'http://some/resource', 'payload')
+			RestClient.post('http://some/resource', 'payload')
+		end
+
+		it "PUT" do
+			RestClient.should_receive(:do_request).with(:put, 'http://some/resource', 'payload')
+			RestClient.put('http://some/resource', 'payload')
+		end
+
+		it "DELETE" do
+			RestClient.should_receive(:do_request).with(:delete, 'http://some/resource')
+			RestClient.delete('http://some/resource')
+		end
+	end
+
 	context "internal methods" do
 		it "requests xml mimetype" do
 			RestClient.headers['Accept'].should == 'application/xml'
@@ -27,49 +49,20 @@ describe RestClient do
 			URI.should_receive(:parse).with('http://example.com/resource')
 			RestClient.parse_url('example.com/resource')
 		end
-	end
 
-	context "public API" do
-		before do
-			@uri = mock("uri")
-			@uri.stub!(:path).and_return('/resource')
-			RestClient.should_receive(:parse_url).with('http://some/resource').and_return(@uri)
+		it "determines the Net::HTTP class to instantiate by the method name" do
+			RestClient.net_http_class(:put).should == Net::HTTP::Put
 		end
 
-		it "GET url" do
-			Net::HTTP::Get.should_receive(:new).with('/resource', RestClient.headers).and_return(:get)
-			RestClient.should_receive(:transmit).with(@uri, :get)
-			RestClient.get('http://some/resource')
-		end
-
-		it "POST url" do
-			Net::HTTP::Post.should_receive(:new).with('/resource', RestClient.headers).and_return(:post)
-			RestClient.should_receive(:transmit).with(@uri, :post, nil)
-			RestClient.post('http://some/resource')
-		end
-
-		it "POST url, payload" do
-			Net::HTTP::Post.should_receive(:new).with('/resource', RestClient.headers).and_return(:post)
-			RestClient.should_receive(:transmit).with(@uri, :post, 'payload')
-			RestClient.post('http://some/resource', 'payload')
-		end
-
-		it "PUT url" do
-			Net::HTTP::Put.should_receive(:new).with('/resource', RestClient.headers).and_return(:put)
-			RestClient.should_receive(:transmit).with(@uri, :put, nil)
-			RestClient.put('http://some/resource')
-		end
-
-		it "PUT url, payload" do
-			Net::HTTP::Put.should_receive(:new).with('/resource', RestClient.headers).and_return(:put)
-			RestClient.should_receive(:transmit).with(@uri, :put, 'payload')
-			RestClient.put('http://some/resource', 'payload')
-		end
-
-		it "DELETE url" do
-			Net::HTTP::Delete.should_receive(:new).with('/resource', RestClient.headers).and_return(:delete)
-			RestClient.should_receive(:transmit).with(@uri, :delete)
-			RestClient.delete('http://some/resource')
+		it "does a request with an http method name passed in as a symbol" do
+			uri = mock("uri")
+			uri.stub!(:path).and_return('/resource')
+			RestClient.should_receive(:parse_url).with('http://some/resource').and_return(uri)
+			klass = mock("net:http class")
+			RestClient.should_receive(:net_http_class).with(:put).and_return(klass)
+			klass.should_receive(:new).with('/resource', RestClient.headers).and_return('result')
+			RestClient.should_receive(:transmit).with(uri, 'result', 'payload')
+			RestClient.do_request(:put, 'http://some/resource', 'payload')
 		end
 	end
 end

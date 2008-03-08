@@ -4,33 +4,38 @@ require 'rexml/document'
 
 module RestClient
 	def self.get(url)
-		uri = parse_url(url)
-		transmit uri, Net::HTTP::Get.new(uri.path, headers)
+		do_request :get, url
 	end
 
 	def self.post(url, payload=nil)
-		uri = parse_url(url)
-		transmit uri, Net::HTTP::Post.new(uri.path, headers), payload
+		do_request :post, url, payload
 	end
 
 	def self.put(url, payload=nil)
-		uri = parse_url(url)
-		transmit uri, Net::HTTP::Put.new(uri.path, headers), payload
+		do_request :put, url, payload
 	end
 
 	def self.delete(url)
-		uri = parse_url(url)
-		transmit uri, Net::HTTP::Delete.new(uri.path, headers)
+		do_request :delete, url
 	end
 
 	####
+
+	def self.do_request(method, url, payload=nil)
+		uri = parse_url(url)
+		transmit uri, net_http_class(method).new(uri.path, headers), payload
+	end
+
+	def self.net_http_class(method)
+		Object.module_eval "Net::HTTP::#{method.to_s.capitalize}"
+	end
 
 	def self.parse_url(url)
 		url = "http://#{url}" unless url.match(/^http/)
 		URI.parse(url)
 	end
 
-	def self.transmit(uri, req, payload=nil)    # :nodoc:
+	def self.transmit(uri, req, payload=nil)
 		Net::HTTP.start(uri.host, uri.port) do |http|
 			process_result http.request(req, payload)
 		end
