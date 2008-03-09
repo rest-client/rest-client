@@ -1,6 +1,5 @@
 require 'uri'
 require 'net/http'
-require 'rexml/document'
 
 module RestClient
 	def self.get(url, headers={})
