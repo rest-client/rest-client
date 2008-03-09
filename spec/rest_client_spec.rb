@@ -69,7 +69,7 @@ describe RestClient do
 			RestClient.should_receive(:net_http_class).with(:put).and_return(klass)
 			klass.should_receive(:new).with('/resource', RestClient.headers).and_return('result')
 			RestClient.should_receive(:transmit).with(@uri, 'result', 'payload')
-			RestClient.do_request(:put, 'http://some/resource', 'payload')
+			RestClient.do_request_inner(:put, 'http://some/resource', 'payload')
 		end
 
 		it "transmits the request with Net::HTTP" do
@@ -86,6 +86,11 @@ describe RestClient do
 			http.should_receive(:request).with('req', '')
 			RestClient.should_receive(:process_result)
 			RestClient.transmit(@uri, 'req', nil)
+		end
+
+		it "do_request calls do_request_inner" do
+			RestClient.should_receive(:do_request_inner).with(:get, 'http://some/where', 'payload')
+			RestClient.do_request(:get, 'http://some/where', 'payload')
 		end
 	end
 end
