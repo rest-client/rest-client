@@ -3,22 +3,18 @@ require 'net/http'
 
 # This module's static methods are the entry point for using the REST client.
 module RestClient
-	# GET http://some/resource
 	def self.get(url, headers={})
 		Request.new(:get, url, nil, headers).execute
 	end
 
-	# POST http://some/resource, payload
 	def self.post(url, payload=nil, headers={})
 		Request.new(:post, url, payload, headers).execute
 	end
 
-	# PUT http://some/resource, payload
 	def self.put(url, payload=nil, headers={})
 		Request.new(:put, url, payload, headers).execute
 	end
 
-	# DELETE http://some/resource
 	def self.delete(url, headers={})
 		Request.new(:delete, url, nil, headers).execute
 	end

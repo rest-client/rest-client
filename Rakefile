@@ -40,8 +40,10 @@ spec = Gem::Specification.new do |s|
 	s.description = "A simple REST client for Ruby, inspired by the microframework (Camping, Sinatra...) style of specifying actions: get, put, post, delete."
 	s.author = "Adam Wiggins"
 	s.email = "adam@heroku.com"
+	s.rubyforge_project = "rest-client"
 
 	s.platform = Gem::Platform::RUBY
+	s.has_rdoc = true
 	
 	s.files = %w(Rakefile) + Dir.glob("{lib,spec}/**/*")
 	
@@ -64,6 +66,15 @@ Rake::TestTask.new do |t|
 	t.libs << "spec"
 	t.test_files = FileList['spec/*_spec.rb']
 	t.verbose = true
+end
+
+Rake::RDocTask.new do |t|
+	t.rdoc_dir = 'rdoc'
+	t.title    = "rest-client, fetch RESTful resources effortlessly"
+	t.options << '--line-numbers' << '--inline-source' << '-A cattr_accessor=object'
+	t.options << '--charset' << 'utf-8'
+	t.rdoc_files.include('README')
+	t.rdoc_files.include('lib/rest_client.rb')
 end
 
 CLEAN.include [ 'pkg', '*.gem', '.config' ]
