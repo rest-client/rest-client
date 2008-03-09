@@ -40,6 +40,7 @@ spec = Gem::Specification.new do |s|
 	s.description = "A simple REST client for Ruby, inspired by the microframework (Camping, Sinatra...) style of specifying actions: get, put, post, delete."
 	s.author = "Adam Wiggins"
 	s.email = "adam@heroku.com"
+	s.homepage = "http://rest-client.heroku.com/"
 	s.rubyforge_project = "rest-client"
 
 	s.platform = Gem::Platform::RUBY
