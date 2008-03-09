@@ -3,29 +3,29 @@ require File.dirname(__FILE__) + '/base'
 describe RestClient do
 	context "public API" do
 		it "GET" do
-			RestClient.should_receive(:do_request).with(:get, 'http://some/resource')
+			RestClient.should_receive(:do_request).with(:get, 'http://some/resource', nil, {})
 			RestClient.get('http://some/resource')
 		end
 
 		it "POST" do
-			RestClient.should_receive(:do_request).with(:post, 'http://some/resource', 'payload')
+			RestClient.should_receive(:do_request).with(:post, 'http://some/resource', 'payload', {})
 			RestClient.post('http://some/resource', 'payload')
 		end
 
 		it "PUT" do
-			RestClient.should_receive(:do_request).with(:put, 'http://some/resource', 'payload')
+			RestClient.should_receive(:do_request).with(:put, 'http://some/resource', 'payload', {})
 			RestClient.put('http://some/resource', 'payload')
 		end
 
 		it "DELETE" do
-			RestClient.should_receive(:do_request).with(:delete, 'http://some/resource')
+			RestClient.should_receive(:do_request).with(:delete, 'http://some/resource', nil, {})
 			RestClient.delete('http://some/resource')
 		end
 	end
 
 	context "internal support methods" do
 		it "requests xml mimetype" do
-			RestClient.headers['Accept'].should == 'application/xml'
+			RestClient.default_headers[:accept].should == 'application/xml'
 		end
 
 		it "converts an xml document" do
@@ -53,6 +53,21 @@ describe RestClient do
 		it "determines the Net::HTTP class to instantiate by the method name" do
 			RestClient.net_http_class(:put).should == Net::HTTP::Put
 		end
+
+		it "merges user headers with the default headers" do
+			RestClient.should_receive(:default_headers).and_return({ '1' => '2' })
+			RestClient.make_headers('3' => '4').should == { '1' => '2', '3' => '4' }
+		end
+
+		it "prefers the user header when the same header exists in the defaults" do
+			RestClient.should_receive(:default_headers).and_return({ '1' => '2' })
+			RestClient.make_headers('1' => '3').should == { '1' => '3' }
+		end
+
+		it "converts header symbols from :content_type to 'Content-type'" do
+			RestClient.should_receive(:default_headers).and_return({})
+			RestClient.make_headers(:content_type => 'abc').should == { 'Content-type' => 'abc' }
+		end
 	end
 
 	context "internal transmission methods" do
@@ -67,9 +82,9 @@ describe RestClient do
 			RestClient.should_receive(:parse_url).with('http://some/resource').and_return(@uri)
 			klass = mock("net:http class")
 			RestClient.should_receive(:net_http_class).with(:put).and_return(klass)
-			klass.should_receive(:new).with('/resource', RestClient.headers).and_return('result')
+			klass.should_receive(:new).and_return('result')
 			RestClient.should_receive(:transmit).with(@uri, 'result', 'payload')
-			RestClient.do_request_inner(:put, 'http://some/resource', 'payload')
+			RestClient.do_request_inner(:put, 'http://some/resource', 'payload', {})
 		end
 
 		it "transmits the request with Net::HTTP" do
@@ -89,8 +104,8 @@ describe RestClient do
 		end
 
 		it "do_request calls do_request_inner" do
-			RestClient.should_receive(:do_request_inner).with(:get, 'http://some/where', 'payload')
-			RestClient.do_request(:get, 'http://some/where', 'payload')
+			RestClient.should_receive(:do_request_inner).with(:get, 'http://some/where', 'payload', {})
+			RestClient.do_request(:get, 'http://some/where', 'payload', {})
 		end
 	end
 end

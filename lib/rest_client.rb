@@ -3,33 +3,42 @@ require 'net/http'
 require 'rexml/document'
 
 module RestClient
-	def self.get(url)
-		do_request :get, url
+	def self.get(url, headers={})
+		do_request :get, url, nil, headers
 	end
 
-	def self.post(url, payload=nil)
-		do_request :post, url, payload
+	def self.post(url, payload=nil, headers={})
+		do_request :post, url, payload, headers
 	end
 
-	def self.put(url, payload=nil)
-		do_request :put, url, payload
+	def self.put(url, payload=nil, headers={})
+		do_request :put, url, payload, headers
 	end
 
-	def self.delete(url)
-		do_request :delete, url
+	def self.delete(url, headers={})
+		do_request :delete, url, nil, headers
 	end
 
 	####
 
-	def self.do_request(method, url, payload=nil)
-		do_request_inner(method, url, payload)
+	def self.do_request(method, url, payload, headers)
+		do_request_inner(method, url, payload, headers)
 	rescue Redirect => e
-		do_request(method, e.message, payload)
+		do_request(method, e.message, payload, headers)
 	end
 
-	def self.do_request_inner(method, url, payload=nil)
+	def self.do_request_inner(method, url, payload, headers)
 		uri = parse_url(url)
-		transmit uri, net_http_class(method).new(uri.path, headers), payload
+		transmit uri, net_http_class(method).new(uri.path, make_headers(headers)), payload
+	end
+
+	def self.make_headers(user_headers)
+		final = {}
+		merged = default_headers.merge(user_headers)
+		merged.keys.each do |key|
+			final[key.to_s.gsub(/_/, '-').capitalize] = merged[key]
+		end
+		final
 	end
 
 	def self.net_http_class(method)
@@ -73,8 +82,8 @@ module RestClient
 		"HTTP code #{res.code}: #{parse_error_xml(res.body)}"
 	end
 
-	def self.headers
-		{ 'Accept' => 'application/xml' }
+	def self.default_headers
+		{ :accept => 'application/xml', :content_type => 'text/plain' }
 	end
 
 	def self.xml(raw)
