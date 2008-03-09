@@ -1,23 +1,29 @@
 require 'uri'
 require 'net/http'
 
+# This module's static methods are the entry point for using the REST client.
 module RestClient
+	# GET http://some/resource
 	def self.get(url, headers={})
 		Request.new(:get, url, nil, headers).execute
 	end
 
+	# POST http://some/resource, payload
 	def self.post(url, payload=nil, headers={})
 		Request.new(:post, url, payload, headers).execute
 	end
 
+	# PUT http://some/resource, payload
 	def self.put(url, payload=nil, headers={})
 		Request.new(:put, url, payload, headers).execute
 	end
 
+	# DELETE http://some/resource
 	def self.delete(url, headers={})
 		Request.new(:delete, url, nil, headers).execute
 	end
 
+	# Internal class used to build and execute the request.
 	class Request
 		attr_reader :method, :url, :payload, :headers
 
@@ -58,8 +64,13 @@ module RestClient
 			URI.parse(url)
 		end
 
+		# A redirect was encountered; caught by execute to retry with the new url.
 		class Redirect < Exception; end
+
+		# Request failed with an unhandled http error code.
 		class RequestFailed < Exception; end
+
+		# Authorization is required to access the resource specified.
 		class Unauthorized < Exception; end
 
 		def transmit(uri, req, payload)

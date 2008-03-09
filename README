@@ -1,0 +1,32 @@
+= REST Client -- simple DSL for accessing REST resources
+
+A simple REST client for Ruby, inspired by the microframework (Camping,
+Sinatra...) style of specifying actions: get, put, post, delete.
+
+== Usage
+
+require 'rest_client'
+
+xml = RestClient.get 'http://some/resource'
+jpg = RestClient.get 'http://some/resource', :accept => 'image/jpg'
+
+RestClient.put 'http://some/resource', File.read('my.pdf'), :content_type => 'application/pdf'
+
+RestClient.post 'http://some/resource', xml, :content_type => 'application/xml'
+
+RestClient.delete 'http://some/resource'
+
+== Shell
+
+Require rest_client from within irb to access RestClient interactively, like
+using curl at the command line.  Better yet, require gem from within your
+~/.rush/env.rb and have instant access to it from within your rush sessions.
+
+== Meta
+
+Written by Adam Wiggins (adam at heroku dot com)
+
+Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+
+http://rest-client.rubyforge.org
+
