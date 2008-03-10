@@ -2,38 +2,30 @@ require File.dirname(__FILE__) + '/base'
 
 describe RestClient do
 	context "public API" do
-		before do
-			@request = mock("restclient request")
-		end
-
 		it "GET" do
-			RestClient::Request.should_receive(:new).with(:get, 'http://some/resource', nil, {}).and_return(@request)
-			@request.should_receive(:execute)
+			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
 			RestClient.get('http://some/resource')
 		end
 
 		it "POST" do
-			RestClient::Request.should_receive(:new).with(:post, 'http://some/resource', 'payload', {}).and_return(@request)
-			@request.should_receive(:execute)
+			RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {})
 			RestClient.post('http://some/resource', 'payload')
 		end
 
 		it "PUT" do
-			RestClient::Request.should_receive(:new).with(:put, 'http://some/resource', 'payload', {}).and_return(@request)
-			@request.should_receive(:execute)
+			RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {})
 			RestClient.put('http://some/resource', 'payload')
 		end
 
 		it "DELETE" do
-			RestClient::Request.should_receive(:new).with(:delete, 'http://some/resource', nil, {}).and_return(@request)
-			@request.should_receive(:execute)
+			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
 			RestClient.delete('http://some/resource')
 		end
 	end
 
 	context RestClient::Request do
 		before do
-			@request = RestClient::Request.new(:put, 'http://some/resource', 'payload', {})
+			@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
 
 			@uri = mock("uri")
 			@uri.stub!(:path).and_return('/resource')
@@ -109,6 +101,13 @@ describe RestClient do
 		it "execute calls execute_inner" do
 			@request.should_receive(:execute_inner)
 			@request.execute
+		end
+
+		it "class method execute wraps constructor" do
+			req = mock("rest request")
+			RestClient::Request.should_receive(:new).with(1 => 2).and_return(req)
+			req.should_receive(:execute)
+			RestClient::Request.execute(1 => 2)
 		end
 	end
 end

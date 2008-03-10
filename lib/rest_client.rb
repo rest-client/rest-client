@@ -4,30 +4,44 @@ require 'net/http'
 # This module's static methods are the entry point for using the REST client.
 module RestClient
 	def self.get(url, headers={})
-		Request.new(:get, url, nil, headers).execute
+		Request.execute(:method => :get,
+			:url => url,
+			:headers => headers)
 	end
 
-	def self.post(url, payload=nil, headers={})
-		Request.new(:post, url, payload, headers).execute
+	def self.post(url, payload, headers={})
+		Request.execute(:method => :post,
+			:url => url,
+			:payload => payload,
+			:headers => headers)
 	end
 
-	def self.put(url, payload=nil, headers={})
-		Request.new(:put, url, payload, headers).execute
+	def self.put(url, payload, headers={})
+		Request.execute(:method => :put,
+			:url => url,
+			:payload => payload,
+			:headers => headers)
 	end
 
 	def self.delete(url, headers={})
-		Request.new(:delete, url, nil, headers).execute
+		Request.execute(:method => :delete,
+			:url => url,
+			:headers => headers)
 	end
 
 	# Internal class used to build and execute the request.
 	class Request
 		attr_reader :method, :url, :payload, :headers
 
-		def initialize(method, url, payload, headers)
-			@method = method
-			@url = url
-			@payload = payload
-			@headers = headers
+		def self.execute(args)
+			new(args).execute
+		end
+
+		def initialize(args)
+			@method = args[:method] or raise ArgumentError, "must pass :method"
+			@url = args[:url] or raise ArgumentError, "must pass :url"
+			@payload = args[:payload]
+			@headers = args[:headers] || {}
 		end
 
 		def execute
