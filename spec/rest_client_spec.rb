@@ -98,6 +98,34 @@ describe RestClient do
 			@request.transmit(@uri, 'req', nil)
 		end
 
+		it "sets up the credentials prior to the request" do
+			http = mock("net::http connection")
+			Net::HTTP.should_receive(:start).and_yield(http)
+			http.stub!(:request)
+			@request.stub!(:process_result)
+
+			@request.stub!(:user).and_return('joe')
+			@request.stub!(:password).and_return('mypass')
+			@request.should_receive(:setup_credentials).with('req')
+
+			@request.transmit(@uri, 'req', nil)
+		end
+
+		it "does not attempt to send any credentials if user is nil" do
+			@request.stub!(:user).and_return(nil)
+			req = mock("request")
+			req.should_not_receive(:basic_auth)
+			@request.setup_credentials(req)
+		end
+
+		it "does not attempt to send any credentials if user is nil" do
+			@request.stub!(:user).and_return('joe')
+			@request.stub!(:password).and_return('mypass')
+			req = mock("request")
+			req.should_receive(:basic_auth).with('joe', 'mypass')
+			@request.setup_credentials(req)
+		end
+
 		it "execute calls execute_inner" do
 			@request.should_receive(:execute_inner)
 			@request.execute

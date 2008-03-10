@@ -31,7 +31,7 @@ module RestClient
 
 	# Internal class used to build and execute the request.
 	class Request
-		attr_reader :method, :url, :payload, :headers
+		attr_reader :method, :url, :payload, :headers, :user, :password
 
 		def self.execute(args)
 			new(args).execute
@@ -42,6 +42,8 @@ module RestClient
 			@url = args[:url] or raise ArgumentError, "must pass :url"
 			@payload = args[:payload]
 			@headers = args[:headers] || {}
+			@user = args[:user]
+			@password = args[:password]
 		end
 
 		def execute
@@ -84,9 +86,15 @@ module RestClient
 		class Unauthorized < Exception; end
 
 		def transmit(uri, req, payload)
+			setup_credentials(req)
+
 			Net::HTTP.start(uri.host, uri.port) do |http|
 				process_result http.request(req, payload || "")
 			end
+		end
+
+		def setup_credentials(req)
+			req.basic_auth(user, password) if user
 		end
 
 		def process_result(res)
