@@ -3,7 +3,7 @@
 A simple REST client for Ruby, inspired by the microframework (Camping,
 Sinatra...) style of specifying actions: get, put, post, delete.
 
-== Usage
+== Usage: Raw URL
 
   require 'rest_client'
 
@@ -16,11 +16,24 @@ Sinatra...) style of specifying actions: get, put, post, delete.
 
   RestClient.delete 'http://some/resource'
 
+See RestClient module docs for details.
+
+== Usage: ActiveResource-Style
+
+  resource = RestClient::Resource.new 'http://some/resource'
+  resource.get
+
+  protected_resource = RestClient::Resource.new 'http://protected/resource', 'user', 'pass'
+  protected_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
+
+See RestClient::Resource module docs for details.
+
 == Shell
 
 Require rest_client from within irb to access RestClient interactively, like
 using curl at the command line.  Better yet, require gem from within your
-~/.rush/env.rb and have instant access to it from within your rush (http://rush.heroku.com) sessions.
+~/.rush/env.rb and have instant access to it from within your rush
+(http://rush.heroku.com) sessions.
 
 == Meta
 

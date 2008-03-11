@@ -1,6 +1,8 @@
 require 'uri'
 require 'net/http'
 
+require File.dirname(__FILE__) + '/resource'
+
 # This module's static methods are the entry point for using the REST client.
 module RestClient
 	def self.get(url, headers={})
