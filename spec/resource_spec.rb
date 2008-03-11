@@ -24,4 +24,8 @@ describe RestClient::Resource do
 		RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {}, :user => 'jane', :password => 'mypass')
 		@resource.delete
 	end
+
+	it "can instantiate with no user/password" do
+		@resource = RestClient::Resource.new('http://some/resource')
+	end
 end
