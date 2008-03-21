@@ -30,7 +30,7 @@ require 'rake/gempackagetask'
 require 'rake/rdoctask'
 require 'fileutils'
 
-version = "0.2"
+version = "0.3"
 name = "rest-client"
 
 spec = Gem::Specification.new do |s|
