@@ -57,7 +57,7 @@ module RestClient
 
 		def execute_inner
 			uri = parse_url(url)
-			transmit uri, net_http_class(method).new(uri.path, make_headers(headers)), payload
+			transmit uri, net_http_class(method).new(uri.request_uri, make_headers(headers)), payload
 		end
 
 		def make_headers(user_headers)

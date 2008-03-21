@@ -39,6 +39,8 @@ using curl at the command line.  Better yet, require gem from within your
 
 Written by Adam Wiggins (adam at heroku dot com)
 
+Patches contributed by: Chris Anderson
+
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
 http://rest-client.heroku.com

@@ -28,7 +28,7 @@ describe RestClient do
 			@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
 
 			@uri = mock("uri")
-			@uri.stub!(:path).and_return('/resource')
+			@uri.stub!(:request_uri).and_return('/resource')
 			@uri.stub!(:host).and_return('some')
 			@uri.stub!(:port).and_return(80)
 		end
