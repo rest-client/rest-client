@@ -42,8 +42,8 @@ module RestClient
 		def initialize(args)
 			@method = args[:method] or raise ArgumentError, "must pass :method"
 			@url = args[:url] or raise ArgumentError, "must pass :url"
-			@payload = args[:payload]
 			@headers = args[:headers] || {}
+			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
 		end
@@ -86,6 +86,15 @@ module RestClient
 
 		# Authorization is required to access the resource specified.
 		class Unauthorized < Exception; end
+
+    def process_payload(p=nil)
+      if p && p.is_a?( Hash ) && method == :post
+        @headers[:content_type] = 'application/x-www-form-urlencoded'
+        p.keys.collect{|k| "#{k}=#{URI.escape(p[k])}"}.join("&")
+      else
+        p
+      end
+    end
 
 		def transmit(uri, req, payload)
 			setup_credentials(req)

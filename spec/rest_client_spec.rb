@@ -22,6 +22,28 @@ describe RestClient do
 			RestClient.delete('http://some/resource')
 		end
 	end
+	
+	context "RestClient with a hash of form data as a payload" do
+	  before do
+	    @request = RestClient::Request.new(:method => :post, :url => 'http://some/resource', :payload => {:email => "my@email.com", :password =>"secrets"})
+	    @uri = mock("uri")
+		  @uri.stub!(:request_uri).and_return('/resource')
+		  @uri.stub!(:host).and_return('some')
+		  @uri.stub!(:port).and_return(80)
+		  Net::HTTP::Post.stub!(:new).and_return(@net = mock('Net::HTTP::Post'))
+		  @request.stub!(:transmit)
+	  end
+	  
+	  it "should set the payload to be the hash processed into URI params" do
+	    @request.should_receive(:transmit).with(URI.parse('http://some/resource'), @net, "email=my@email.com&password=secrets")
+	    @request.execute_inner
+	  end
+	  
+	  it "should add the 'application/x-www-form-urlencoded' content_type header" do
+	    @request.should_receive(:make_headers).with({:content_type => 'application/x-www-form-urlencoded'})
+	    @request.execute_inner
+	  end
+	end
 
 	context RestClient::Request do
 		before do
@@ -139,3 +161,5 @@ describe RestClient do
 		end
 	end
 end
+
+
