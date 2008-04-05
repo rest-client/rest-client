@@ -39,7 +39,7 @@ using curl at the command line.  Better yet, require gem from within your
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson
+Patches contributed by: Chris Anderson, Greg Borenstein
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
