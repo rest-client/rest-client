@@ -87,14 +87,14 @@ module RestClient
 		# Authorization is required to access the resource specified.
 		class Unauthorized < Exception; end
 
-    def process_payload(p=nil)
-      if p && p.is_a?( Hash ) && method == :post
-        @headers[:content_type] = 'application/x-www-form-urlencoded'
-        p.keys.collect{|k| "#{k}=#{URI.escape(p[k])}"}.join("&")
-      else
-        p
-      end
-    end
+		def process_payload(p=nil)
+			unless p.is_a?(Hash)
+				p
+			else
+				@headers[:content_type] = 'application/x-www-form-urlencoded'
+				p.keys.map { |k| "#{k}=#{URI.escape(p[k].to_s)}" }.join("&")
+			end
+		end
 
 		def transmit(uri, req, payload)
 			setup_credentials(req)
