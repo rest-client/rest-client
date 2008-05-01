@@ -79,13 +79,13 @@ module RestClient
 		end
 
 		# A redirect was encountered; caught by execute to retry with the new url.
-		class Redirect < Exception; end
+		class Redirect < RuntimeError; end
 
 		# Request failed with an unhandled http error code.
-		class RequestFailed < Exception; end
+		class RequestFailed < RuntimeError; end
 
 		# Authorization is required to access the resource specified.
-		class Unauthorized < Exception; end
+		class Unauthorized < RuntimeError; end
 
 		def process_payload(p=nil)
 			unless p.is_a?(Hash)
