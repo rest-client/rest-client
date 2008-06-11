@@ -158,5 +158,20 @@ describe RestClient do
 			req.should_receive(:execute)
 			RestClient::Request.execute(1 => 2)
 		end
+
+		it "raises a Redirect with the new location when the response is in the 30x range" do
+			res = mock('response', :code => '301', :header => { 'Location' => 'http://new/resource' })
+			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect, 'http://new/resource')
+		end
+
+		it "raises Unauthorized when the response is 401" do
+			res = mock('response', :code => '401')
+			lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
+		end
+
+		it "raises RequestFailed otherwise" do
+			res = mock('response', :code => '500')
+			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
+		end
 	end
 end

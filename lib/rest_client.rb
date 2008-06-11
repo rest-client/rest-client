@@ -2,6 +2,7 @@ require 'uri'
 require 'net/https'
 
 require File.dirname(__FILE__) + '/resource'
+require File.dirname(__FILE__) + '/request_errors'
 
 # This module's static methods are the entry point for using the REST client.
 module RestClient
@@ -78,15 +79,6 @@ module RestClient
 			URI.parse(url)
 		end
 
-		# A redirect was encountered; caught by execute to retry with the new url.
-		class Redirect < RuntimeError; end
-
-		# Request failed with an unhandled http error code.
-		class RequestFailed < RuntimeError; end
-
-		# Authorization is required to access the resource specified.
-		class Unauthorized < RuntimeError; end
-
 		def process_payload(p=nil)
 			unless p.is_a?(Hash)
 				p
@@ -119,12 +111,8 @@ module RestClient
 			elsif res.code == "401"
 				raise Unauthorized
 			else
-				raise RequestFailed, error_message(res)
+				raise RequestFailed, res
 			end
-		end
-
-		def error_message(res)
-			"HTTP code #{res.code}: #{res.body}"
 		end
 
 		def default_headers
