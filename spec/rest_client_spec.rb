@@ -131,7 +131,7 @@ describe RestClient do
 			@request.setup_credentials(req)
 		end
 
-		it "does not attempt to send any credentials if user is nil" do
+		it "setup credentials when there's a user" do
 			@request.stub!(:user).and_return('joe')
 			@request.stub!(:password).and_return('mypass')
 			req = mock("request")
