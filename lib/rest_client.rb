@@ -1,5 +1,5 @@
 require 'uri'
-require 'net/http'
+require 'net/https'
 
 require File.dirname(__FILE__) + '/resource'
 
@@ -99,7 +99,10 @@ module RestClient
 		def transmit(uri, req, payload)
 			setup_credentials(req)
 
-			Net::HTTP.start(uri.host, uri.port) do |http|
+			net = Net::HTTP.new(uri.host, uri.port)
+			net.use_ssl = uri.is_a?(URI::HTTPS)
+
+			net.start do |http|
 				process_result http.request(req, payload || "")
 			end
 		end
