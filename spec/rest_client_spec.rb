@@ -31,6 +31,12 @@ describe RestClient do
 			@uri.stub!(:request_uri).and_return('/resource')
 			@uri.stub!(:host).and_return('some')
 			@uri.stub!(:port).and_return(80)
+
+			@net = mock("net::http base")
+			@http = mock("net::http connection")
+			Net::HTTP.stub!(:new).and_return(@net)
+			@net.stub!(:start).and_yield(@http)
+			@net.stub!(:use_ssl=)
 		end
 
 		it "requests xml mimetype" do
@@ -83,17 +89,21 @@ describe RestClient do
 		end
 
 		it "transmits the request with Net::HTTP" do
-			http = mock("net::http connection")
-			Net::HTTP.should_receive(:start).and_yield(http)
-			http.should_receive(:request).with('req', 'payload')
+			@http.should_receive(:request).with('req', 'payload')
 			@request.should_receive(:process_result)
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
+		it "uses SSL when the URI refers to a https address" do
+			@uri.stub!(:is_a?).with(URI::HTTPS).and_return(true)
+			@net.should_receive(:use_ssl=).with(true)
+			@http.stub!(:request)
+			@request.stub!(:process_result)
+			@request.transmit(@uri, 'req', 'payload')
+		end
+
 		it "doesn't send nil payloads" do
-			http = mock("net::http connection")
-			Net::HTTP.should_receive(:start).and_yield(http)
-			http.should_receive(:request).with('req', '')
+			@http.should_receive(:request).with('req', '')
 			@request.should_receive(:process_result)
 			@request.transmit(@uri, 'req', nil)
 		end
@@ -112,9 +122,7 @@ describe RestClient do
 		end
 
 		it "sets up the credentials prior to the request" do
-			http = mock("net::http connection")
-			Net::HTTP.should_receive(:start).and_yield(http)
-			http.stub!(:request)
+			@http.stub!(:request)
 			@request.stub!(:process_result)
 
 			@request.stub!(:user).and_return('joe')
