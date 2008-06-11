@@ -19,16 +19,14 @@ module RestClient
 			@response.code.to_i
 		end
 
-		def message
+		def message(default = "Unknown error")
 			return "Resource not found" if http_code == 404
-			parse_error_xml
+			parse_error_xml rescue default
 		end
 
 		def parse_error_xml
 			xml_errors = REXML::Document.new(@response.body).elements.to_a("//errors/error")
 			xml_errors.empty? ? raise : xml_errors.map { |a| a.text }.join(" / ")
-		rescue
-			"Unknown error"
 		end
 	end
 end

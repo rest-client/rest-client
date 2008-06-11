@@ -14,4 +14,14 @@ describe RestClient::RequestFailed do
 		@error.response = mock('response', :code => '500', :body => 'Syntax error in SQL query: SELECT * FROM ...')
 		@error.message.should == 'Unknown error'
 	end
+
+	it "accepts a default error message" do
+		@error.response = mock('response', :code => '500', :body => 'Internal Server Error')
+		@error.message('Custom default message').should == 'Custom default message'
+	end
+
+	it "doesn't show the default error message when there's something in the xml" do
+		@error.response = mock('response', :code => '422', :body => '<errors><error>Specific error message</error></errors>')
+		@error.message('Custom default message').should == 'Specific error message'
+	end
 end
