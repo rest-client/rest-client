@@ -30,3 +30,8 @@ module RestClient
 		end
 	end
 end
+
+# for backwards compatibility
+RestClient::Resource::Redirect = RestClient::Redirect
+RestClient::Resource::Unauthorized = RestClient::Unauthorized
+RestClient::Resource::RequestFailed = RestClient::RequestFailed
