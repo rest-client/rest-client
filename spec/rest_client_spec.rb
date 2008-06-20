@@ -113,7 +113,7 @@ describe RestClient do
 		end
 
 		it "converts a hash payload to urlencoded data" do
-			@request.process_payload(:a => 'b c').should == "a=b%20c"
+			@request.process_payload(:a => 'b c+d').should == "a=b%20c%2Bd"
 		end
 
 		it "set urlencoded content_type header on hash payloads" do
