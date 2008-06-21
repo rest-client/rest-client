@@ -10,6 +10,9 @@ module RestClient
 	# The server broke the connection prior to the request completing.
 	class ServerBrokeConnection < RuntimeError; end
 
+	# The server took too long to respond.
+	class RequestTimeout < RuntimeError; end
+
 	# The request failed, meaning the remote HTTP server returned a code other
 	# than success, unauthorized, or redirect.
 	#

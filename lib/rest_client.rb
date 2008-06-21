@@ -109,6 +109,8 @@ module RestClient
 			end
 		rescue EOFError
 			raise RestClient::ServerBrokeConnection
+		rescue Timeout::Error
+			raise RestClient::RequestTimeout
 		end
 
 		def setup_credentials(req)
