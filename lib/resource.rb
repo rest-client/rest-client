@@ -70,13 +70,13 @@ module RestClient
 		# This is especially useful if you wish to define your site in one place and
 		# call it in multiple locations:
 		#
-		#   def product(id)
-		#     RestClient::Resource.new('http://example.com/products/#{id}', 'adam', 'mypasswd')
+		#   def orders
+		#     RestClient::Resource.new('http://example.com/orders', 'admin', 'mypasswd')
 		#   end
 		#
-		#   product(123).get
-		#   product(123).put params.to_xml
-		#   product(123).delete
+		#   orders.get                     # GET http://example.com/orders
+		#   orders['1'].get                # GET http://example.com/orders/1
+		#   orders['1/items'].delete       # DELETE http://example.com/orders/1/items
 		#
 		# Nest resources as far as you want:
 		#
