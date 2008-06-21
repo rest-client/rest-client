@@ -7,26 +7,35 @@ Sinatra...) style of specifying actions: get, put, post, delete.
 
   require 'rest_client'
 
-  xml = RestClient.get 'http://some/resource'
-  jpg = RestClient.get 'http://some/resource', :accept => 'image/jpg'
+  xml = RestClient.get 'http://example.com/resource'
+  jpg = RestClient.get 'http://example.com/resource', :accept => 'image/jpg'
 
-  RestClient.put 'http://some/resource', File.read('my.pdf'), :content_type => 'application/pdf'
+  private_resource = RestClient.get 'https://user:password@example.com/private/resource'
 
-  RestClient.post 'http://some/resource', xml, :content_type => 'application/xml'
+  RestClient.put 'http://example.com/resource', File.read('my.pdf'), :content_type => 'application/pdf'
 
-  RestClient.delete 'http://some/resource'
+  RestClient.post 'http://example.com/resource', xml, :content_type => 'application/xml'
+
+  RestClient.delete 'http://example.com/resource'
 
 See RestClient module docs for details.
 
 == Usage: ActiveResource-Style
 
-  resource = RestClient::Resource.new 'http://some/resource'
+  resource = RestClient::Resource.new 'http://example.com/resource'
   resource.get
 
-  protected_resource = RestClient::Resource.new 'http://protected/resource', 'user', 'pass'
-  protected_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
+  private_resource = RestClient::Resource.new 'http://example.com/private/resource', 'user', 'pass'
+  private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 
 See RestClient::Resource module docs for details.
+
+== Usage: Resource Nesting
+
+  site = RestClient::Resource.new('http://example.com')
+  site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
+
+See RestClient::Resource docs for details.
 
 == Shell
 
