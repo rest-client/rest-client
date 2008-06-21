@@ -41,6 +41,10 @@ describe RestClient::Resource do
 		@resource.concat_urls('http://example.com', '/resource').should == 'http://example.com/resource'
 	end
 
+	it "concatinates even non-string urls (i.e. 'posts' + 1)" do
+		@resource.concat_urls('posts/', 1).should == 'posts/1'
+	end
+
 	it "offers subresources via []" do
 		parent = RestClient::Resource.new('http://example.com')
 		parent['posts'].url.should == 'http://example.com/posts'
