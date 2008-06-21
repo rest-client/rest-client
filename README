@@ -1,7 +1,7 @@
 = REST Client -- simple DSL for accessing REST resources
 
-A simple REST client for Ruby, inspired by the microframework (Camping,
-Sinatra...) style of specifying actions: get, put, post, delete.
+A simple REST client for Ruby, inspired by the Sinatra's microframework style
+of specifying actions: get, put, post, delete.
 
 == Usage: Raw URL
 
