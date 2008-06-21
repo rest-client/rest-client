@@ -12,7 +12,7 @@ describe RestClient::RequestFailed do
 
 	it "ignores responses without xml since they might contain sensitive data" do
 		@error.response = mock('response', :code => '500', :body => 'Syntax error in SQL query: SELECT * FROM ...')
-		@error.message.should == 'Unknown error'
+		@error.message.should == 'Unknown error, HTTP status code 500'
 	end
 
 	it "accepts a default error message" do
