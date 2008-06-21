@@ -107,6 +107,8 @@ module RestClient
 			net.start do |http|
 				process_result http.request(req, payload || "")
 			end
+		rescue EOFError
+			raise RestClient::ServerBrokeConnection
 		end
 
 		def setup_credentials(req)

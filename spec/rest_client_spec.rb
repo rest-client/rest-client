@@ -162,6 +162,11 @@ describe RestClient do
 			@request.setup_credentials(req)
 		end
 
+		it "catches EOFError and shows the more informative ServerBrokeConnection" do
+			@http.stub!(:request).and_raise(EOFError)
+			lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
+		end
+
 		it "execute calls execute_inner" do
 			@request.should_receive(:execute_inner)
 			@request.execute

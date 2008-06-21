@@ -7,6 +7,9 @@ module RestClient
 	# Authorization is required to access the resource specified.
 	class Unauthorized < RuntimeError; end
 
+	# The server broke the connection prior to the request completing.
+	class ServerBrokeConnection < RuntimeError; end
+
 	# The request failed, meaning the remote HTTP server returned a code other
 	# than success, unauthorized, or redirect.
 	#
