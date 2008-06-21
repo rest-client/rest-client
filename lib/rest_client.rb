@@ -84,10 +84,10 @@ module RestClient
 				p
 			else
 				@headers[:content_type] = 'application/x-www-form-urlencoded'
-				p.keys.map { |k| 
+				p.keys.map do |k|
 					v = URI.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
 					"#{k}=#{v}"
-				}.join("&")
+				end.join("&")
 			end
 		end
 
