@@ -12,6 +12,11 @@ module RestClient
 	#   resource = RestClient::Resource.new('http://protected/resource', 'user', 'pass')
 	#   resource.delete
 	#
+	# Use the [] syntax to allocate subresources:
+	#
+	#   site = RestClient::Resource.new('http://example.com', 'adam', 'mypasswd')
+	#   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
+	#
 	class Resource
 		attr_reader :url, :user, :password
 
@@ -53,6 +58,44 @@ module RestClient
 				:user => user,
 				:password => password,
 				:headers => headers)
+		end
+
+		# Construct a subresource, preserving authentication.
+		#
+		# Example:
+		#
+		#   site = RestClient::Resource.new('http://example.com', 'adam', 'mypasswd')
+		#   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
+		#
+		# This is especially useful if you wish to define your site in one place and
+		# call it in multiple locations:
+		#
+		#   def product(id)
+		#     RestClient::Resource.new('http://example.com/products/#{id}', 'adam', 'mypasswd')
+		#   end
+		#
+		#   product(123).get
+		#   product(123).put params.to_xml
+		#   product(123).delete
+		#
+		# Nest resources as far as you want:
+		#
+		#   site = RestClient::Resource.new('http://example.com')
+		#   posts = site['posts']
+		#   first_post = posts['1']
+		#   comments = first_post['comments']
+		#   comments.post 'Hello', :content_type => 'text/plain'
+		#
+		def [](suburl)
+			self.class.new(concat_urls(url, suburl), user, password)
+		end
+
+		def concat_urls(url, suburl)   # :nodoc:
+			if url.slice(-1, 1) == '/' or suburl.slice(0, 1) == '/'
+				url + suburl
+			else
+				"#{url}/#{suburl}"
+			end
 		end
 	end
 end
