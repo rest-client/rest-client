@@ -60,6 +60,21 @@ describe RestClient do
 			@request.parse_url('example.com/resource')
 		end
 
+		it "extracts the username and password when parsing http://user:password@example.com/" do
+			URI.stub!(:parse).and_return(mock('uri', :user => 'joe', :password => 'pass1'))
+			@request.parse_url_with_auth('http://joe:pass1@example.com/resource')
+			@request.user.should == 'joe'
+			@request.password.should == 'pass1'
+		end
+
+		it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
+			URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
+			@request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
+			@request.parse_url_with_auth('http://example.com/resource')
+			@request.user.should == 'beth'
+			@request.password.should == 'pass2'
+		end
+
 		it "determines the Net::HTTP class to instantiate by the method name" do
 			@request.net_http_class(:put).should == Net::HTTP::Put
 		end
@@ -80,7 +95,7 @@ describe RestClient do
 		end
 
 		it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
-			@request.should_receive(:parse_url).with('http://some/resource').and_return(@uri)
+			@request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
 			klass = mock("net:http class")
 			@request.should_receive(:net_http_class).with(:put).and_return(klass)
 			klass.should_receive(:new).and_return('result')

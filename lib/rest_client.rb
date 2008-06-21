@@ -57,7 +57,7 @@ module RestClient
 		end
 
 		def execute_inner
-			uri = parse_url(url)
+			uri = parse_url_with_auth(url)
 			transmit uri, net_http_class(method).new(uri.request_uri, make_headers(headers)), payload
 		end
 
@@ -77,6 +77,13 @@ module RestClient
 		def parse_url(url)
 			url = "http://#{url}" unless url.match(/^http/)
 			URI.parse(url)
+		end
+
+		def parse_url_with_auth(url)
+			uri = parse_url(url)
+			@user = uri.user if uri.user
+			@password = uri.password if uri.password
+			uri
 		end
 
 		def process_payload(p=nil)
