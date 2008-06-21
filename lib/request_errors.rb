@@ -7,7 +7,15 @@ module RestClient
 	# Authorization is required to access the resource specified.
 	class Unauthorized < RuntimeError; end
 
-	# Request failed with an unhandled http error code.
+	# The request failed, meaning the remote HTTP server returned a code other
+	# than success, unauthorized, or redirect.
+	#
+	# The exception message attempts to extract the error from the XML, using
+	# format returned by Rails: <errors><error>some message</error></errors>
+	#
+	# You can get the status code by e.http_code, or see anything about the
+	# response via e.response.  For example, the entire result body (which is
+	# probably an HTML error page) is e.response.body.
 	class RequestFailed < RuntimeError
 		attr_accessor :response
 
@@ -31,7 +39,7 @@ module RestClient
 	end
 end
 
-# for backwards compatibility
+# backwards compatibility
 RestClient::Resource::Redirect = RestClient::Redirect
 RestClient::Resource::Unauthorized = RestClient::Unauthorized
 RestClient::Resource::RequestFailed = RestClient::RequestFailed
