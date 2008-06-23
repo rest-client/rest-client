@@ -27,15 +27,15 @@ describe RestClient::RequestFailed do
 end
 
 describe "backwards compatibility" do
-	it "alias RestClient::Resource::Redirect to RestClient::Redirect" do
-		RestClient::Resource::Redirect.should == RestClient::Redirect
+	it "alias RestClient::Request::Redirect to RestClient::Redirect" do
+		RestClient::Request::Redirect.should == RestClient::Redirect
 	end
 
-	it "alias RestClient::Resource::Unauthorized to RestClient::Unauthorized" do
-		RestClient::Resource::Unauthorized.should == RestClient::Unauthorized
+	it "alias RestClient::Request::Unauthorized to RestClient::Unauthorized" do
+		RestClient::Request::Unauthorized.should == RestClient::Unauthorized
 	end
 
-	it "alias RestClient::Resource::RequestFailed to RestClient::RequestFailed" do
-		RestClient::Resource::RequestFailed.should == RestClient::RequestFailed
+	it "alias RestClient::Request::RequestFailed to RestClient::RequestFailed" do
+		RestClient::Request::RequestFailed.should == RestClient::RequestFailed
 	end
 end
