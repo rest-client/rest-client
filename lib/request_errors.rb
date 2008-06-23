@@ -25,15 +25,16 @@ module RestClient
 	class RequestFailed < RuntimeError
 		attr_accessor :response
 
-		def initialize(response)
+		def initialize(response=nil)
 			@response = response
 		end
 
 		def http_code
-			@response.code.to_i
+			@response.code.to_i if @response
 		end
 
 		def message(default="Unknown error, HTTP status code #{http_code}")
+			return default unless @response
 			return "Resource not found" if http_code == 404
 			parse_error_xml rescue default
 		end

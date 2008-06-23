@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/base'
 
 describe RestClient::RequestFailed do
 	before do
-		@error = RestClient::RequestFailed.new(nil)
+		@error = RestClient::RequestFailed.new
 	end
 
 	it "extracts the error message from xml" do
