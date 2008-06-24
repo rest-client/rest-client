@@ -91,8 +91,10 @@ module RestClient
 		end
 
 		def concat_urls(url, suburl)   # :nodoc:
+			url = url.to_s
+			suburl = suburl.to_s
 			if url.slice(-1, 1) == '/' or suburl.slice(0, 1) == '/'
-				"#{url}#{suburl}"
+				url + suburl
 			else
 				"#{url}/#{suburl}"
 			end
