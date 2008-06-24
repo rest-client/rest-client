@@ -124,6 +124,8 @@ module RestClient
 				raise Redirect, res.header['Location']
 			elsif res.code == "401"
 				raise Unauthorized
+			elsif res.code == "404"
+				raise ResourceNotFound
 			else
 				raise RequestFailed, res
 			end

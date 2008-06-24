@@ -7,6 +7,9 @@ module RestClient
 	# Authorization is required to access the resource specified.
 	class Unauthorized < RuntimeError; end
 
+	# No resource was found at the given URL.
+	class ResourceNotFound < RuntimeError; end
+
 	# The server broke the connection prior to the request completing.
 	class ServerBrokeConnection < RuntimeError; end
 
@@ -35,7 +38,6 @@ module RestClient
 
 		def message(default="Unknown error, HTTP status code #{http_code}")
 			return default unless @response
-			return "Resource not found" if http_code == 404
 			parse_error_xml rescue default
 		end
 

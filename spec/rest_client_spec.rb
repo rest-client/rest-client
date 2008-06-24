@@ -189,6 +189,11 @@ describe RestClient do
 			lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
 		end
 
+		it "raises ResourceNotFound when the response is 404" do
+			res = mock('response', :code => '404')
+			lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
+		end
+
 		it "raises RequestFailed otherwise" do
 			res = mock('response', :code => '500')
 			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
