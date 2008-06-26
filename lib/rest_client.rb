@@ -52,7 +52,7 @@ module RestClient
 		def execute
 			execute_inner
 		rescue Redirect => e
-			@url = e.message
+			@url = e.url
 			execute
 		end
 

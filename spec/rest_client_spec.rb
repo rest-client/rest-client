@@ -181,7 +181,7 @@ describe RestClient do
 
 		it "raises a Redirect with the new location when the response is in the 30x range" do
 			res = mock('response', :code => '301', :header => { 'Location' => 'http://new/resource' })
-			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect, 'http://new/resource')
+			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://new/resource'}
 		end
 
 		it "raises Unauthorized when the response is 401" do
