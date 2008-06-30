@@ -34,6 +34,15 @@ module RestClient
 
 	# Internal class used to build and execute the request.
 	class Request
+		class << self
+			attr_accessor :default_headers, :timeout_threshold
+		end
+
+		self.default_headers = { :accept => 'application/xml' }
+
+		# Set a custom open and read timeout for Net::HTTP instances.
+		self.timeout_threshold = nil
+
 		attr_reader :method, :url, :payload, :headers, :user, :password
 
 		def self.execute(args)
@@ -62,16 +71,14 @@ module RestClient
 		end
 
 		def make_headers(user_headers)
-			final = {}
-			merged = default_headers.merge(user_headers)
-			merged.keys.each do |key|
-				final[key.to_s.gsub(/_/, '-').capitalize] = merged[key]
+			merged = self.class.default_headers.merge(user_headers)
+			merged.inject({}) do |final, (key, value)|
+				final.update(key.to_s.gsub(/_/, '-').capitalize => value)
 			end
-			final
 		end
 
 		def net_http_class(method)
-			Object.module_eval "Net::HTTP::#{method.to_s.capitalize}"
+			Net::HTTP.const_get(method.to_s.capitalize)
 		end
 
 		def parse_url(url)
@@ -102,6 +109,7 @@ module RestClient
 			setup_credentials(req)
 
 			net = Net::HTTP.new(uri.host, uri.port)
+			net.read_timeout = net.open_timeout = self.class.timeout_threshold if self.class.timeout_threshold
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 
 			net.start do |http|
@@ -129,10 +137,6 @@ module RestClient
 			else
 				raise RequestFailed, res
 			end
-		end
-
-		def default_headers
-			{ :accept => 'application/xml' }
 		end
 	end
 end

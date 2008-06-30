@@ -40,7 +40,7 @@ describe RestClient do
 		end
 
 		it "requests xml mimetype" do
-			@request.default_headers[:accept].should == 'application/xml'
+			RestClient::Request.default_headers[:accept].should == 'application/xml'
 		end
 
 		it "processes a successful result" do
@@ -80,17 +80,17 @@ describe RestClient do
 		end
 
 		it "merges user headers with the default headers" do
-			@request.should_receive(:default_headers).and_return({ '1' => '2' })
+			RestClient::Request.should_receive(:default_headers).and_return({ '1' => '2' })
 			@request.make_headers('3' => '4').should == { '1' => '2', '3' => '4' }
 		end
 
 		it "prefers the user header when the same header exists in the defaults" do
-			@request.should_receive(:default_headers).and_return({ '1' => '2' })
+			RestClient::Request.should_receive(:default_headers).and_return({ '1' => '2' })
 			@request.make_headers('1' => '3').should == { '1' => '3' }
 		end
 
 		it "converts header symbols from :content_type to 'Content-type'" do
-			@request.should_receive(:default_headers).and_return({})
+			RestClient::Request.should_receive(:default_headers).and_return({})
 			@request.make_headers(:content_type => 'abc').should == { 'Content-type' => 'abc' }
 		end
 
