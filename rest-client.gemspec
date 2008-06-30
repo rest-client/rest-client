@@ -9,6 +9,8 @@ Gem::Specification.new do |s|
     s.homepage = "http://rest-client.heroku.com/"
     s.has_rdoc = true
     s.platform = Gem::Platform::RUBY
-    s.files = %w(Rakefile README rest-client.gemspec) + Dir.glob("{lib,spec}/**/*")
+    s.files = %w(Rakefile README rest-client.gemspec 
+                 lib/request_errors.rb lib/resource.rb lib/rest_client.rb 
+                 spec/base.rb spec/request_errors_spec.rb spec/resource_spec.rb spec/rest_client_spec.rb)
     s.require_path = "lib"
 end
