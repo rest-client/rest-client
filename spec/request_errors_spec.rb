@@ -1,5 +1,16 @@
 require File.dirname(__FILE__) + '/base'
 
+describe RestClient::Exception do
+	it "sets the exception message to ErrorMessage" do
+		RestClient::ResourceNotFound.new.message.should == 'Resource not found'
+	end
+
+	it "contains exceptions in RestClient" do
+		RestClient::Unauthorized.new.should be_a_kind_of(RestClient::Exception)
+		RestClient::ServerBrokeConnection.new.should be_a_kind_of(RestClient::Exception)
+	end
+end
+
 describe RestClient::RequestFailed do
 	before do
 		@error = RestClient::RequestFailed.new
