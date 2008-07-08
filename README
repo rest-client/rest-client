@@ -39,10 +39,10 @@ See RestClient::Resource docs for details.
 
 == Shell
 
-Require rest_client from within irb to access RestClient interactively, like
-using curl at the command line.  Better yet, require gem from within your
-~/.rush/env.rb and have instant access to it from within your rush
-(http://rush.heroku.com) sessions.
+Run: 
+restclient resource_url [username] [password] 
+
+or require the gem from within your ~/.rush/env.rb and have instant access to it from within your rush (http://rush.heroku.com) sessions.
 
 == Meta
 

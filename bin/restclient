@@ -1,0 +1,54 @@
+#!/usr/bin/env ruby
+
+$:.unshift File.dirname(__FILE__) + "/../lib"
+require 'rest_client'
+
+def usage
+	puts "usage: restclient url [username] [password]"
+	exit(1)
+end
+
+@url = ARGV.first || 'http://localhost:4567'
+
+usage unless @url =~ /^https?/
+usage unless ARGV.size < 3
+
+def r
+	@r ||= RestClient::Resource.new(*[@url, ARGV])
+end
+
+r # force rc to load
+
+%w(get post put delete).each do |m|
+ eval <<-end_eval
+def #{m}(path, *args, &b)
+	r[path].#{m}(*args, &b)
+end
+ end_eval
+end
+
+def method_missing(s, *args, &b)
+	super unless r.respond_to?(s)
+	begin
+		r.send(s, *args, &b)
+	rescue RestClient::RequestFailed => e
+		puts e.response.body
+		raise e
+	end
+end
+
+require 'irb'
+require 'irb/completion'
+
+if File.exists? ".irbrc"
+  ENV['IRBRC'] = ".irbrc"
+end
+
+if File.exists?(rcfile = "~/.restclientrc")
+	load(rcfile)
+end
+
+ARGV.clear
+
+IRB.start
+exit!
