@@ -48,7 +48,7 @@ or require the gem from within your ~/.rush/env.rb and have instant access to it
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, and Rick Olson
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, and Aman Gupta
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
