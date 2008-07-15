@@ -121,7 +121,15 @@ module RestClient
 			if %w(200 201 202).include? res.code
 				res.body
 			elsif %w(301 302 303).include? res.code
-				raise Redirect, res.header['Location']
+				url = res.header['Location']
+
+				if url !~ /^http/
+					uri = URI.parse(@url)
+					uri.path = "/#{url}".squeeze('/')
+					url = uri.to_s
+				end
+
+				raise Redirect, url
 			elsif res.code == "401"
 				raise Unauthorized
 			elsif res.code == "404"

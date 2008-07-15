@@ -184,6 +184,17 @@ describe RestClient do
 			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://new/resource'}
 		end
 
+		it "handles redirects with relative paths" do
+			res = mock('response', :code => '301', :header => { 'Location' => 'index' })
+			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
+		end
+
+		it "handles redirects with absolute paths" do
+			@request.instance_variable_set('@url', 'http://some/place/else')
+			res = mock('response', :code => '301', :header => { 'Location' => '/index' })
+			lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
+		end
+
 		it "raises Unauthorized when the response is 401" do
 			res = mock('response', :code => '401')
 			lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
