@@ -44,6 +44,24 @@ restclient resource_url [username] [password]
 
 or require the gem from within your ~/.rush/env.rb and have instant access to it from within your rush (http://rush.heroku.com) sessions.
 
+You can also create a ~/.restclient file and store named sessions as:
+
+name:
+  :url: http://mydomain.com
+  :username: myusername
+  :password: supersecret
+
+anothername:
+  ...
+  
+The use like:
+
+mycpu:~ adamwiggins$ restclient anothername
+>>r
+=> #<RestClient::Resource:0x557bac @password="supersecret", @user="myusername", @url="http://mydomain.com">
+>>get '/'
+=> Hey!
+
 == Meta
 
 Written by Adam Wiggins (adam at heroku dot com)

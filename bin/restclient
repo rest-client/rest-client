@@ -3,19 +3,29 @@
 $:.unshift File.dirname(__FILE__) + "/../lib"
 require 'rest_client'
 
+require "yaml"
+
 def usage(why = nil)
   puts "failed for reason: #{why}" if why
-	puts "usage: restclient url [username] [password]"
+	puts "usage: restclient url|name [username] [password]"
 	exit(1)
 end
 
 @url = ARGV.shift || 'http://localhost:4567'
 
+config = YAML.load(File.read(ENV['HOME'] + "/.restclient")) rescue {}
+
+@url, @username, @password = if c = config[@url]
+  [c[:url], c[:username], c[:password]]
+else
+  [@url, *ARGV]
+end
+
 usage("invalid url '#{@url}") unless @url =~ /^https?/
 usage("to few args") unless ARGV.size < 3
 
 def r
-	@r ||= RestClient::Resource.new(@url, *ARGV)
+	@r ||= RestClient::Resource.new(@url, @username, @password)
 end
 
 r # force rc to load
