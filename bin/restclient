@@ -3,18 +3,19 @@
 $:.unshift File.dirname(__FILE__) + "/../lib"
 require 'rest_client'
 
-def usage
+def usage(why = nil)
+  puts "failed for reason: #{why}" if why
 	puts "usage: restclient url [username] [password]"
 	exit(1)
 end
 
-@url = ARGV.first || 'http://localhost:4567'
+@url = ARGV.shift || 'http://localhost:4567'
 
-usage unless @url =~ /^https?/
-usage unless ARGV.size < 3
+usage("invalid url '#{@url}") unless @url =~ /^https?/
+usage("to few args") unless ARGV.size < 3
 
 def r
-	@r ||= RestClient::Resource.new(*[@url, ARGV])
+	@r ||= RestClient::Resource.new(@url, *ARGV)
 end
 
 r # force rc to load
