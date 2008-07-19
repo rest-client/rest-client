@@ -71,7 +71,7 @@ module RestClient
 		end
 
 		def net_http_class(method)
-			Object.module_eval "Net::HTTP::#{method.to_s.capitalize}"
+			Net::HTTP.const_get(method.to_s.capitalize)
 		end
 
 		def parse_url(url)
