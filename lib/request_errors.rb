@@ -1,5 +1,3 @@
-require 'rexml/document'
-
 module RestClient
 	# This is the base RestClient exception class. Rescue it if you want to
 	# catch any exception that your request might raise
@@ -59,14 +57,8 @@ module RestClient
 			@response.code.to_i if @response
 		end
 
-		def message(default="Unknown error, HTTP status code #{http_code}")
-			return default unless @response
-			parse_error_xml rescue default
-		end
-
-		def parse_error_xml
-			xml_errors = REXML::Document.new(@response.body).elements.to_a("//errors/error")
-			xml_errors.empty? ? raise : xml_errors.map { |a| a.text }.join(" / ")
+		def message
+			"HTTP status code #{http_code}"
 		end
 
 		def to_s
