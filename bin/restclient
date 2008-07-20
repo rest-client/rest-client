@@ -6,7 +6,7 @@ require 'rest_client'
 require "yaml"
 
 def usage(why = nil)
-  puts "failed for reason: #{why}" if why
+	puts "failed for reason: #{why}" if why
 	puts "usage: restclient url|name [username] [password]"
 	exit(1)
 end
@@ -16,9 +16,9 @@ end
 config = YAML.load(File.read(ENV['HOME'] + "/.restclient")) rescue {}
 
 @url, @username, @password = if c = config[@url]
-  [c[:url], c[:username], c[:password]]
+	[c[:url], c[:username], c[:password]]
 else
-  [@url, *ARGV]
+	[@url, *ARGV]
 end
 
 usage("invalid url '#{@url}") unless @url =~ /^https?/
@@ -52,7 +52,7 @@ require 'irb'
 require 'irb/completion'
 
 if File.exists? ".irbrc"
-  ENV['IRBRC'] = ".irbrc"
+	ENV['IRBRC'] = ".irbrc"
 end
 
 if File.exists?(rcfile = "~/.restclientrc")
