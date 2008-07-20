@@ -25,7 +25,7 @@ See RestClient module docs for details.
   resource = RestClient::Resource.new 'http://example.com/resource'
   resource.get
 
-  private_resource = RestClient::Resource.new 'http://example.com/private/resource', 'user', 'pass'
+  private_resource = RestClient::Resource.new 'https://example.com/private/resource', 'user', 'pass'
   private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 
 See RestClient::Resource module docs for details.
@@ -39,34 +39,41 @@ See RestClient::Resource docs for details.
 
 == Shell
 
-Run: 
-restclient resource_url [username] [password] 
+The restclient shell command gives an IRB session with RestClient already loaded:
 
-or require the gem from within your ~/.rush/env.rb and have instant access to it from within your rush (http://rush.heroku.com) sessions.
+  $ restclient
+  >> RestClient.get 'http://example.com'
 
-You can also create a ~/.restclient file and store named sessions as:
+Specify a URL argument for get/post/put/delete on that resource:
 
-name:
-  :url: http://mydomain.com
-  :username: myusername
-  :password: supersecret
+  $ restclient http://example.com
+  >> put '/resource', 'data'
 
-anothername:
-  ...
+Add a user and password for authenticated resources:
+
+  $ restclient https://example.com user pass
+  >> delete '/private/resource'
+
+Create ~/.restclient for named sessions:
+
+  sinatra:
+    :url: http://localhost:4567
+  rack:
+    :url: http://localhost:9292
+  private_site:
+    :url: http://example.com
+    :username: user
+    :password: pass
+
+Then invoke:
+
+  $ restclient private_site
   
-The use like:
-
-mycpu:~ adamwiggins$ restclient anothername
->>r
-=> #<RestClient::Resource:0x557bac @password="supersecret", @user="myusername", @url="http://mydomain.com">
->>get '/'
-=> Hey!
-
 == Meta
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, and Aman Gupta
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, and Blake Mizerany
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
