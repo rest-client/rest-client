@@ -1,8 +1,8 @@
 require 'uri'
 require 'net/https'
 
-require File.dirname(__FILE__) + '/resource'
-require File.dirname(__FILE__) + '/request_errors'
+require File.dirname(__FILE__) + '/rest_client/resource'
+require File.dirname(__FILE__) + '/rest_client/request_errors'
 
 # This module's static methods are the entry point for using the REST client.
 #
