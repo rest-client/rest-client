@@ -86,14 +86,19 @@ module RestClient
 			uri
 		end
 
-		def process_payload(p=nil)
+		def process_payload(p=nil, parent_key=nil)
 			unless p.is_a?(Hash)
 				p
 			else
-				@headers[:content_type] = 'application/x-www-form-urlencoded'
+				@headers[:content_type] ||= 'application/x-www-form-urlencoded'
 				p.keys.map do |k|
-					v = URI.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-					"#{k}=#{v}"
+					key = parent_key ? "#{parent_key}[#{k}]" : k
+					if p[k].is_a? Hash
+						process_payload(p[k], key)
+					else
+						value = URI.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+						"#{key}=#{value}"
+					end
 				end.join("&")
 			end
 		end

@@ -131,6 +131,13 @@ describe RestClient do
 			@request.process_payload(:a => 'b c+d').should == "a=b%20c%2Bd"
 		end
 
+		it "accepts nested hashes in payload" do
+			payload = @request.process_payload(:user => { :name => 'joe', :location => { :country => 'USA', :state => 'CA' }})
+			payload.should include('user[name]=joe')
+			payload.should include('user[location][country]=USA')
+			payload.should include('user[location][state]=CA')
+		end
+
 		it "set urlencoded content_type header on hash payloads" do
 			@request.process_payload(:a => 1)
 			@request.headers[:content_type].should == 'application/x-www-form-urlencoded'
