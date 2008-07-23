@@ -3,6 +3,8 @@ require 'net/https'
 
 require File.dirname(__FILE__) + '/rest_client/resource'
 require File.dirname(__FILE__) + '/rest_client/request_errors'
+require File.dirname(__FILE__) + '/rest_client/payload'
+require File.dirname(__FILE__) + '/rest_client/net_http_ext'
 
 # This module's static methods are the entry point for using the REST client.
 #
@@ -61,7 +63,7 @@ module RestClient
 
 	# Internal class used to build and execute the request.
 	class Request
-		attr_reader :method, :url, :payload, :headers, :user, :password
+		attr_reader :method, :url, :headers, :user, :password
 
 		def self.execute(args)
 			new(args).execute
@@ -70,8 +72,8 @@ module RestClient
 		def initialize(args)
 			@method = args[:method] or raise ArgumentError, "must pass :method"
 			@url = args[:url] or raise ArgumentError, "must pass :url"
+			@payload = Payload.generate(args[:payload] || '')
 			@headers = args[:headers] || {}
-			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
 		end
@@ -170,9 +172,13 @@ module RestClient
 				raise RequestFailed, res
 			end
 		end
+		
+		def payload
+			@payload
+		end
 
 		def default_headers
-			{ :accept => 'application/xml' }
+			@payload.headers.merge({ :accept => 'application/xml' })
 		end
 	end
 end
