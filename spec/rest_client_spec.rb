@@ -1,24 +1,29 @@
 require File.dirname(__FILE__) + '/base'
 
 describe RestClient do
+	before do
+		# reset the proxy for other tests
+		RestClient.proxy = nil
+	end
+	
 	context "public API" do
 		it "GET" do
-			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
+			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {}, :proxy => nil)
 			RestClient.get('http://some/resource')
 		end
 
 		it "POST" do
-			RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+			RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {}, :proxy => nil)
 			RestClient.post('http://some/resource', 'payload')
 		end
 
 		it "PUT" do
-			RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+			RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {}, :proxy => nil)
 			RestClient.put('http://some/resource', 'payload')
 		end
 
 		it "DELETE" do
-			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
+			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {}, :proxy => nil)
 			RestClient.delete('http://some/resource')
 		end
 	end
@@ -208,6 +213,38 @@ describe RestClient do
 		it "raises RequestFailed otherwise" do
 			res = mock('response', :code => '500')
 			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
+		end
+		
+		it "sets proxy based on initializer argument" do
+			RestClient::Request.new(
+				:method => :get, 
+				:proxy => "http://test.com/", 
+				:url => "http://google.com/"
+			).proxy.should == "http://test.com/"
+		end
+		
+		it "uses an http proxy if a proxy url is given" do
+			RestClient.proxy = 'http://test.com/'
+			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {}, :proxy => 'http://test.com/')
+			RestClient.get('http://some/resource')
+		end
+		
+		it "creates a proxy class if a proxy url is given" do
+			@http.should_receive(:request).with(@net, '')
+			Net::HTTP::Get.stub!(:new).and_return(@net)
+
+			proxy = stub(:proxy_class)
+			proxy.should_receive(:new).with('google.com', 80).and_return(@net)
+			
+			Net::HTTP.should_receive(:Proxy).with('test.com', 80, nil, nil).and_return(proxy)
+			request = RestClient::Request.new(
+				:method => :get, 
+				:proxy => "http://test.com/", 
+				:url => "http://google.com/"
+			)
+
+			request.stub!(:process_result)
+			request.execute
 		end
 	end
 end
