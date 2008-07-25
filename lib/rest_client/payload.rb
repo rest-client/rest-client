@@ -1,4 +1,5 @@
 require "tempfile"
+require "stringio"
 
 module RestClient
 

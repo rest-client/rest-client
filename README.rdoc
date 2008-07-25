@@ -29,6 +29,14 @@ If you are sending params that do not contain a File object but the payload need
 
   RestClient.post '/data', :foo => 'bar', :multipart => true
 
+== Streaming downloads
+
+RestClient.get('http://some/resource/lotsofdata') do |res|
+  res.read_body do |chunk|
+    .. do something with chunk ..
+  end
+end
+
 See RestClient module docs for more details.
 
 == Usage: ActiveResource-Style

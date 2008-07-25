@@ -35,38 +35,38 @@ require File.dirname(__FILE__) + '/rest_client/net_http_ext'
 #   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
 #
 module RestClient
-	def self.get(url, headers={})
+	def self.get(url, headers={}, &b)
 		Request.execute(:method => :get,
 			:url => url,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.post(url, payload, headers={})
+	def self.post(url, payload, headers={}, &b)
 		Request.execute(:method => :post,
 			:url => url,
 			:payload => payload,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.put(url, payload, headers={})
+	def self.put(url, payload, headers={}, &b)
 		Request.execute(:method => :put,
 			:url => url,
 			:payload => payload,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.delete(url, headers={})
+	def self.delete(url, headers={}, &b)
 		Request.execute(:method => :delete,
 			:url => url,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
 	# Internal class used to build and execute the request.
 	class Request
 		attr_reader :method, :url, :headers, :user, :password
 
-		def self.execute(args)
-			new(args).execute
+		def self.execute(args, &b)
+			new(args).execute(&b)
 		end
 
 		def initialize(args)
@@ -78,16 +78,16 @@ module RestClient
 			@password = args[:password]
 		end
 
-		def execute
-			execute_inner
+		def execute(&b)
+			execute_inner(&b)
 		rescue Redirect => e
 			@url = e.url
-			execute
+			execute(&b)
 		end
 
-		def execute_inner
+		def execute_inner(&b)
 			uri = parse_url_with_auth(url)
-			transmit uri, net_http_class(method).new(uri.request_uri, make_headers(headers)), payload
+			transmit(uri, net_http_class(method).new(uri.request_uri, make_headers(headers)), payload, &b)
 		end
 
 		def make_headers(user_headers)
@@ -132,14 +132,17 @@ module RestClient
 			end
 		end
 
-		def transmit(uri, req, payload)
+		def transmit(uri, req, payload, &b)
 			setup_credentials(req)
 
 			net = Net::HTTP.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 
 			net.start do |http|
-				process_result http.request(req, payload || "")
+				## Ok. I know this is weird but it's a hack for now
+				## this lets process_result determine if it should read the body
+				## into memory or not
+				process_result(http.request(req, payload || "", &b), &b)
 			end
 		rescue EOFError
 			raise RestClient::ServerBrokeConnection
@@ -151,9 +154,9 @@ module RestClient
 			req.basic_auth(user, password) if user
 		end
 
-		def process_result(res)
+		def process_result(res, &b)
 			if %w(200 201 202).include? res.code
-				res.body
+				return res.body unless b
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 

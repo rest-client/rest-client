@@ -26,38 +26,38 @@ module RestClient
 			@password = password
 		end
 
-		def get(headers={})
+		def get(headers={}, &b)
 			Request.execute(:method => :get,
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers, &b)
 		end
 
-		def post(payload, headers={})
+		def post(payload, headers={}, &b)
 			Request.execute(:method => :post,
 				:url => url,
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers, &b)
 		end
 
-		def put(payload, headers={})
+		def put(payload, headers={}, &b)
 			Request.execute(:method => :put,
 				:url => url,
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers, &b)
 		end
 
-		def delete(headers={})
+		def delete(headers={}, &b)
 			Request.execute(:method => :delete,
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers, &b)
 		end
 
 		# Construct a subresource, preserving authentication.
