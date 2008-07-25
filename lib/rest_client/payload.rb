@@ -48,7 +48,10 @@ module RestClient
 			end
 			alias :length :size
 			
-			
+			def close
+				@stream.close
+			end
+
 		end
 
 		class UrlEncoded < Base
@@ -63,7 +66,7 @@ module RestClient
 			def headers
 				super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
 			end
-
+			
 		end
 
 		class Multipart < Base
@@ -95,11 +98,15 @@ module RestClient
 			end
 
 			def create_file_field(s, k, v)
-				s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{v.path}\"#{EOL}")
-				s.write("Content-Type: #{mime_for(v.path)}#{EOL}")
-				s.write(EOL)
-				while data = v.read(8124)
-					s.write(data)
+				begin
+					s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{v.path}\"#{EOL}")
+					s.write("Content-Type: #{mime_for(v.path)}#{EOL}")
+					s.write(EOL)
+					while data = v.read(8124)
+						s.write(data)
+					end
+				ensure
+					v.close
 				end
 			end
 			
@@ -114,6 +121,10 @@ module RestClient
 			
 			def headers
 				super.merge({'Content-Type' => %Q{multipart/form-data; boundary="#{boundary}"}})
+			end
+			
+			def close
+				@stream.close
 			end
 
 		end

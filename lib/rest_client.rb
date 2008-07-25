@@ -148,6 +148,8 @@ module RestClient
 			raise RestClient::ServerBrokeConnection
 		rescue Timeout::Error
 			raise RestClient::RequestTimeout
+		ensure
+			payload.close
 		end
 
 		def setup_credentials(req)

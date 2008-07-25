@@ -1,6 +1,11 @@
 require File.dirname(__FILE__) + '/base'
 
 describe RestClient do
+	
+	def generate_payload(v)
+		RestClient::Payload::Base.new(v)
+	end
+	
 	context "public API" do
 		it "GET" do
 			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
@@ -104,9 +109,9 @@ describe RestClient do
 		end
 
 		it "transmits the request with Net::HTTP" do
-			@http.should_receive(:request).with('req', 'payload')
+			@http.should_receive(:request).with('req', be_kind_of(RestClient::Payload::Base))
 			@request.should_receive(:process_result)
-			@request.transmit(@uri, 'req', 'payload')
+			@request.transmit(@uri, 'req', generate_payload('payload'))
 		end
 
 		it "uses SSL when the URI refers to a https address" do
@@ -114,13 +119,7 @@ describe RestClient do
 			@net.should_receive(:use_ssl=).with(true)
 			@http.stub!(:request)
 			@request.stub!(:process_result)
-			@request.transmit(@uri, 'req', 'payload')
-		end
-
-		it "doesn't send nil payloads" do
-			@http.should_receive(:request).with('req', '')
-			@request.should_receive(:process_result)
-			@request.transmit(@uri, 'req', nil)
+			@request.transmit(@uri, 'req', generate_payload('payload'))
 		end
 
 		it "passes non-hash payloads straight through" do
@@ -151,7 +150,7 @@ describe RestClient do
 			@request.stub!(:password).and_return('mypass')
 			@request.should_receive(:setup_credentials).with('req')
 
-			@request.transmit(@uri, 'req', nil)
+			@request.transmit(@uri, 'req', generate_payload(''))
 		end
 
 		it "does not attempt to send any credentials if user is nil" do
@@ -171,7 +170,8 @@ describe RestClient do
 
 		it "catches EOFError and shows the more informative ServerBrokeConnection" do
 			@http.stub!(:request).and_raise(EOFError)
-			lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
+			lambda { @request.transmit(@uri, 'req', generate_payload('')) }.
+				should raise_error(RestClient::ServerBrokeConnection)
 		end
 
 		it "execute calls execute_inner" do
