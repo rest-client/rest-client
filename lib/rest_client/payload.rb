@@ -150,6 +150,7 @@ module RestClient
       "etx"   => "text/x-setext",
       "exe"   => "application/octet-stream",
       "gif"   => "image/gif",
+      "gz"   => "application/x-gzip",
       "htm"   => "text/html",
       "html"  => "text/html",
       "jpe"   => "image/jpeg",
