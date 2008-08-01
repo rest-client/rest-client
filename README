@@ -53,13 +53,13 @@ Add a user and password for authenticated resources:
 Create ~/.restclient for named sessions:
 
   sinatra:
-    :url: http://localhost:4567
+    url: http://localhost:4567
   rack:
-    :url: http://localhost:9292
+    url: http://localhost:9292
   private_site:
-    :url: http://example.com
-    :username: user
-    :password: pass
+    url: http://example.com
+    username: user
+    password: pass
 
 Then invoke:
 
