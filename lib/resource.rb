@@ -31,7 +31,8 @@ module RestClient
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers,
+				:proxy => RestClient.proxy)
 		end
 
 		def post(payload, headers={})
@@ -40,7 +41,8 @@ module RestClient
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers,
+				:proxy => RestClient.proxy)
 		end
 
 		def put(payload, headers={})
@@ -49,7 +51,8 @@ module RestClient
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers,
+				:proxy => RestClient.proxy)
 		end
 
 		def delete(headers={})
@@ -57,7 +60,8 @@ module RestClient
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => headers,
+				:proxy => RestClient.proxy)
 		end
 
 		# Construct a subresource, preserving authentication.
