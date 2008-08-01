@@ -7,14 +7,10 @@ of specifying actions: get, put, post, delete.
 
   require 'rest_client'
 
-  xml = RestClient.get 'http://example.com/resource'
-  jpg = RestClient.get 'http://example.com/resource', :accept => 'image/jpg'
+  RestClient.get 'http://example.com/resource'
+  RestClient.get 'https://user:password@example.com/private/resource'
 
-  private_resource = RestClient.get 'https://user:password@example.com/private/resource'
-
-  RestClient.put 'http://example.com/resource', File.read('my.pdf'), :content_type => 'application/pdf'
-
-  RestClient.post 'http://example.com/resource', xml, :content_type => 'application/xml'
+  RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
 
   RestClient.delete 'http://example.com/resource'
 

@@ -5,6 +5,33 @@ require File.dirname(__FILE__) + '/resource'
 require File.dirname(__FILE__) + '/request_errors'
 
 # This module's static methods are the entry point for using the REST client.
+#
+#   # GET
+#   xml = RestClient.get 'http://example.com/resource'
+#   jpg = RestClient.get 'http://example.com/resource', :accept => 'image/jpg'
+#
+#   # authentication and SSL
+#   RestClient.get 'https://user:password@example.com/private/resource'
+#
+#   # POST or PUT with a hash sends parameters as a urlencoded form body
+#   RestClient.post 'http://example.com/resource', :param1 => 'one'
+#
+#   # nest hash parameters
+#   RestClient.post 'http://example.com/resource', :nested => { :param1 => 'one' }
+#
+#   # POST and PUT with raw payloads
+#   RestClient.post 'http://example.com/resource', 'the post body', :content_type => 'text/plain'
+#   RestClient.post 'http://example.com/resource.xml', xml_doc
+#   RestClient.put 'http://example.com/resource.pdf', File.read('my.pdf'), :content_type => 'application/pdf'
+#
+#   # DELETE
+#   RestClient.delete 'http://example.com/resource'
+#
+# For live tests of RestClient, try using http://rest-test.heroku.com, which echoes back information about the rest call:
+#
+#   >> RestClient.put 'http://rest-test.heroku.com/resource', :foo => 'baz'
+#   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
+#
 module RestClient
 	def self.get(url, headers={})
 		Request.execute(:method => :get,
