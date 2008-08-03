@@ -92,7 +92,9 @@ Then invoke:
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, and Blake Mizerany
+Major modifications by Blake Mizerany
+
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, and Aman Gupta
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
