@@ -1,11 +1,10 @@
 require File.dirname(__FILE__) + '/base'
 
+def generate_payload(v)
+	RestClient::Payload::Base.new(v)
+end
+
 describe RestClient do
-	
-	def generate_payload(v)
-		RestClient::Payload::Base.new(v)
-	end
-	
 	context "public API" do
 		it "GET" do
 			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
