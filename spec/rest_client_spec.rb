@@ -23,6 +23,29 @@ describe RestClient do
 		end
 	end
 
+	context "logging" do
+		after do
+			RestClient.log = nil
+		end
+
+		it "gets the log source from the RESTCLIENT_LOG environment variable" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return('from env')
+			RestClient.log = 'from class method'
+			RestClient.log.should == 'from env'
+		end
+
+		it "sets a destination for log output, used if no environment variable is set" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
+			RestClient.log = 'from class method'
+			RestClient.log.should == 'from class method'
+		end
+
+		it "returns nil (no logging) if neither are set (default)" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
+			RestClient.log.should == nil
+		end
+	end
+	
 	context RestClient::Request do
 		before do
 			@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
@@ -215,6 +238,41 @@ describe RestClient do
 		it "raises RequestFailed otherwise" do
 			res = mock('response', :code => '500')
 			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
+		end
+
+		it "logs a get" do
+			RestClient::Request.new(:method => :get, :url => 'http://url').log.should ==
+			"RestClient.get 'http://url'"
+		end
+
+		it "logs a post with a small payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log.should ==
+			"RestClient.post 'http://url', 'foo'"
+		end
+
+		it "logs a post with a long payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log.should ==
+			"RestClient.post 'http://url', '(1000 byte payload)'"
+		end
+
+		it "displays the log to stdout" do
+			RestClient.stub!(:log).and_return('stdout')
+			STDOUT.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
+		end
+
+		it "displays the log to stderr" do
+			RestClient.stub!(:log).and_return('stderr')
+			STDERR.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
+		end
+
+		it "append the log to the requested filename" do
+			RestClient.stub!(:log).and_return('/tmp/restclient.log')
+			f = mock('file handle')
+			File.should_receive(:open).with('/tmp/restclient.log', 'a').and_yield(f)
+			f.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
 		end
 	end
 end

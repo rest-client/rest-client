@@ -59,6 +59,18 @@ module RestClient
 			:headers => headers)
 	end
 
+	# Print log of RestClient calls.  Value can be stdout, stderr, or a filename.
+	# You can also configure logging by the environment variable RESTCLIENT_LOG.
+	def self.log=(log)
+		@@log = log
+	end
+
+	def self.log    # :nodoc:
+		return ENV['RESTCLIENT_LOG'] if ENV['RESTCLIENT_LOG']
+		return @@log if defined? @@log
+		nil
+	end
+
 	# Internal class used to build and execute the request.
 	class Request
 		attr_reader :method, :url, :payload, :headers, :user, :password
@@ -136,6 +148,8 @@ module RestClient
 			net = Net::HTTP.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 
+			display_log(log)
+
 			net.start do |http|
 				process_result http.request(req, payload || "")
 			end
@@ -168,6 +182,30 @@ module RestClient
 				raise ResourceNotFound
 			else
 				raise RequestFailed, res
+			end
+		end
+
+		def log
+			if @payload
+				if @payload.size > 100
+					"RestClient.#{method} '#{url}', '(#{payload.size} byte payload)'"
+				else
+					"RestClient.#{method} '#{url}', '#{payload}'"
+				end
+			else
+				"RestClient.#{method} '#{url}'"
+			end
+		end
+
+		def display_log(msg)
+			return unless log_to = RestClient.log
+
+			if log_to == 'stdout'
+				STDOUT.puts msg
+			elsif log_to == 'stderr'
+				STDERR.puts msg
+			else
+				File.open(log_to, 'a') { |f| f.puts msg }
 			end
 		end
 
