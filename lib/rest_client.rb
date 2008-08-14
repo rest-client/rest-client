@@ -148,10 +148,12 @@ module RestClient
 			net = Net::HTTP.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 
-			display_log(log)
+			display_log request_log
 
 			net.start do |http|
-				process_result http.request(req, payload || "")
+				res = http.request(req, payload || "")
+				display_log response_log(res)
+				process_result res
 			end
 		rescue EOFError
 			raise RestClient::ServerBrokeConnection
@@ -185,7 +187,7 @@ module RestClient
 			end
 		end
 
-		def log
+		def request_log
 			if @payload
 				if @payload.size > 100
 					"RestClient.#{method} '#{url}', '(#{payload.size} byte payload)'"
@@ -195,6 +197,10 @@ module RestClient
 			else
 				"RestClient.#{method} '#{url}'"
 			end
+		end
+
+		def response_log(res)
+			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{res['Content-type'].gsub(/;.*$/, '')} #{res.body.size} bytes"
 		end
 
 		def display_log(msg)

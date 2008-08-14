@@ -129,6 +129,7 @@ describe RestClient do
 		it "transmits the request with Net::HTTP" do
 			@http.should_receive(:request).with('req', 'payload')
 			@request.should_receive(:process_result)
+			@request.should_receive(:response_log)
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
@@ -137,12 +138,14 @@ describe RestClient do
 			@net.should_receive(:use_ssl=).with(true)
 			@http.stub!(:request)
 			@request.stub!(:process_result)
+			@request.stub!(:response_log)
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
 		it "doesn't send nil payloads" do
 			@http.should_receive(:request).with('req', '')
 			@request.should_receive(:process_result)
+			@request.stub!(:response_log)
 			@request.transmit(@uri, 'req', nil)
 		end
 
@@ -169,6 +172,7 @@ describe RestClient do
 		it "sets up the credentials prior to the request" do
 			@http.stub!(:request)
 			@request.stub!(:process_result)
+			@request.stub!(:response_log)
 
 			@request.stub!(:user).and_return('joe')
 			@request.stub!(:password).and_return('mypass')
@@ -240,19 +244,31 @@ describe RestClient do
 			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
 		end
 
-		it "logs a get" do
-			RestClient::Request.new(:method => :get, :url => 'http://url').log.should ==
+		it "logs a get request" do
+			RestClient::Request.new(:method => :get, :url => 'http://url').request_log.should ==
 			"RestClient.get 'http://url'"
 		end
 
-		it "logs a post with a small payload" do
-			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log.should ==
+		it "logs a post request with a small payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log.should ==
 			"RestClient.post 'http://url', 'foo'"
 		end
 
-		it "logs a post with a long payload" do
-			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log.should ==
+		it "logs a post request with a large payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log.should ==
 			"RestClient.post 'http://url', '(1000 byte payload)'"
+		end
+
+		it "logs a response including the status code, content type, and result body size in bytes" do
+			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+			res.stub!(:[]).with('Content-type').and_return('text/html')
+			@request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
+		end
+
+		it "strips the charset from the response content type" do
+			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+			res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
+			@request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
 		end
 
 		it "displays the log to stdout" do
