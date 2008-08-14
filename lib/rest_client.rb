@@ -188,15 +188,11 @@ module RestClient
 		end
 
 		def request_log
-			if @payload
-				if @payload.size > 100
-					"RestClient.#{method} '#{url}', '(#{payload.size} byte payload)'"
-				else
-					"RestClient.#{method} '#{url}', '#{payload}'"
-				end
-			else
-				"RestClient.#{method} '#{url}'"
-			end
+			out = []
+			out << "RestClient.#{method} #{url.inspect}"
+			out << (payload.size > 100 ? "(#{payload.size} byte payload)".inspect : payload.inspect) if payload
+			out << headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '') unless headers.empty?
+			out.join(', ')
 		end
 
 		def response_log(res)
