@@ -196,7 +196,7 @@ module RestClient
 		end
 
 		def response_log(res)
-			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{res['Content-type'].gsub(/;.*$/, '')} #{res.body.size} bytes"
+			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{res.body.size} bytes"
 		end
 
 		def display_log(msg)
