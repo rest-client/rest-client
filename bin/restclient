@@ -16,7 +16,7 @@ end
 config = YAML.load(File.read(ENV['HOME'] + "/.restclient")) rescue {}
 
 @url, @username, @password = if c = config[@url]
-	[c[:url], c[:username], c[:password]]
+	[c['url'], c['username'], c['password']]
 else
 	[@url, *ARGV]
 end

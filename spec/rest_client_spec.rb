@@ -28,6 +28,29 @@ describe RestClient do
 		end
 	end
 
+	context "logging" do
+		after do
+			RestClient.log = nil
+		end
+
+		it "gets the log source from the RESTCLIENT_LOG environment variable" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return('from env')
+			RestClient.log = 'from class method'
+			RestClient.log.should == 'from env'
+		end
+
+		it "sets a destination for log output, used if no environment variable is set" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
+			RestClient.log = 'from class method'
+			RestClient.log.should == 'from class method'
+		end
+
+		it "returns nil (no logging) if neither are set (default)" do
+			ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
+			RestClient.log.should == nil
+		end
+	end
+	
 	context RestClient::Request do
 		before do
 			@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
@@ -48,10 +71,23 @@ describe RestClient do
 			@request.default_headers[:accept].should == 'application/xml'
 		end
 
+		it "decodes an uncompressed result body by passing it straight through" do
+			@request.decode(nil, 'xyz').should == 'xyz'
+		end
+
+		it "decodes a gzip body" do
+			@request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should == "i'm gziped\n"
+		end
+
+		it "decodes a deflated body" do
+			@request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should == "some deflated text"
+		end
+
 		it "processes a successful result" do
 			res = mock("result")
 			res.stub!(:code).and_return("200")
 			res.stub!(:body).and_return('body')
+			res.stub!(:[]).with('content-encoding').and_return(nil)
 			@request.process_result(res).should == 'body'
 		end
 
@@ -111,6 +147,7 @@ describe RestClient do
 		it "transmits the request with Net::HTTP" do
 			@http.should_receive(:request).with('req', 'payload')
 			@request.should_receive(:process_result)
+			@request.should_receive(:response_log)
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
@@ -119,12 +156,14 @@ describe RestClient do
 			@net.should_receive(:use_ssl=).with(true)
 			@http.stub!(:request)
 			@request.stub!(:process_result)
+			@request.stub!(:response_log)
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
 		it "doesn't send nil payloads" do
 			@http.should_receive(:request).with('req', '')
 			@request.should_receive(:process_result)
+			@request.stub!(:response_log)
 			@request.transmit(@uri, 'req', nil)
 		end
 
@@ -136,6 +175,13 @@ describe RestClient do
 			@request.process_payload(:a => 'b c+d').should == "a=b%20c%2Bd"
 		end
 
+		it "accepts nested hashes in payload" do
+			payload = @request.process_payload(:user => { :name => 'joe', :location => { :country => 'USA', :state => 'CA' }})
+			payload.should include('user[name]=joe')
+			payload.should include('user[location][country]=USA')
+			payload.should include('user[location][state]=CA')
+		end
+
 		it "set urlencoded content_type header on hash payloads" do
 			@request.process_payload(:a => 1)
 			@request.headers[:content_type].should == 'application/x-www-form-urlencoded'
@@ -144,6 +190,7 @@ describe RestClient do
 		it "sets up the credentials prior to the request" do
 			@http.stub!(:request)
 			@request.stub!(:process_result)
+			@request.stub!(:response_log)
 
 			@request.stub!(:user).and_return('joe')
 			@request.stub!(:password).and_return('mypass')
@@ -245,6 +292,64 @@ describe RestClient do
 
 			request.stub!(:process_result)
 			request.execute
+		end
+
+		it "logs a get request" do
+			RestClient::Request.new(:method => :get, :url => 'http://url').request_log.should ==
+			'RestClient.get "http://url"'
+		end
+
+		it "logs a post request with a small payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log.should ==
+			'RestClient.post "http://url", "foo"'
+		end
+
+		it "logs a post request with a large payload" do
+			RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log.should ==
+			'RestClient.post "http://url", "(1000 byte payload)"'
+		end
+
+		it "logs input headers as a hash" do
+			RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).request_log.should ==
+			'RestClient.get "http://url", :accept=>"text/plain"'
+		end
+
+		it "logs a response including the status code, content type, and result body size in bytes" do
+			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+			res.stub!(:[]).with('Content-type').and_return('text/html')
+			@request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
+		end
+
+		it "logs a response with a nil Content-type" do
+			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+			res.stub!(:[]).with('Content-type').and_return(nil)
+			@request.response_log(res).should == "# => 200 OK |	 4 bytes"
+		end
+
+		it "strips the charset from the response content type" do
+			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+			res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
+			@request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
+		end
+
+		it "displays the log to stdout" do
+			RestClient.stub!(:log).and_return('stdout')
+			STDOUT.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
+		end
+
+		it "displays the log to stderr" do
+			RestClient.stub!(:log).and_return('stderr')
+			STDERR.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
+		end
+
+		it "append the log to the requested filename" do
+			RestClient.stub!(:log).and_return('/tmp/restclient.log')
+			f = mock('file handle')
+			File.should_receive(:open).with('/tmp/restclient.log', 'a').and_yield(f)
+			f.should_receive(:puts).with('xyz')
+			@request.display_log('xyz')
 		end
 	end
 end
