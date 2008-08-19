@@ -67,7 +67,7 @@ Then invoke:
   
 == Logging
 
-Choose a log within your program:
+Write calls to a log filename (can also be "stdout" or "stderr"):
 
   RestClient.log = '/tmp/restclient.log'
 
@@ -75,15 +75,15 @@ Or set an environment variable to avoid modifying the code:
 
   $ RESTCLIENT_LOG=stdout path/to/my/program
 
-Either one produces logs like this:
+Either produces logs like this:
 
-  RestClient.get 'http://some/resource'
+  RestClient.get "http://some/resource"
   # => 200 OK | text/html 250 bytes
-  RestClient.put 'http://some/resource'
+  RestClient.put "http://some/resource", "payload"
   # => 401 Unauthorized | application/xml 340 bytes
 
 Note that these logs are valid Ruby, so you can paste them into the restclient
-shell to replay your sequence of calls.
+shell or a script to replay your sequence of rest calls.
 
 == Meta
 
