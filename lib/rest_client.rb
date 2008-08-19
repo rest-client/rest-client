@@ -1,5 +1,7 @@
 require 'uri'
 require 'net/https'
+require 'zlib'
+require 'stringio'
 
 require File.dirname(__FILE__) + '/resource'
 require File.dirname(__FILE__) + '/request_errors'
@@ -167,7 +169,7 @@ module RestClient
 
 		def process_result(res)
 			if %w(200 201 202).include? res.code
-				res.body
+				decode res['content-encoding'], res.body
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 
@@ -184,6 +186,16 @@ module RestClient
 				raise ResourceNotFound
 			else
 				raise RequestFailed, res
+			end
+		end
+
+		def decode(content_encoding, body)
+			if content_encoding == 'gzip'
+				Zlib::GzipReader.new(StringIO.new(body)).read
+			elsif content_encoding == 'deflate'
+				Zlib::Inflate.new.inflate(body)
+			else
+				body
 			end
 		end
 
@@ -212,7 +224,7 @@ module RestClient
 		end
 
 		def default_headers
-			{ :accept => 'application/xml' }
+			{ :accept => 'application/xml', :accept_encoding => 'gzip, deflate' }
 		end
 	end
 end
