@@ -38,33 +38,29 @@ module RestClient
 	def self.get(url, headers={})
 		Request.execute(:method => :get,
 			:url => url,
-			:headers => headers, 
-			:proxy => proxy)
+			:headers => headers)
 	end
 
 	def self.post(url, payload, headers={})
 		Request.execute(:method => :post,
 			:url => url,
 			:payload => payload,
-			:headers => headers, 
-			:proxy => proxy)
+			:headers => headers)
 	end
 
 	def self.put(url, payload, headers={})
 		Request.execute(:method => :put,
 			:url => url,
 			:payload => payload,
-			:headers => headers, 
-			:proxy => proxy)
+			:headers => headers)
 	end
 
 	def self.delete(url, headers={})
 		Request.execute(:method => :delete,
 			:url => url,
-			:headers => headers, 
-			:proxy => proxy)
+			:headers => headers)
 	end
-	
+
 	class <<self
 		attr_accessor :proxy
 	end
@@ -83,7 +79,7 @@ module RestClient
 
 	# Internal class used to build and execute the request.
 	class Request
-		attr_reader :method, :url, :payload, :headers, :user, :password, :proxy
+		attr_reader :method, :url, :payload, :headers, :user, :password
 
 		def self.execute(args)
 			new(args).execute
@@ -96,7 +92,6 @@ module RestClient
 			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
-			@proxy = args[:proxy]
 		end
 
 		def execute
@@ -108,7 +103,7 @@ module RestClient
 
 		def execute_inner
 			uri = parse_url_with_auth(url)
-			transmit uri, net_http_class(method).new(uri.request_uri, make_headers(headers)), payload
+			transmit uri, net_http_request_class(method).new(uri.request_uri, make_headers(headers)), payload
 		end
 
 		def make_headers(user_headers)
@@ -120,7 +115,16 @@ module RestClient
 			final
 		end
 
-		def net_http_class(method)
+		def net_http_class
+			if RestClient.proxy
+				proxy_uri = URI.parse(RestClient.proxy)
+				Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+			else
+				Net::HTTP
+			end
+		end
+
+		def net_http_request_class(method)
 			Net::HTTP.const_get(method.to_s.capitalize)
 		end
 
@@ -155,14 +159,8 @@ module RestClient
 
 		def transmit(uri, req, payload)
 			setup_credentials(req)
-			if proxy
-				proxy_uri = URI.parse(proxy)
-				http_klass = Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-			else
-				http_klass = Net::HTTP
-			end
 
-			net = http_klass.new(uri.host, uri.port)
+			net = net_http_class.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 
 			display_log request_log

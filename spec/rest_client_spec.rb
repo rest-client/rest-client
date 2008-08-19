@@ -1,29 +1,24 @@
 require File.dirname(__FILE__) + '/base'
 
 describe RestClient do
-	before do
-		# reset the proxy for other tests
-		RestClient.proxy = nil
-	end
-	
 	context "public API" do
 		it "GET" do
-			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {}, :proxy => nil)
+			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
 			RestClient.get('http://some/resource')
 		end
 
 		it "POST" do
-			RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {}, :proxy => nil)
+			RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {})
 			RestClient.post('http://some/resource', 'payload')
 		end
 
 		it "PUT" do
-			RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {}, :proxy => nil)
+			RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {})
 			RestClient.put('http://some/resource', 'payload')
 		end
 
 		it "DELETE" do
-			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {}, :proxy => nil)
+			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
 			RestClient.delete('http://some/resource')
 		end
 	end
@@ -117,7 +112,7 @@ describe RestClient do
 		end
 
 		it "determines the Net::HTTP class to instantiate by the method name" do
-			@request.net_http_class(:put).should == Net::HTTP::Put
+			@request.net_http_request_class(:put).should == Net::HTTP::Put
 		end
 
 		it "merges user headers with the default headers" do
@@ -138,7 +133,7 @@ describe RestClient do
 		it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
 			@request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
 			klass = mock("net:http class")
-			@request.should_receive(:net_http_class).with(:put).and_return(klass)
+			@request.should_receive(:net_http_request_class).with(:put).and_return(klass)
 			klass.should_receive(:new).and_return('result')
 			@request.should_receive(:transmit).with(@uri, 'result', 'payload')
 			@request.execute_inner
@@ -261,37 +256,14 @@ describe RestClient do
 			res = mock('response', :code => '500')
 			lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
 		end
-		
-		it "sets proxy based on initializer argument" do
-			RestClient::Request.new(
-				:method => :get, 
-				:proxy => "http://test.com/", 
-				:url => "http://google.com/"
-			).proxy.should == "http://test.com/"
-		end
-		
-		it "uses an http proxy if a proxy url is given" do
-			RestClient.proxy = 'http://test.com/'
-			RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {}, :proxy => 'http://test.com/')
-			RestClient.get('http://some/resource')
-		end
-		
+
 		it "creates a proxy class if a proxy url is given" do
-			@http.should_receive(:request).with(@net, '')
-			Net::HTTP::Get.stub!(:new).and_return(@net)
+			RestClient.stub!(:proxy).and_return("http://example.com/")
+			@request.net_http_class.should include(Net::HTTP::ProxyDelta)
+		end
 
-			proxy = stub(:proxy_class)
-			proxy.should_receive(:new).with('google.com', 80).and_return(@net)
-			
-			Net::HTTP.should_receive(:Proxy).with('test.com', 80, nil, nil).and_return(proxy)
-			request = RestClient::Request.new(
-				:method => :get, 
-				:proxy => "http://test.com/", 
-				:url => "http://google.com/"
-			)
-
-			request.stub!(:process_result)
-			request.execute
+		it "creates a non-proxy class if a proxy url is not given" do
+		  @request.net_http_class.should_not include(Net::HTTP::ProxyDelta)
 		end
 
 		it "logs a get request" do
@@ -323,7 +295,7 @@ describe RestClient do
 		it "logs a response with a nil Content-type" do
 			res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
 			res.stub!(:[]).with('Content-type').and_return(nil)
-			@request.response_log(res).should == "# => 200 OK |	 4 bytes"
+			@request.response_log(res).should == "# => 200 OK |  4 bytes"
 		end
 
 		it "strips the charset from the response content type" do
