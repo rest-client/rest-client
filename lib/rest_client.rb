@@ -29,6 +29,14 @@ require File.dirname(__FILE__) + '/request_errors'
 #   # DELETE
 #   RestClient.delete 'http://example.com/resource'
 #
+# To use with a proxy, just set RestClient.proxy to the proper http proxy:
+#
+#   RestClient.proxy = "http://proxy.example.com/"
+#
+# Or inherit the proxy from the environment:
+#
+#   RestClient.proxy = ENV['http_proxy']
+#
 # For live tests of RestClient, try using http://rest-test.heroku.com, which echoes back information about the rest call:
 #
 #   >> RestClient.put 'http://rest-test.heroku.com/resource', :foo => 'baz'

@@ -85,6 +85,20 @@ Either produces logs like this:
 Note that these logs are valid Ruby, so you can paste them into the restclient
 shell or a script to replay your sequence of rest calls.
 
+== Proxy
+
+All calls to RestClient, including Resources, will use the proxy specified by
+RestClient.proxy:
+
+  RestClient.proxy = "http://proxy.example.com/"
+  RestClient.get "http://some/resource"
+  # => response from some/resource as proxied through proxy.example.com
+
+Often the proxy url is set in an environment variable, so you can do this to
+use whatever proxy the system is configured to use:
+
+  RestClient.proxy = ENV['http_proxy']
+
 == Meta
 
 Written by Adam Wiggins (adam at heroku dot com)
