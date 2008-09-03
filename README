@@ -89,8 +89,8 @@ shell or a script to replay your sequence of rest calls.
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur,
-Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, and Blake Mizerany
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
+Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, and Brian Donovan
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
