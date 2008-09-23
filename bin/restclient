@@ -39,12 +39,17 @@ end
 r # force rc to load
 
 if @verb
-	if %w(put post).include? @verb
-		puts r.send(@verb, STDIN.read)
-	else
-		puts r.send(@verb)
+	begin
+		if %w(put post).include? @verb
+			puts r.send(@verb, STDIN.read)
+		else
+			puts r.send(@verb)
+		end
+		exit 0
+	rescue RestClient::Exception => e
+		puts e.response.body if e.respond_to? :response
+		raise
 	end
-	exit 0
 end
 
 %w(get post put delete).each do |m|
@@ -60,7 +65,7 @@ def method_missing(s, *args, &b)
 	begin
 		r.send(s, *args, &b)
 	rescue RestClient::RequestFailed => e
-		puts e.response.body
+		print STDERR, e.response.body
 		raise e
 	end
 end
