@@ -65,6 +65,12 @@ Then invoke:
 
   $ restclient private_site
   
+Use as a one-off, curl-style:
+
+  $ restclient get http://example.com/resource > output_body
+
+  $ restclient put http://example.com/resource < input_body
+
 == Logging
 
 Write calls to a log filename (can also be "stdout" or "stderr"):
