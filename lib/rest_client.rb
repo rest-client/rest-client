@@ -116,7 +116,7 @@ module RestClient
 
 		def make_headers(user_headers)
 			default_headers.merge(user_headers).inject({}) do |final, (key, value)|
-				final[key.to_s.gsub(/_/, '-').capitalize] = value
+				final[key.to_s.gsub(/_/, '-').capitalize] = value.to_s
 				final
 			end
 		end

@@ -130,6 +130,10 @@ describe RestClient do
 			@request.make_headers(:content_type => 'abc').should == { 'Content-type' => 'abc' }
 		end
 
+		it "converts header values to strings" do
+			@request.make_headers('A' => 1)['A'].should == '1'
+		end
+
 		it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
 			@request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
 			klass = mock("net:http class")
