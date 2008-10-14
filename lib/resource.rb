@@ -9,55 +9,78 @@ module RestClient
 	#
 	# With HTTP basic authentication:
 	#
-	#   resource = RestClient::Resource.new('http://protected/resource', 'user', 'pass')
+	#   resource = RestClient::Resource.new('http://protected/resource', :user => 'user', :password => 'password')
 	#   resource.delete
+	#
+	# You can also use resources to share common headers. For headers keys,
+	# symbols are converted to strings. Example:
+	#
+	#   resource = RestClient::Resource.new('http://some/resource', :headers => { :client_version => 1 })
+	#
+	# This header will be transported as X-Client-Version (notice the X prefix,
+	# capitalization and hyphens)
 	#
 	# Use the [] syntax to allocate subresources:
 	#
-	#   site = RestClient::Resource.new('http://example.com', 'adam', 'mypasswd')
+	#   site = RestClient::Resource.new('http://example.com', :user => 'adam', :password => 'mypasswd')
 	#   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
 	#
 	class Resource
-		attr_reader :url, :user, :password
+		attr_reader :url, :options
 
-		def initialize(url, user=nil, password=nil)
+		def initialize(url, options={}, backwards_compatibility=nil)
 			@url = url
-			@user = user
-			@password = password
+			if options.class == Hash
+				@options = options
+			else # compatibility with previous versions
+				@options = { :user => options, :password => backwards_compatibility }
+			end
 		end
 
-		def get(headers={})
+		def get(additional_headers={})
 			Request.execute(:method => :get,
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => additional_headers.merge(headers))
 		end
 
-		def post(payload, headers={})
+		def post(payload, additional_headers={})
 			Request.execute(:method => :post,
 				:url => url,
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => additional_headers.merge(headers))
 		end
 
-		def put(payload, headers={})
+		def put(payload, additional_headers={})
 			Request.execute(:method => :put,
 				:url => url,
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => additional_headers.merge(headers))
 		end
 
-		def delete(headers={})
+		def delete(additional_headers={})
 			Request.execute(:method => :delete,
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => headers)
+				:headers => additional_headers.merge(headers))
+		end
+
+		def user
+			options[:user]
+		end
+
+		def password
+			options[:password]
+		end
+
+		def headers
+			options[:headers] || {}
 		end
 
 		# Construct a subresource, preserving authentication.
@@ -87,7 +110,7 @@ module RestClient
 		#   comments.post 'Hello', :content_type => 'text/plain'
 		#
 		def [](suburl)
-			self.class.new(concat_urls(url, suburl), user, password)
+			self.class.new(concat_urls(url, suburl), options)
 		end
 
 		def concat_urls(url, suburl)   # :nodoc:
