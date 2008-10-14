@@ -42,7 +42,7 @@ module RestClient
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => additional_headers.merge(headers))
+				:headers => headers.merge(additional_headers))
 		end
 
 		def post(payload, additional_headers={})
@@ -51,7 +51,7 @@ module RestClient
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => additional_headers.merge(headers))
+				:headers => headers.merge(additional_headers))
 		end
 
 		def put(payload, additional_headers={})
@@ -60,7 +60,7 @@ module RestClient
 				:payload => payload,
 				:user => user,
 				:password => password,
-				:headers => additional_headers.merge(headers))
+				:headers => headers.merge(additional_headers))
 		end
 
 		def delete(additional_headers={})
@@ -68,7 +68,7 @@ module RestClient
 				:url => url,
 				:user => user,
 				:password => password,
-				:headers => additional_headers.merge(headers))
+				:headers => headers.merge(additional_headers))
 		end
 
 		def user
