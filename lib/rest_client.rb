@@ -202,6 +202,8 @@ module RestClient
 				end
 
 				raise Redirect, url
+			elsif res.code == "304"
+				raise NotModified
 			elsif res.code == "401"
 				raise Unauthorized, res
 			elsif res.code == "404"
@@ -230,7 +232,7 @@ module RestClient
 		end
 
 		def response_log(res)
-			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{res.body.size} bytes"
+			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{(res.body) ? res.body.size : nil} bytes"
 		end
 
 		def display_log(msg)

@@ -30,6 +30,10 @@ module RestClient
 		end
 	end
 
+	class NotModified < Exception
+		ErrorMessage = 'NotModified'
+	end
+
 	# Authorization is required to access the resource specified.
 	class Unauthorized < ExceptionWithResponse
 		ErrorMessage = 'Unauthorized'
