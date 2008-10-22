@@ -168,6 +168,7 @@ module RestClient
 
 			net = net_http_class.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
+			net.verify_mode = OpenSSL::SSL::VERIFY_NONE
 
 			display_log request_log
 
