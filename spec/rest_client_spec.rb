@@ -60,6 +60,7 @@ describe RestClient do
 			Net::HTTP.stub!(:new).and_return(@net)
 			@net.stub!(:start).and_yield(@http)
 			@net.stub!(:use_ssl=)
+			@net.stub!(:verify_mode=)
 		end
 
 		it "requests xml mimetype" do
