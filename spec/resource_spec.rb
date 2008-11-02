@@ -68,4 +68,8 @@ describe RestClient::Resource do
 		parent['posts'].user.should == 'user'
 		parent['posts'].password.should == 'password'
 	end
+
+	it "prints its url with to_s" do
+		RestClient::Resource.new('x').to_s.should == 'x'
+	end
 end

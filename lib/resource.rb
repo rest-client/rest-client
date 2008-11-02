@@ -71,6 +71,10 @@ module RestClient
 				:headers => headers.merge(additional_headers))
 		end
 
+		def to_s
+			url
+		end
+
 		def user
 			options[:user]
 		end
