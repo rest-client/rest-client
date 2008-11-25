@@ -170,11 +170,11 @@ module RestClient
 			net = net_http_class.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 			net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-			net.write_timeout = net.read_timeout = @timeout if @timeout
 
 			display_log request_log
 
 			net.start do |http|
+  			http.read_timeout = @timeout if @timeout
 				res = http.request(req, payload || "")
 				display_log response_log(res)
 				process_result res

@@ -335,8 +335,7 @@ describe RestClient do
 			@request.stub!(:process_result)
 			@request.stub!(:response_log)
 			
-			@net.should_receive(:read_timeout=).with(123)
-			@net.should_receive(:write_timeout=).with(123)
+			@http.should_receive(:read_timeout=).with(123)
 			
 			@request.transmit(@uri, 'req', nil)
 		end
