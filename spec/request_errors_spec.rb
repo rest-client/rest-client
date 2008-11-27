@@ -29,6 +29,16 @@ describe RestClient::RequestFailed do
 	end
 end
 
+describe RestClient::ResourceNotFound do
+	it "also has the http response attached" do
+		begin
+			raise RestClient::ResourceNotFound, :response
+		rescue RestClient::ResourceNotFound => e
+			e.response.should == :response
+		end
+	end
+end
+
 describe "backwards compatibility" do
 	it "alias RestClient::Request::Redirect to RestClient::Redirect" do
 		RestClient::Request::Redirect.should == RestClient::Redirect

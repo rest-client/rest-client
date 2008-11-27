@@ -201,9 +201,9 @@ module RestClient
 
 				raise Redirect, url
 			elsif res.code == "401"
-				raise Unauthorized
+				raise Unauthorized, res
 			elsif res.code == "404"
-				raise ResourceNotFound
+				raise ResourceNotFound, res
 			else
 				raise RequestFailed, res
 			end

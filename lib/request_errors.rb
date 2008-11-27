@@ -7,6 +7,19 @@ module RestClient
 		end
 	end
 
+	# Base RestClient exception when there's a response available
+	class ExceptionWithResponse < Exception
+		attr_accessor :response
+
+		def initialize(response=nil)
+			@response = response
+		end
+
+		def http_code
+			@response.code.to_i if @response
+		end
+	end
+
 	# A redirect was encountered; caught by execute to retry with the new url.
 	class Redirect < Exception
 		ErrorMessage = "Redirect"
@@ -18,12 +31,12 @@ module RestClient
 	end
 
 	# Authorization is required to access the resource specified.
-	class Unauthorized < Exception
+	class Unauthorized < ExceptionWithResponse
 		ErrorMessage = 'Unauthorized'
 	end
 
 	# No resource was found at the given URL.
-	class ResourceNotFound < Exception
+	class ResourceNotFound < ExceptionWithResponse
 		ErrorMessage = 'Resource not found'
 	end
 
@@ -46,17 +59,7 @@ module RestClient
 	# You can get the status code by e.http_code, or see anything about the
 	# response via e.response.  For example, the entire result body (which is
 	# probably an HTML error page) is e.response.body.
-	class RequestFailed < Exception
-		attr_accessor :response
-
-		def initialize(response=nil)
-			@response = response
-		end
-
-		def http_code
-			@response.code.to_i if @response
-		end
-
+	class RequestFailed < ExceptionWithResponse
 		def message
 			"HTTP status code #{http_code}"
 		end
