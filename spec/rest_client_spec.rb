@@ -328,5 +328,16 @@ describe RestClient do
 			f.should_receive(:puts).with('xyz')
 			@request.display_log('xyz')
 		end
+		
+		it "set read_timeout" do
+			@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
+			@http.stub!(:request)
+			@request.stub!(:process_result)
+			@request.stub!(:response_log)
+			
+			@http.should_receive(:read_timeout=).with(123)
+			
+			@request.transmit(@uri, 'req', nil)
+		end
 	end
 end

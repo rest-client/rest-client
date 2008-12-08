@@ -87,7 +87,7 @@ module RestClient
 
 	# Internal class used to build and execute the request.
 	class Request
-		attr_reader :method, :url, :payload, :headers, :user, :password
+		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout
 
 		def self.execute(args)
 			new(args).execute
@@ -100,6 +100,7 @@ module RestClient
 			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
+			@timeout = args[:timeout]
 		end
 
 		def execute
@@ -173,6 +174,7 @@ module RestClient
 			display_log request_log
 
 			net.start do |http|
+  			http.read_timeout = @timeout if @timeout
 				res = http.request(req, payload || "")
 				display_log response_log(res)
 				process_result res
