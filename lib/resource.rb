@@ -12,6 +12,10 @@ module RestClient
 	#   resource = RestClient::Resource.new('http://protected/resource', :user => 'user', :password => 'password')
 	#   resource.delete
 	#
+	# With a timeout (seconds):
+	#
+	#   RestClient::Resource.new('http://slow', :timeout => 10)
+	#
 	# You can also use resources to share common headers. For headers keys,
 	# symbols are converted to strings. Example:
 	#
@@ -38,37 +42,37 @@ module RestClient
 		end
 
 		def get(additional_headers={})
-			Request.execute(:method => :get,
+			Request.execute(options.merge(
+				:method => :get,
 				:url => url,
-				:user => user,
-				:password => password,
-				:headers => headers.merge(additional_headers))
+				:headers => headers.merge(additional_headers)
+			))
 		end
 
 		def post(payload, additional_headers={})
-			Request.execute(:method => :post,
+			Request.execute(options.merge(
+				:method => :post,
 				:url => url,
 				:payload => payload,
-				:user => user,
-				:password => password,
-				:headers => headers.merge(additional_headers))
+				:headers => headers.merge(additional_headers)
+			))
 		end
 
 		def put(payload, additional_headers={})
-			Request.execute(:method => :put,
+			Request.execute(options.merge(
+				:method => :put,
 				:url => url,
 				:payload => payload,
-				:user => user,
-				:password => password,
-				:headers => headers.merge(additional_headers))
+				:headers => headers.merge(additional_headers)
+			))
 		end
 
 		def delete(additional_headers={})
-			Request.execute(:method => :delete,
+			Request.execute(options.merge(
+				:method => :delete,
 				:url => url,
-				:user => user,
-				:password => password,
-				:headers => headers.merge(additional_headers))
+				:headers => headers.merge(additional_headers)
+			))
 		end
 
 		def to_s
@@ -85,6 +89,10 @@ module RestClient
 
 		def headers
 			options[:headers] || {}
+		end
+
+		def timeout
+			options[:timeout]
 		end
 
 		# Construct a subresource, preserving authentication.
