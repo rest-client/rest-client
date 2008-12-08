@@ -21,7 +21,7 @@ See RestClient module docs for details.
   resource = RestClient::Resource.new 'http://example.com/resource'
   resource.get
 
-  private_resource = RestClient::Resource.new 'https://example.com/private/resource', 'user', 'pass'
+  private_resource = RestClient::Resource.new 'https://example.com/private/resource', :user => 'adam', :password => 'secret', :timeout => 20
   private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 
 See RestClient::Resource module docs for details.
