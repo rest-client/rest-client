@@ -110,8 +110,8 @@ use whatever proxy the system is configured to use:
 Written by Adam Wiggins (adam at heroku dot com)
 
 Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
-Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, and
-Ivan Makfinsky
+Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, Ivan
+Makfinsky, and Marc-André Cournoyer
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
