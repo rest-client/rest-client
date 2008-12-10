@@ -175,7 +175,7 @@ module RestClient
 
 			net.start do |http|
 				http.read_timeout = @timeout if @timeout
-				res = http.request(req, payload || "")
+				res = http.request(req, payload)
 				display_log response_log(res)
 				process_result res
 			end

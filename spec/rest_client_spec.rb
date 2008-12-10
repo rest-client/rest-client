@@ -160,8 +160,8 @@ describe RestClient do
 			@request.transmit(@uri, 'req', 'payload')
 		end
 
-		it "doesn't send nil payloads" do
-			@http.should_receive(:request).with('req', '')
+		it "sends nil payloads" do
+			@http.should_receive(:request).with('req', nil)
 			@request.should_receive(:process_result)
 			@request.stub!(:response_log)
 			@request.transmit(@uri, 'req', nil)
