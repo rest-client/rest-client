@@ -76,9 +76,10 @@ module RestClient
 					else
 						create_regular_field(@stream, k,v)
 					end
-					@stream.write(b + EOL)
+					@stream.write(EOL + b)
 				end
 				@stream.write('--')
+				@stream.write(EOL)
 				@stream.seek(0)
 			end
 

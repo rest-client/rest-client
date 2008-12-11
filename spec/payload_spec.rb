@@ -20,29 +20,27 @@ describe RestClient::Payload do
 			m.headers['Content-Type'].should == 'multipart/form-data; boundary="123"'
 		end
 
-		xit "should form properly seperated multipart data" do
+		it "should form properly seperated multipart data" do
 			m = RestClient::Payload::Multipart.new({:foo => "bar"})
-			m.stub!(:boundary).and_return("123")
 			m.to_s.should == <<-EOS
---123\r
+--#{m.boundary}\r
 Content-Disposition: multipart/form-data; name="foo"\r
 \r
 bar\r
---123--\r
+--#{m.boundary}--\r
 EOS
 		end
 
-		xit "should form properly seperated multipart data" do
+		it "should form properly seperated multipart data" do
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
 			m = RestClient::Payload::Multipart.new({:foo => f})
-			m.stub!(:boundary).and_return("123")
 			m.to_s.should == <<-EOS
---123\r
-Content-Disposition: multipart/form-data; name="foo"; filename="master_shake.jpg"\r
+--#{m.boundary}\r
+Content-Disposition: multipart/form-data; name="foo"; filename="./spec/master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-datadatadata\r
---123--\r
+#{IO.read(f.path)}\r
+--#{m.boundary}--\r
 EOS
 		end
 	end
