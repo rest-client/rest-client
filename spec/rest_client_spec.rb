@@ -340,4 +340,29 @@ describe RestClient do
 			@request.transmit(@uri, 'req', nil)
 		end
 	end
+
+	context RestClient::Response do
+		before do
+			@net_http_res = mock('net http response')
+			@response = RestClient::Response.new('abc', @net_http_res)
+		end
+
+		it "behaves like string" do
+			@response.should == 'abc'
+		end
+
+		it "fetches the numeric response code" do
+			@net_http_res.should_receive(:code).and_return('200')
+			@response.code.should == 200
+		end
+
+		it "fetches the headers" do
+			@net_http_res.should_receive(:to_hash).and_return('a' => ['b'])
+			@response.headers['a'].should == ['b']
+		end
+
+		it "can access the net http result directly" do
+			@response.net_http_res.should == @net_http_res
+		end
+	end
 end

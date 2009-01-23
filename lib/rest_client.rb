@@ -177,7 +177,12 @@ module RestClient
 				http.read_timeout = @timeout if @timeout
 				res = http.request(req, payload)
 				display_log response_log(res)
-				process_result res
+				string = process_result(res)
+				if string
+					Response.new(string, res)
+				else
+					nil
+				end
 			end
 		rescue EOFError
 			raise RestClient::ServerBrokeConnection
@@ -249,6 +254,23 @@ module RestClient
 
 		def default_headers
 			{ :accept => 'application/xml', :accept_encoding => 'gzip, deflate' }
+		end
+	end
+
+	class Response < String
+		attr_reader :net_http_res
+
+		def initialize(string, net_http_res)
+			@net_http_res = net_http_res
+			super string
+		end
+
+		def code
+			@code ||= @net_http_res.code.to_i
+		end
+
+		def headers
+			@headers ||= @net_http_res.to_hash
 		end
 	end
 end
