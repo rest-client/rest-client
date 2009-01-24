@@ -270,7 +270,14 @@ module RestClient
 		end
 
 		def headers
-			@headers ||= @net_http_res.to_hash
+			@headers ||= self.class.beautify_headers(@net_http_res.to_hash)
+		end
+
+		def self.beautify_headers(headers)
+			headers.inject({}) do |out, (key, value)|
+				out[key.gsub(/-/, '_').to_sym] = value.first
+				out
+			end
 		end
 	end
 end

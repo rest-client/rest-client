@@ -356,9 +356,19 @@ describe RestClient do
 			@response.code.should == 200
 		end
 
+		it "beautifies the headers by turning the keys to symbols" do
+			h = RestClient::Response.beautify_headers('content-type' => [ 'x' ])
+			h.keys.first.should == :content_type
+		end
+
+		it "beautifies the headers by turning the values to strings instead of one-element arrays" do
+			h = RestClient::Response.beautify_headers('x' => [ 'text/html' ] )
+			h.values.first.should == 'text/html'
+		end
+
 		it "fetches the headers" do
-			@net_http_res.should_receive(:to_hash).and_return('a' => ['b'])
-			@response.headers['a'].should == ['b']
+			@net_http_res.should_receive(:to_hash).and_return('content-type' => [ 'text/html' ])
+			@response.headers.should == { :content_type => 'text/html' }
 		end
 
 		it "can access the net http result directly" do
