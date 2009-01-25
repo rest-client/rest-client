@@ -31,6 +31,10 @@ require File.dirname(__FILE__) + '/restclient/exceptions'
 #   # DELETE
 #   RestClient.delete 'http://example.com/resource'
 #
+#   # retreive the response headers
+#   res = RestClient.get 'http://example.com/some.jpg'
+#   res.headers[:content_type]  # => 'image/jpg'
+#
 # To use with a proxy, just set RestClient.proxy to the proper http proxy:
 #
 #   RestClient.proxy = "http://proxy.example.com/"
