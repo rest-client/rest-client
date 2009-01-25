@@ -1,4 +1,10 @@
 module RestClient
+	# This class is used internally by RestClient to send the request, but you can also
+	# access it internally if you'd like to use a method not directly supported by the
+	# main API.  For example:
+	#
+	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
+   #
 	class Request
 		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout
 

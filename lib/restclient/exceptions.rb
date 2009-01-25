@@ -44,7 +44,9 @@ module RestClient
 		ErrorMessage = 'Resource not found'
 	end
 
-	# The server broke the connection prior to the request completing.
+	# The server broke the connection prior to the request completing.  Usually
+	# this means it crashed, or sometimes that your network connection was
+	# severed before it could complete.
 	class ServerBrokeConnection < Exception
 		ErrorMessage = 'Server broke connection'
 	end
