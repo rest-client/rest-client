@@ -6,7 +6,8 @@ module RestClient
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
    #
 	class Request
-		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout
+		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout,
+		            :open_timeout
 
 		def self.execute(args)
 			new(args).execute
@@ -20,6 +21,7 @@ module RestClient
 			@user = args[:user]
 			@password = args[:password]
 			@timeout = args[:timeout]
+			@open_timeout = args[:open_timeout]
 		end
 
 		def execute
@@ -94,6 +96,7 @@ module RestClient
 
 			net.start do |http|
 				http.read_timeout = @timeout if @timeout
+				http.open_timeout = @open_timeout if @open_timeout
 				res = http.request(req, payload)
 				display_log response_log(res)
 				string = process_result(res)

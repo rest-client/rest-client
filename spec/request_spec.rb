@@ -293,4 +293,16 @@ describe RestClient::Request do
 		
 		@request.transmit(@uri, 'req', nil)
 	end
+	
+	it "set open_timeout" do
+		@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123)
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		
+		@http.should_receive(:open_timeout=).with(123)
+		
+		@request.transmit(@uri, 'req', nil)
+	end
+	
 end
