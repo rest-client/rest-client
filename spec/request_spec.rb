@@ -289,7 +289,7 @@ describe RestClient::Request do
 		@request.stub!(:process_result)
 		@request.stub!(:response_log)
 		
-		@http.should_receive(:read_timeout=).with(123)
+		@net.should_receive(:read_timeout=).with(123)
 		
 		@request.transmit(@uri, 'req', nil)
 	end
@@ -300,7 +300,7 @@ describe RestClient::Request do
 		@request.stub!(:process_result)
 		@request.stub!(:response_log)
 		
-		@http.should_receive(:open_timeout=).with(123)
+		@net.should_receive(:open_timeout=).with(123)
 		
 		@request.transmit(@uri, 'req', nil)
 	end
