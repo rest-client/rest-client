@@ -135,7 +135,7 @@ module RestClient
 
 				raise Redirect, url
 			elsif res.code == "304"
-				raise NotModified
+				raise NotModified, res
 			elsif res.code == "401"
 				raise Unauthorized, res
 			elsif res.code == "404"

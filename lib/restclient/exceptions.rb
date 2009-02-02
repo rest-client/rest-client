@@ -30,7 +30,7 @@ module RestClient
 		end
 	end
 
-	class NotModified < Exception
+	class NotModified < ExceptionWithResponse
 		ErrorMessage = 'NotModified'
 	end
 
