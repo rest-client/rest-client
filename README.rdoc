@@ -3,6 +3,11 @@
 A simple REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
+<b>This version is a bit out of date, consider the updated one, linked below</b>
+
+* RDoc - http://davetron5000.github.com/rest-client
+* Update version you should use - http://github.com/adamwiggins/rest-client/tree/master
+ 
 == Usage: Raw URL
 
   require 'rest_client'
