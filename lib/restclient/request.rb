@@ -138,7 +138,7 @@ module RestClient
 		end
 
 		def decode(content_encoding, body)
-			if content_encoding == 'gzip'
+			if content_encoding == 'gzip' and not body.empty?
 				Zlib::GzipReader.new(StringIO.new(body)).read
 			elsif content_encoding == 'deflate'
 				Zlib::Inflate.new.inflate(body)
