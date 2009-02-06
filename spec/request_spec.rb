@@ -33,13 +33,23 @@ describe RestClient::Request do
 		@request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should == "some deflated text"
 	end
 
-	it "processes a successful result" do
-		res = mock("result")
-		res.stub!(:code).and_return("200")
-		res.stub!(:body).and_return('body')
-		res.stub!(:[]).with('content-encoding').and_return(nil)
-		@request.process_result(res).should == 'body'
-	end
+  it "processes a successful result" do
+    res = mock("result")
+    res.stub!(:code).and_return("200")
+    res.stub!(:body).and_return('body')
+    res.stub!(:[]).with('content-encoding').and_return(nil)
+    @request.process_result(res).should == 'body'
+  end
+
+  it "doesn't classify successful requests as failed" do
+    203.upto(206) do |code|
+      res = mock("result")
+      res.stub!(:code).and_return(code.to_s)
+      res.stub!(:body).and_return("")
+      res.stub!(:[]).with('content-encoding').and_return(nil)
+      @request.process_result(res).should be_empty
+    end
+  end
 
 	it "parses a url into a URI object" do
 		URI.should_receive(:parse).with('http://example.com/resource')
