@@ -54,7 +54,4 @@ end
 
 # backwards compatibility
 class RestClient::Request
-	Redirect = RestClient::Redirect
-	Unauthorized = RestClient::Unauthorized
-	RequestFailed = RestClient::RequestFailed
 end

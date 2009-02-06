@@ -1,2 +1,4 @@
-rdoc
+html
 pkg
+.*.sw?
+coverage

@@ -1,5 +1,20 @@
+require 'fileutils'
+require 'hanna/rdoctask'
 require 'rake'
+require 'rake/clean'
+require 'rake/gempackagetask'
+require 'rake/rdoctask'
+require 'rake/testtask'
 require 'spec/rake/spectask'
+
+$: << '../grancher/lib'
+require 'grancher/task'
+
+Grancher::Task.new do |g|
+  g.branch = 'gh-pages'
+  g.push_to = 'origin'
+  g.directory 'html'
+end
 
 desc "Run all specs"
 Spec::Rake::SpecTask.new('spec') do |t|
@@ -20,48 +35,11 @@ Spec::Rake::SpecTask.new('rcov') do |t|
 	t.rcov_opts = ['--exclude', 'examples']
 end
 
-task :default => :spec
 
-######################################################
-
-require 'rake'
-require 'rake/testtask'
-require 'rake/clean'
-require 'rake/gempackagetask'
-require 'rake/rdoctask'
-require 'fileutils'
-
-version = "0.5"
-name = "rest-client"
-
-spec = Gem::Specification.new do |s|
-	s.name = name
-	s.version = version
-	s.summary = "Simple REST client for Ruby, inspired by microframework syntax for specifying actions."
-	s.description = "A simple REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete."
-	s.author = "Adam Wiggins"
-	s.email = "adam@heroku.com"
-	s.homepage = "http://rest-client.heroku.com/"
-	s.rubyforge_project = "rest-client"
-
-	s.platform = Gem::Platform::RUBY
-	s.has_rdoc = true
-	
-	s.files = %w(Rakefile) + Dir.glob("{lib,spec}/**/*")
-	
-	s.require_path = "lib"
-end
-
-Rake::GemPackageTask.new(spec) do |p|
-	p.need_tar = true if RUBY_PLATFORM !~ /mswin/
-end
-
-task :install => [ :package ] do
-	sh %{sudo gem install pkg/#{name}-#{version}.gem}
-end
-
-task :uninstall => [ :clean ] do
-	sh %{sudo gem uninstall #{name}}
+spec = eval(File.read('rest-client.gemspec'))
+ 
+Rake::GemPackageTask.new(spec) do |pkg|
+    pkg.need_tar = true
 end
 
 Rake::TestTask.new do |t|
@@ -71,13 +49,13 @@ Rake::TestTask.new do |t|
 end
 
 Rake::RDocTask.new do |t|
-	t.rdoc_dir = 'rdoc'
 	t.title    = "rest-client, fetch RESTful resources effortlessly"
 	t.options << '--line-numbers' << '--inline-source' << '-A cattr_accessor=object'
 	t.options << '--charset' << 'utf-8'
-	t.rdoc_files.include('README')
+	t.rdoc_files.include('README.rdoc')
 	t.rdoc_files.include('lib/*.rb')
 end
 
-CLEAN.include [ 'pkg', '*.gem', '.config' ]
+CLEAN.include [ 'pkg', '*.gem', '.config', 'html' ]
 
+task :default => :spec

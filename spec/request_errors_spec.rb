@@ -25,17 +25,3 @@ describe RestClient::RequestFailed do
 		@error.message('Custom default message').should == 'Specific error message'
 	end
 end
-
-describe "backwards compatibility" do
-	it "alias RestClient::Request::Redirect to RestClient::Redirect" do
-		RestClient::Request::Redirect.should == RestClient::Redirect
-	end
-
-	it "alias RestClient::Request::Unauthorized to RestClient::Unauthorized" do
-		RestClient::Request::Unauthorized.should == RestClient::Unauthorized
-	end
-
-	it "alias RestClient::Request::RequestFailed to RestClient::RequestFailed" do
-		RestClient::Request::RequestFailed.should == RestClient::RequestFailed
-	end
-end
