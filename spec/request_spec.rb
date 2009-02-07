@@ -28,18 +28,32 @@ describe RestClient::Request do
 	it "decodes a gzip body" do
 		@request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should == "i'm gziped\n"
 	end
+	
+	it "ingores gzip for empty bodies" do
+		@request.decode('gzip', '').should be_empty
+	end
 
 	it "decodes a deflated body" do
 		@request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should == "some deflated text"
 	end
 
-	it "processes a successful result" do
-		res = mock("result")
-		res.stub!(:code).and_return("200")
-		res.stub!(:body).and_return('body')
-		res.stub!(:[]).with('content-encoding').and_return(nil)
-		@request.process_result(res).should == 'body'
-	end
+  it "processes a successful result" do
+    res = mock("result")
+    res.stub!(:code).and_return("200")
+    res.stub!(:body).and_return('body')
+    res.stub!(:[]).with('content-encoding').and_return(nil)
+    @request.process_result(res).should == 'body'
+  end
+
+  it "doesn't classify successful requests as failed" do
+    203.upto(206) do |code|
+      res = mock("result")
+      res.stub!(:code).and_return(code.to_s)
+      res.stub!(:body).and_return("")
+      res.stub!(:[]).with('content-encoding').and_return(nil)
+      @request.process_result(res).should be_empty
+    end
+  end
 
 	it "parses a url into a URI object" do
 		URI.should_receive(:parse).with('http://example.com/resource')
