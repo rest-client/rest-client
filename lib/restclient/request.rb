@@ -6,8 +6,7 @@ module RestClient
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
    #
 	class Request
-		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout,
-		            :open_timeout
+		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout
 
 		def self.execute(args)
 			new(args).execute
@@ -17,6 +16,7 @@ module RestClient
 			@method = args[:method] or raise ArgumentError, "must pass :method"
 			@url = args[:url] or raise ArgumentError, "must pass :url"
 			@headers = args[:headers] || {}
+      @cookies = @headers.delete(:cookies) || args[:cookies] || {}
 			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
@@ -37,6 +37,10 @@ module RestClient
 		end
 
 		def make_headers(user_headers)
+      unless @cookies.empty?
+        user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
+      end
+
 			default_headers.merge(user_headers).inject({}) do |final, (key, value)|
 				final[key.to_s.gsub(/_/, '-').capitalize] = value.to_s
 				final

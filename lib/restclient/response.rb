@@ -25,6 +25,17 @@ module RestClient
 			@headers ||= self.class.beautify_headers(@net_http_res.to_hash)
 		end
 
+    # Hash of cookies extracted from response headers
+    def cookies
+      @cookies ||= (self.headers[:set_cookie] || "").split('; ').inject({}) do |out, raw_c|
+        key, val = raw_c.split('=')
+        unless %w(expires domain path secure).member?(key)
+          out[key] = val
+        end
+        out
+      end
+    end
+
 		def self.beautify_headers(headers)
 			headers.inject({}) do |out, (key, value)|
 				out[key.gsub(/-/, '_').to_sym] = value.first

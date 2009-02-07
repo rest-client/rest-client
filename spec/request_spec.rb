@@ -66,6 +66,13 @@ describe RestClient::Request do
 		@request.password.should == 'pass2'
 	end
 
+  it "correctly formats cookies provided to the constructor" do
+    URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
+    @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1' })
+    @request.should_receive(:default_headers).and_return({'foo' => 'bar'})
+    headers = @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1'}
+  end
+
 	it "determines the Net::HTTP class to instantiate by the method name" do
 		@request.net_http_request_class(:put).should == Net::HTTP::Put
 	end
