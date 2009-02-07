@@ -127,7 +127,8 @@ Written by Adam Wiggins (adam at heroku dot com)
 
 Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
 Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, Ivan
-Makfinsky, Marc-André Cournoyer, Coda Hale, Tetsuo Watanabe, and Dusty Doris
+Makfinsky, Marc-André Cournoyer, Coda Hale, Tetsuo Watanabe, Dusty Doris, and
+Lennon Day-Reynolds
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
