@@ -21,6 +21,11 @@ describe RestClient do
 			RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
 			RestClient.delete('http://some/resource')
 		end
+
+		it "HEAD" do
+			RestClient::Request.should_receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {})
+			RestClient.head('http://some/resource')
+		end
 	end
 
 	describe "logging" do

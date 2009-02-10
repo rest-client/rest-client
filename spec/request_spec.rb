@@ -325,5 +325,4 @@ describe RestClient::Request do
 		
 		@request.transmit(@uri, 'req', nil)
 	end
-	
 end

@@ -31,9 +31,13 @@ require File.dirname(__FILE__) + '/restclient/exceptions'
 #   # DELETE
 #   RestClient.delete 'http://example.com/resource'
 #
-#   # retreive the response headers
+#   # retreive the response http code and headers
 #   res = RestClient.get 'http://example.com/some.jpg'
+#   res.code                    # => 200
 #   res.headers[:content_type]  # => 'image/jpg'
+#
+#   # HEAD
+#   RestClient.head('http://example.com').headers
 #
 # To use with a proxy, just set RestClient.proxy to the proper http proxy:
 #
@@ -63,6 +67,10 @@ module RestClient
 
 	def self.delete(url, headers={})
 		Request.execute(:method => :delete, :url => url, :headers => headers)
+	end
+
+	def self.head(url, headers={})
+		Request.execute(:method => :head, :url => url, :headers => headers)
 	end
 
 	class << self

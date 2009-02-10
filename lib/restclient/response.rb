@@ -10,7 +10,7 @@ module RestClient
 
 		def initialize(string, net_http_res)
 			@net_http_res = net_http_res
-			super string
+			super(string || "")
 		end
 
 		# HTTP status code, always 200 since RestClient throws exceptions for

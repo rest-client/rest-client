@@ -38,4 +38,8 @@ describe RestClient::Response do
 	it "can access the net http result directly" do
 		@response.net_http_res.should == @net_http_res
 	end
+
+	it "accepts nil strings and sets it to empty for the case of HEAD" do
+		RestClient::Response.new(nil, @net_http_res).should == ""
+	end
 end
