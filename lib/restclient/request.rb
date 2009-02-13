@@ -123,7 +123,7 @@ module RestClient
 
 		def process_result(res)
 			if res.code =~ /\A2\d{2}\z/
-				decode res['content-encoding'], res.body
+				decode res['content-encoding'], res.body if res.body
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 
