@@ -47,7 +47,7 @@ spec = Gem::Specification.new do |s|
 	s.platform = Gem::Platform::RUBY
 	s.has_rdoc = true
 	
-	s.files = %w(Rakefile) + Dir.glob("{lib,spec}/**/*")
+	s.files = %w(Rakefile README.rdoc) + Dir.glob("{lib,spec}/**/*")
 	s.executables = ['restclient']
 	
 	s.require_path = "lib"
