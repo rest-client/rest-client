@@ -6,7 +6,7 @@ module RestClient
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
    #
 	class Request
-		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout
+		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout, :verify_ssl
 
 		def self.execute(args)
 			new(args).execute
@@ -22,6 +22,7 @@ module RestClient
 			@password = args[:password]
 			@timeout = args[:timeout]
 			@open_timeout = args[:open_timeout]
+			@verify_ssl = args[:verify_ssl] || false
 		end
 
 		def execute
@@ -94,7 +95,7 @@ module RestClient
 
 			net = net_http_class.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
-			net.verify_mode = OpenSSL::SSL::VERIFY_NONE
+			net.verify_mode = OpenSSL::SSL::VERIFY_NONE if @verify_ssl == false
 			net.read_timeout = @timeout if @timeout
 			net.open_timeout = @open_timeout if @open_timeout
 
