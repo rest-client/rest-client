@@ -346,4 +346,66 @@ describe RestClient::Request do
 	  @request.stub!(:response_log)
 	  @request.transmit(@uri, 'req', 'payload')
 	end
+	
+	it "should default to not having an ssl_client_cert" do
+	  @request.ssl_client_cert.should be(nil)
+	end
+	
+	it "should set the ssl_client_cert if provided" do
+	  @request = RestClient::Request.new(
+	    :method => :put, 
+	    :url => 'https://some/resource', 
+	    :payload => 'payload',
+	    :ssl_client_cert => "whatsupdoc!"
+	  )
+	  @net.should_receive(:cert=).with("whatsupdoc!")
+	  @http.stub!(:request)
+	  @request.stub!(:process_result)
+	  @request.stub!(:response_log)
+	  @request.transmit(@uri, 'req', 'payload')
+	end
+	
+	it "should not set the ssl_client_cert if it is not provided" do
+	  @request = RestClient::Request.new(
+	    :method => :put, 
+	    :url => 'https://some/resource', 
+	    :payload => 'payload'
+	  )
+	  @net.should_not_receive(:cert=).with("whatsupdoc!")
+	  @http.stub!(:request)
+	  @request.stub!(:process_result)
+	  @request.stub!(:response_log)
+	  @request.transmit(@uri, 'req', 'payload')
+	end
+	
+	it "should default to not having an ssl_client_key" do
+	  @request.ssl_client_key.should be(nil)
+	end
+	
+	it "should set the ssl_client_key if provided" do
+	  @request = RestClient::Request.new(
+	    :method => :put, 
+	    :url => 'https://some/resource', 
+	    :payload => 'payload',
+	    :ssl_client_key => "whatsupdoc!"
+	  )
+	  @net.should_receive(:key=).with("whatsupdoc!")
+	  @http.stub!(:request)
+	  @request.stub!(:process_result)
+	  @request.stub!(:response_log)
+	  @request.transmit(@uri, 'req', 'payload')
+	end
+	
+	it "should not set the ssl_client_key if it is not provided" do
+	  @request = RestClient::Request.new(
+	    :method => :put, 
+	    :url => 'https://some/resource', 
+	    :payload => 'payload'
+	  )
+	  @net.should_not_receive(:key=).with("whatsupdoc!")
+	  @http.stub!(:request)
+	  @request.stub!(:process_result)
+	  @request.stub!(:response_log)
+	  @request.transmit(@uri, 'req', 'payload')
+	end
 end
