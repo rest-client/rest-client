@@ -1,3 +1,5 @@
+require 'tempfile'
+
 module RestClient
 	# This class is used internally by RestClient to send the request, but you can also
 	# access it internally if you'd like to use a method not directly supported by the
@@ -6,7 +8,7 @@ module RestClient
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
    #
 	class Request
-		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout
+		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout, :raw_response
 
 		def self.execute(args)
 			new(args).execute
@@ -22,6 +24,7 @@ module RestClient
 			@password = args[:password]
 			@timeout = args[:timeout]
 			@open_timeout = args[:open_timeout]
+			@raw_response = args[:raw_response] || false
 		end
 
 		def execute
@@ -103,10 +106,12 @@ module RestClient
 			net.start do |http|
 				res = http.request(req, payload)
 				display_log response_log(res)
-				string = process_result(res)
+				result = process_result(res)
 
-				if string or @method == :head
-					Response.new(string, res)
+				if result.kind_of?(String) or @method == :head
+					Response.new(result, res)
+				elsif result.kind_of?(Tempfile)
+				  RawResponse.new(result, res)
 				else
 					nil
 				end
@@ -123,7 +128,28 @@ module RestClient
 
 		def process_result(res)
 			if res.code =~ /\A2\d{2}\z/
-				decode res['content-encoding'], res.body if res.body
+			  if @raw_response
+			    # Taken from Chef, which as in turn...
+			    # Stolen from http://www.ruby-forum.com/topic/166423
+          # Kudos to _why!
+			    tf = Tempfile.new("rest-client") 
+          size, total = 0, res.header['Content-Length'].to_i
+          res.read_body do |chunk|
+            tf.write(chunk) 
+            size += chunk.size
+            if size == 0
+              display_log("Request for #{@url} done (0 length file)")
+            elsif total == 0
+              display_log("Request for #{@url} (zero content length)")
+            else
+              display_log("Request for #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
+            end
+          end
+          tf.close
+          tf
+		    else
+  				decode res['content-encoding'], res.body if res.body
+				end
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 

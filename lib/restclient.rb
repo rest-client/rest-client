@@ -4,7 +4,9 @@ require 'zlib'
 require 'stringio'
 
 require File.dirname(__FILE__) + '/restclient/request'
+require File.dirname(__FILE__) + '/restclient/mixin/response'
 require File.dirname(__FILE__) + '/restclient/response'
+require File.dirname(__FILE__) + '/restclient/raw_response'
 require File.dirname(__FILE__) + '/restclient/resource'
 require File.dirname(__FILE__) + '/restclient/exceptions'
 
