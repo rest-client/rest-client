@@ -29,6 +29,7 @@ module RestClient
 			@verify_ssl = args[:verify_ssl] || false
 			@ssl_client_cert = args[:ssl_client_cert] || nil
 			@ssl_client_key  = args[:ssl_client_key] || nil
+			@tf = nil # If you are a raw request, this is your tempfile
 		end
 
 		def execute
@@ -110,14 +111,14 @@ module RestClient
 			display_log request_log
 
 			net.start do |http|
-				res = http.request(req, payload)
-				display_log response_log(res)
+				res = http.request(req, payload) { |http_response| fetch_body(http_response) }
 				result = process_result(res)
+				display_log response_log(res)
 
 				if result.kind_of?(String) or @method == :head
 					Response.new(result, res)
-				elsif result.kind_of?(Tempfile)
-				  RawResponse.new(result, res)
+				elsif @raw_response
+				  RawResponse.new(@tf, res)
 				else
 					nil
 				end
@@ -131,31 +132,39 @@ module RestClient
 		def setup_credentials(req)
 			req.basic_auth(user, password) if user
 		end
+		
+		def fetch_body(http_response)
+		  if @raw_response
+		    # Taken from Chef, which as in turn...
+		    # Stolen from http://www.ruby-forum.com/topic/166423
+        # Kudos to _why!
+		    @tf = Tempfile.new("rest-client") 
+        size, total = 0, http_response.header['Content-Length'].to_i
+        http_response.read_body do |chunk|
+          @tf.write(chunk) 
+          size += chunk.size
+          if size == 0
+            display_log("#{@method} #{@url} done (0 length file)")
+          elsif total == 0
+            display_log("#{@method} #{@url} (zero content length)")
+          else
+            display_log("#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
+          end
+        end
+        @tf.close
+        @tf
+      else
+        http_response.read_body
+      end
+      http_response
+	  end
 
 		def process_result(res)
-			if res.code =~ /\A2\d{2}\z/
-			  if @raw_response
-			    # Taken from Chef, which as in turn...
-			    # Stolen from http://www.ruby-forum.com/topic/166423
-          # Kudos to _why!
-			    tf = Tempfile.new("rest-client") 
-          size, total = 0, res.header['Content-Length'].to_i
-          res.read_body do |chunk|
-            tf.write(chunk) 
-            size += chunk.size
-            if size == 0
-              display_log("Request for #{@url} done (0 length file)")
-            elsif total == 0
-              display_log("Request for #{@url} (zero content length)")
-            else
-              display_log("Request for #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
-            end
-          end
-          tf.close
-          tf
-		    else
-  				decode res['content-encoding'], res.body if res.body
-				end
+			if res.code =~ /\A2\d{2}\z/ 
+			  # We don't decode raw requests
+			  unless @raw_response
+    			decode res['content-encoding'], res.body if res.body
+  			end
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 
@@ -196,7 +205,7 @@ module RestClient
 		end
 
 		def response_log(res)
-			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{(res.body) ? res.body.size : nil} bytes"
+			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{(res.body) ? res['Content-Length'].to_i : nil} bytes"
 		end
 
 		def display_log(msg)
