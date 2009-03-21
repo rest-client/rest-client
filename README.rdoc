@@ -121,6 +121,12 @@ extract and set headers for them as needed:
   )
   # ...response body
 
+== SSL Client Certificates
+
+  RestClient.get('https://example.com', :ssl_client_cert => File.read('cert.pem'), :ssl_client_key => File.read('key.pem')
+
+Self-signed certificates can be generated with the openssl command-line tool.
+
 == Meta
 
 Written by Adam Wiggins (adam at heroku dot com)
@@ -128,7 +134,8 @@ Written by Adam Wiggins (adam at heroku dot com)
 Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
 Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, Ivan
 Makfinsky, Marc-André Cournoyer, Coda Hale, Tetsuo Watanabe, Dusty Doris,
-Lennon Day-Reynolds, James Edward Gray II, Cyril Rohr, and Juan Alvarez
+Lennon Day-Reynolds, James Edward Gray II, Cyril Rohr, Juan Alvarez, and Adam
+Jacob
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
