@@ -6,10 +6,12 @@ module RestClient
 	# main API.  For example:
 	#
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
-   #
+	#
 	class Request
-		attr_reader :method, :url, :payload, :headers, :cookies, :user, :password, :timeout, :open_timeout, 
-		            :raw_response, :verify_ssl, :ssl_client_cert, :ssl_client_key
+		attr_reader :method, :url, :payload, :headers,
+			:cookies, :user, :password, :timeout, :open_timeout,
+			:verify_ssl, :ssl_client_cert, :ssl_client_key,
+			:raw_response
 
 		def self.execute(args)
 			new(args).execute
@@ -19,7 +21,7 @@ module RestClient
 			@method = args[:method] or raise ArgumentError, "must pass :method"
 			@url = args[:url] or raise ArgumentError, "must pass :url"
 			@headers = args[:headers] || {}
-      @cookies = @headers.delete(:cookies) || args[:cookies] || {}
+			@cookies = @headers.delete(:cookies) || args[:cookies] || {}
 			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
@@ -45,13 +47,13 @@ module RestClient
 		end
 
 		def make_headers(user_headers)
-      unless @cookies.empty?
-        user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
-      end
+			unless @cookies.empty?
+				user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
+			end
 
 			default_headers.merge(user_headers).inject({}) do |final, (key, value)|
 				final[key.to_s.gsub(/_/, '-').capitalize] = value.to_s
-				final
+			final
 			end
 		end
 
@@ -118,7 +120,7 @@ module RestClient
 				if result.kind_of?(String) or @method == :head
 					Response.new(result, res)
 				elsif @raw_response
-				  RawResponse.new(@tf, res)
+					RawResponse.new(@tf, res)
 				else
 					nil
 				end
@@ -132,39 +134,39 @@ module RestClient
 		def setup_credentials(req)
 			req.basic_auth(user, password) if user
 		end
-		
+
 		def fetch_body(http_response)
-		  if @raw_response
-		    # Taken from Chef, which as in turn...
-		    # Stolen from http://www.ruby-forum.com/topic/166423
-        # Kudos to _why!
-		    @tf = Tempfile.new("rest-client") 
-        size, total = 0, http_response.header['Content-Length'].to_i
-        http_response.read_body do |chunk|
-          @tf.write(chunk) 
-          size += chunk.size
-          if size == 0
-            display_log("#{@method} #{@url} done (0 length file)")
-          elsif total == 0
-            display_log("#{@method} #{@url} (zero content length)")
-          else
-            display_log("#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
-          end
-        end
-        @tf.close
-        @tf
-      else
-        http_response.read_body
-      end
-      http_response
-	  end
+			if @raw_response
+				# Taken from Chef, which as in turn...
+				# Stolen from http://www.ruby-forum.com/topic/166423
+				# Kudos to _why!
+				@tf = Tempfile.new("rest-client") 
+				size, total = 0, http_response.header['Content-Length'].to_i
+				http_response.read_body do |chunk|
+					@tf.write(chunk) 
+					size += chunk.size
+					if size == 0
+						display_log("#{@method} #{@url} done (0 length file)")
+					elsif total == 0
+						display_log("#{@method} #{@url} (zero content length)")
+					else
+						display_log("#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
+					end
+				end
+				@tf.close
+				@tf
+			else
+				http_response.read_body
+			end
+			http_response
+		end
 
 		def process_result(res)
 			if res.code =~ /\A2\d{2}\z/ 
-			  # We don't decode raw requests
-			  unless @raw_response
-    			decode res['content-encoding'], res.body if res.body
-  			end
+				# We don't decode raw requests
+				unless @raw_response
+					decode res['content-encoding'], res.body if res.body
+				end
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 
@@ -205,7 +207,7 @@ module RestClient
 		end
 
 		def response_log(res)
-		  size = @raw_response ? File.size(@tf.path) : res.body.size
+			size = @raw_response ? File.size(@tf.path) : res.body.size
 			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
 		end
 

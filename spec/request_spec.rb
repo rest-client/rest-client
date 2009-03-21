@@ -28,7 +28,7 @@ describe RestClient::Request do
 	it "decodes a gzip body" do
 		@request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should == "i'm gziped\n"
 	end
-	
+
 	it "ingores gzip for empty bodies" do
 		@request.decode('gzip', '').should be_empty
 	end
@@ -37,23 +37,23 @@ describe RestClient::Request do
 		@request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should == "some deflated text"
 	end
 
-  it "processes a successful result" do
-    res = mock("result")
-    res.stub!(:code).and_return("200")
-    res.stub!(:body).and_return('body')
-    res.stub!(:[]).with('content-encoding').and_return(nil)
-    @request.process_result(res).should == 'body'
-  end
+	it "processes a successful result" do
+		res = mock("result")
+		res.stub!(:code).and_return("200")
+		res.stub!(:body).and_return('body')
+		res.stub!(:[]).with('content-encoding').and_return(nil)
+		@request.process_result(res).should == 'body'
+	end
 
-  it "doesn't classify successful requests as failed" do
-    203.upto(206) do |code|
-      res = mock("result")
-      res.stub!(:code).and_return(code.to_s)
-      res.stub!(:body).and_return("")
-      res.stub!(:[]).with('content-encoding').and_return(nil)
-      @request.process_result(res).should be_empty
-    end
-  end
+	it "doesn't classify successful requests as failed" do
+		203.upto(206) do |code|
+			res = mock("result")
+			res.stub!(:code).and_return(code.to_s)
+			res.stub!(:body).and_return("")
+			res.stub!(:[]).with('content-encoding').and_return(nil)
+			@request.process_result(res).should be_empty
+		end
+	end
 
 	it "parses a url into a URI object" do
 		URI.should_receive(:parse).with('http://example.com/resource')
@@ -80,12 +80,12 @@ describe RestClient::Request do
 		@request.password.should == 'pass2'
 	end
 
-  it "correctly formats cookies provided to the constructor" do
-    URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
-    @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1' })
-    @request.should_receive(:default_headers).and_return({'foo' => 'bar'})
-    headers = @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1'}
-  end
+	it "correctly formats cookies provided to the constructor" do
+		URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
+		@request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1' })
+		@request.should_receive(:default_headers).and_return({'foo' => 'bar'})
+		headers = @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1'}
+	end
 
 	it "determines the Net::HTTP class to instantiate by the method name" do
 		@request.net_http_request_class(:put).should == Net::HTTP::Put
@@ -243,7 +243,7 @@ describe RestClient::Request do
 	end
 
 	it "creates a non-proxy class if a proxy url is not given" do
-	  @request.net_http_class.should_not include(Net::HTTP::ProxyDelta)
+		@request.net_http_class.should_not include(Net::HTTP::ProxyDelta)
 	end
 
 	it "logs a get request" do
@@ -303,109 +303,109 @@ describe RestClient::Request do
 		f.should_receive(:puts).with('xyz')
 		@request.display_log('xyz')
 	end
-	
+
 	it "set read_timeout" do
 		@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
 		@http.stub!(:request)
 		@request.stub!(:process_result)
 		@request.stub!(:response_log)
-		
+
 		@net.should_receive(:read_timeout=).with(123)
-		
+
 		@request.transmit(@uri, 'req', nil)
 	end
-	
+
 	it "set open_timeout" do
 		@request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123)
 		@http.stub!(:request)
 		@request.stub!(:process_result)
 		@request.stub!(:response_log)
-		
+
 		@net.should_receive(:open_timeout=).with(123)
-		
+
 		@request.transmit(@uri, 'req', nil)
 	end
-	
+
 	it "should default to not verifying ssl certificates" do
-	  @request.verify_ssl.should == false
+		@request.verify_ssl.should == false
 	end
-	
+
 	it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
-	  @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
-	
+
 	it "should not set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is true" do
-	  @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
-	  @net.should_not_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
+		@net.should_not_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
-	
+
 	it "should default to not having an ssl_client_cert" do
-	  @request.ssl_client_cert.should be(nil)
+		@request.ssl_client_cert.should be(nil)
 	end
-	
+
 	it "should set the ssl_client_cert if provided" do
-	  @request = RestClient::Request.new(
-	    :method => :put, 
-	    :url => 'https://some/resource', 
-	    :payload => 'payload',
-	    :ssl_client_cert => "whatsupdoc!"
-	  )
-	  @net.should_receive(:cert=).with("whatsupdoc!")
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload',
+			:ssl_client_cert => "whatsupdoc!"
+		)
+		@net.should_receive(:cert=).with("whatsupdoc!")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
-	
+
 	it "should not set the ssl_client_cert if it is not provided" do
-	  @request = RestClient::Request.new(
-	    :method => :put, 
-	    :url => 'https://some/resource', 
-	    :payload => 'payload'
-	  )
-	  @net.should_not_receive(:cert=).with("whatsupdoc!")
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload'
+		)
+		@net.should_not_receive(:cert=).with("whatsupdoc!")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
-	
+
 	it "should default to not having an ssl_client_key" do
-	  @request.ssl_client_key.should be(nil)
+		@request.ssl_client_key.should be(nil)
 	end
-	
+
 	it "should set the ssl_client_key if provided" do
-	  @request = RestClient::Request.new(
-	    :method => :put, 
-	    :url => 'https://some/resource', 
-	    :payload => 'payload',
-	    :ssl_client_key => "whatsupdoc!"
-	  )
-	  @net.should_receive(:key=).with("whatsupdoc!")
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload',
+			:ssl_client_key => "whatsupdoc!"
+		)
+		@net.should_receive(:key=).with("whatsupdoc!")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
-	
+
 	it "should not set the ssl_client_key if it is not provided" do
-	  @request = RestClient::Request.new(
-	    :method => :put, 
-	    :url => 'https://some/resource', 
-	    :payload => 'payload'
-	  )
-	  @net.should_not_receive(:key=).with("whatsupdoc!")
-	  @http.stub!(:request)
-	  @request.stub!(:process_result)
-	  @request.stub!(:response_log)
-	  @request.transmit(@uri, 'req', 'payload')
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload'
+		)
+		@net.should_not_receive(:key=).with("whatsupdoc!")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
 	end
 end

@@ -8,7 +8,7 @@ module RestClient
 	#   RestClient.get('http://example.com').headers[:content_type]
 	#
 	class Response < String
-		
+
 		include RestClient::Mixin::Response
 
 		def initialize(string, net_http_res)

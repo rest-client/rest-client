@@ -12,8 +12,8 @@ module RestClient
 	# a Tempfile object at res.file, which contains the path to the raw 
 	# downloaded request body.  
 	class RawResponse 
-	  include RestClient::Mixin::Response
-		
+		include RestClient::Mixin::Response
+
 		attr_reader :file
 
 		def initialize(tempfile, net_http_res)
@@ -21,10 +21,10 @@ module RestClient
 			@file = tempfile
 		end
 
-    def to_s
-      @file.open
-      @file.read
-    end
+		def to_s
+			@file.open
+			@file.read
+		end
 
 	end
 end

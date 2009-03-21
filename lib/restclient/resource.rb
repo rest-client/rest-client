@@ -100,8 +100,8 @@ module RestClient
 		end
 		
 		def open_timeout
-		  options[:open_timeout]
-	  end
+			options[:open_timeout]
+		end
 
 		# Construct a subresource, preserving authentication.
 		#
