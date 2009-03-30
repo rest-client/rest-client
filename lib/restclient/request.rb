@@ -10,7 +10,7 @@ module RestClient
 	class Request
 		attr_reader :method, :url, :payload, :headers,
 			:cookies, :user, :password, :timeout, :open_timeout,
-			:verify_ssl, :ssl_client_cert, :ssl_client_key,
+			:verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file
 			:raw_response
 
 		def self.execute(args)
@@ -31,6 +31,7 @@ module RestClient
 			@verify_ssl = args[:verify_ssl] || false
 			@ssl_client_cert = args[:ssl_client_cert] || nil
 			@ssl_client_key  = args[:ssl_client_key] || nil
+			@ssl_ca_file = args[:ssl_ca_file] || nil
 			@tf = nil # If you are a raw request, this is your tempfile
 		end
 
@@ -107,6 +108,7 @@ module RestClient
 			net.verify_mode = OpenSSL::SSL::VERIFY_NONE if @verify_ssl == false
 			net.cert = @ssl_client_cert if @ssl_client_cert
 			net.key = @ssl_client_key if @ssl_client_key
+			net.ca_file = @ssl_ca_file if @ssl_ca_file
 			net.read_timeout = @timeout if @timeout
 			net.open_timeout = @open_timeout if @open_timeout
 

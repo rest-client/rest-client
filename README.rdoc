@@ -123,7 +123,13 @@ extract and set headers for them as needed:
 
 == SSL Client Certificates
 
-  RestClient.get('https://example.com', :ssl_client_cert => File.read('cert.pem'), :ssl_client_key => File.read('key.pem')
+  RestClient::Resource.new(
+    'https://example.com', 
+    :ssl_client_cert  =>  OpenSSL::X509::Certificate.new(File.read("cert.pem")), 
+    :ssl_client_key   =>  OpenSSL::PKey::RSA.new(File.read("key.pem"), "passphrase, if any"),
+    :ssl_ca_file      =>  "ca_certificate.pem", 
+    :verify_ssl       =>  OpenSSL::SSL::VERIFY_PEER 
+  ).get
 
 Self-signed certificates can be generated with the openssl command-line tool.
 

@@ -408,4 +408,35 @@ describe RestClient::Request do
 		@request.stub!(:response_log)
 		@request.transmit(@uri, 'req', 'payload')
 	end
+	
+	it "should default to not having an ssl_ca_file" do
+		@request.ssl_ca_file.should be(nil)
+	end
+
+	it "should set the ssl_ca_file if provided" do
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload',
+			:ssl_ca_file => "Certificate Authority File"
+		)
+		@net.should_receive(:ca_file=).with("Certificate Authority File")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
+	end
+
+	it "should not set the ssl_ca_file if it is not provided" do
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload'
+		)
+		@net.should_not_receive(:ca_file=).with("Certificate Authority File")
+		@http.stub!(:request)
+		@request.stub!(:process_result)
+		@request.stub!(:response_log)
+		@request.transmit(@uri, 'req', 'payload')
+	end
 end
