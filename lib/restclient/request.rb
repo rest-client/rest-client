@@ -10,7 +10,7 @@ module RestClient
 	class Request
 		attr_reader :method, :url, :payload, :headers,
 			:cookies, :user, :password, :timeout, :open_timeout,
-			:verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file
+			:verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
 			:raw_response
 
 		def self.execute(args)
