@@ -330,13 +330,13 @@ describe RestClient::Request do
 		@request.verify_ssl.should == false
 	end
 
-	it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
-		@net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-		@http.stub!(:request)
-		@request.stub!(:process_result)
-		@request.stub!(:response_log)
-		@request.transmit(@uri, 'req', 'payload')
-	end
+  it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
+    @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+    @http.stub!(:request)
+    @request.stub!(:process_result)
+    @request.stub!(:response_log)
+    @request.transmit(@uri, 'req', 'payload')
+  end
 
 	it "should not set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is true" do
 		@request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
@@ -346,6 +346,20 @@ describe RestClient::Request do
 		@request.stub!(:response_log)
 		@request.transmit(@uri, 'req', 'payload')
 	end
+
+  it "should set net.verify_mode to the passed value if verify_ssl is an OpenSSL constant" do
+    mode     = OpenSSL::SSL::VERIFY_PEER |
+               OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT
+		@request = RestClient::Request.new( :method     => :put,
+		                                    :url        => 'https://some/resource',
+		                                    :payload    => 'payload',
+		                                    :verify_ssl => mode )
+    @net.should_receive(:verify_mode=).with(mode)
+    @http.stub!(:request)
+    @request.stub!(:process_result)
+    @request.stub!(:response_log)
+    @request.transmit(@uri, 'req', 'payload')
+  end
 
 	it "should default to not having an ssl_client_cert" do
 		@request.ssl_client_cert.should be(nil)
