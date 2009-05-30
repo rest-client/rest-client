@@ -213,7 +213,7 @@ module RestClient
 		end
 
 		def response_log(res)
-			size = @raw_response ? File.size(@tf.path) : res.body.size
+			size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
 			"# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
 		end
 

@@ -278,6 +278,12 @@ describe RestClient::Request do
 		@request.response_log(res).should == "# => 200 OK |  4 bytes"
 	end
 
+	it "logs a response with a nil body" do
+		res = mock('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+		res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
+		@request.response_log(res).should == "# => 200 OK | text/html 0 bytes"
+	end
+
 	it "strips the charset from the response content type" do
 		res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
 		res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
