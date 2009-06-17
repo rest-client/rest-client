@@ -39,6 +39,8 @@ module RestClient
 			execute_inner
 		rescue Redirect => e
 			@url = e.url
+			@method = :get
+			@payload = nil
 			execute
 		end
 

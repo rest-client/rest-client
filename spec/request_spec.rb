@@ -222,6 +222,21 @@ describe RestClient::Request do
 		lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
 	end
 
+	it "uses GET and clears payload when following 30x redirects" do
+		url = "http://example.com/redirected"
+
+		@request.should_receive(:execute_inner).once.ordered.
+			and_raise(RestClient::Redirect.new(url))
+
+		@request.should_receive(:execute_inner).once.ordered do
+			@request.url.should     == url
+			@request.method.should	== :get
+			@request.payload.should be_nil
+		end
+
+		@request.execute
+	end
+
 	it "raises Unauthorized when the response is 401" do
 		res = mock('response', :code => '401')
 		lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
