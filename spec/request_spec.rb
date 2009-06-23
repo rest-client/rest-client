@@ -225,12 +225,11 @@ describe RestClient::Request do
 	it "uses GET and clears payload when following 30x redirects" do
 		url = "http://example.com/redirected"
 
-		@request.should_receive(:execute_inner).once.ordered.
-			and_raise(RestClient::Redirect.new(url))
+		@request.should_receive(:execute_inner).once.ordered.and_raise(RestClient::Redirect.new(url))
 
 		@request.should_receive(:execute_inner).once.ordered do
-			@request.url.should     == url
-			@request.method.should	== :get
+			@request.url.should == url
+			@request.method.should == :get
 			@request.payload.should be_nil
 		end
 
