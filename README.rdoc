@@ -141,7 +141,7 @@ Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
 Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, Ivan
 Makfinsky, Marc-André Cournoyer, Coda Hale, Tetsuo Watanabe, Dusty Doris,
 Lennon Day-Reynolds, James Edward Gray II, Cyril Rohr, Juan Alvarez, and Adam
-Jacob, and Paul Dlug
+Jacob, Paul Dlug, and Brad Ediger
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
