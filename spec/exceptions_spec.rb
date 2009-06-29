@@ -12,6 +12,10 @@ describe RestClient::Exception do
 end
 
 describe RestClient::RequestFailed do
+	before do
+		@response = mock('HTTP Response', :code => '502')
+	end
+
 	it "stores the http response on the exception" do
 		begin
 			raise RestClient::RequestFailed, :response
@@ -21,11 +25,18 @@ describe RestClient::RequestFailed do
 	end
 
 	it "http_code convenience method for fetching the code as an integer" do
-		RestClient::RequestFailed.new(mock('res', :code => '502')).http_code.should == 502
+		RestClient::RequestFailed.new(@response).http_code.should == 502
+	end
+
+	it "http_body convenience method for fetching the body (decoding when necessary)" do
+		@response.stub!(:[]).with('content-encoding').and_return('gzip')
+		@response.stub!(:body).and_return('compressed body')
+		RestClient::Request.should_receive(:decode).with('gzip', 'compressed body').and_return('plain body')
+		RestClient::RequestFailed.new(@response).http_body.should == 'plain body'
 	end
 
 	it "shows the status code in the message" do
-		RestClient::RequestFailed.new(mock('res', :code => '502')).to_s.should match(/502/)
+		RestClient::RequestFailed.new(@response).to_s.should match(/502/)
 	end
 end
 

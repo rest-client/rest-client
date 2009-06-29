@@ -18,6 +18,10 @@ module RestClient
 		def http_code
 			@response.code.to_i if @response
 		end
+
+		def http_body
+			RestClient::Request.decode(@response['content-encoding'], @response.body) if @response
+		end
 	end
 
 	# A redirect was encountered; caught by execute to retry with the new url.
