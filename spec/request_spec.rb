@@ -17,8 +17,8 @@ describe RestClient::Request do
 		@net.stub!(:verify_mode=)
 	end
 
-	it "requests xml mimetype" do
-		@request.default_headers[:accept].should == 'application/xml'
+	it "accept */* mimetype, preferring xml" do
+		@request.default_headers[:accept].should == '*/*; q=0.5, application/xml'
 	end
 
 	it "decodes an uncompressed result body by passing it straight through" do
