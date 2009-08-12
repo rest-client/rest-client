@@ -92,7 +92,7 @@ module RestClient
 
 			def create_file_field(s, k, v)
 				begin
-					s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{v.path}\"#{EOL}")
+					s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{File.basename(v.path)}\"#{EOL}")
 					s.write("Content-Type: #{mime_for(v.path)}#{EOL}")
 					s.write(EOL)
 					while data = v.read(8124)

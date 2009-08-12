@@ -36,7 +36,7 @@ EOS
 			m = RestClient::Payload::Multipart.new({:foo => f})
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo"; filename="./spec/master_shake.jpg"\r
+Content-Disposition: multipart/form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
 #{IO.read(f.path)}\r
