@@ -3,8 +3,10 @@ require 'net/https'
 require 'zlib'
 require 'stringio'
 
-require File.dirname(__FILE__) + '/resource'
-require File.dirname(__FILE__) + '/request_errors'
+require File.dirname(__FILE__) + '/rest_client/resource'
+require File.dirname(__FILE__) + '/rest_client/request_errors'
+require File.dirname(__FILE__) + '/rest_client/payload'
+require File.dirname(__FILE__) + '/rest_client/net_http_ext'
 
 # This module's static methods are the entry point for using the REST client.
 #
@@ -43,30 +45,30 @@ require File.dirname(__FILE__) + '/request_errors'
 #   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
 #
 module RestClient
-	def self.get(url, headers={})
+	def self.get(url, headers={}, &b)
 		Request.execute(:method => :get,
 			:url => url,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.post(url, payload, headers={})
+	def self.post(url, payload, headers={}, &b)
 		Request.execute(:method => :post,
 			:url => url,
 			:payload => payload,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.put(url, payload, headers={})
+	def self.put(url, payload, headers={}, &b)
 		Request.execute(:method => :put,
 			:url => url,
 			:payload => payload,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
-	def self.delete(url, headers={})
+	def self.delete(url, headers={}, &b)
 		Request.execute(:method => :delete,
 			:url => url,
-			:headers => headers)
+			:headers => headers, &b)
 	end
 
 	class <<self
@@ -89,30 +91,30 @@ module RestClient
 	class Request
 		attr_reader :method, :url, :payload, :headers, :user, :password, :timeout
 
-		def self.execute(args)
-			new(args).execute
+		def self.execute(args, &b)
+			new(args).execute(&b)
 		end
 
 		def initialize(args)
 			@method = args[:method] or raise ArgumentError, "must pass :method"
 			@url = args[:url] or raise ArgumentError, "must pass :url"
+			@payload = Payload.generate(args[:payload] || '')
 			@headers = args[:headers] || {}
-			@payload = process_payload(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
 			@timeout = args[:timeout]
 		end
 
-		def execute
-			execute_inner
+		def execute(&b)
+			execute_inner(&b)
 		rescue Redirect => e
 			@url = e.url
-			execute
+			execute(&b)
 		end
 
-		def execute_inner
+		def execute_inner(&b)
 			uri = parse_url_with_auth(url)
-			transmit uri, net_http_request_class(method).new(uri.request_uri, make_headers(headers)), payload
+			transmit(uri, net_http_request_class(method).new(uri.request_uri, make_headers(headers)), payload, &b)
 		end
 
 		def make_headers(user_headers)
@@ -164,7 +166,7 @@ module RestClient
 			end
 		end
 
-		def transmit(uri, req, payload)
+		def transmit(uri, req, payload, &b)
 			setup_credentials(req)
 
 			net = net_http_class.new(uri.host, uri.port)
@@ -177,7 +179,10 @@ module RestClient
 				http.read_timeout = @timeout if @timeout
 				res = http.request(req, payload)
 				display_log response_log(res)
-				string = process_result(res)
+				## Ok. I know this is weird but it's a hack for now
+				## this lets process_result determine if it should read the body
+				## into memory or not
+				string = process_result(http.request(req, payload || "", &b), &b)
 				if string
 					Response.new(string, res)
 				else
@@ -188,15 +193,17 @@ module RestClient
 			raise RestClient::ServerBrokeConnection
 		rescue Timeout::Error
 			raise RestClient::RequestTimeout
+		ensure
+			payload.close
 		end
 
 		def setup_credentials(req)
 			req.basic_auth(user, password) if user
 		end
 
-		def process_result(res)
+		def process_result(res, &b)
 			if %w(200 201 202).include? res.code
-				decode res['content-encoding'], res.body
+				decode(res['content-encoding'], res.body) unless b
 			elsif %w(301 302 303).include? res.code
 				url = res.header['Location']
 
@@ -217,6 +224,9 @@ module RestClient
 				raise RequestFailed, res
 			end
 		end
+		
+		def payload
+			@payload
 
 		def decode(content_encoding, body)
 			if content_encoding == 'gzip'
@@ -253,7 +263,7 @@ module RestClient
 		end
 
 		def default_headers
-			{ :accept => 'application/xml', :accept_encoding => 'gzip, deflate' }
+			@payload.headers.merge({ :accept => 'application/xml', :accept_encoding => 'gzip, deflate' })
 		end
 	end
 

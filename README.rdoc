@@ -13,15 +13,38 @@ of specifying actions: get, put, post, delete.
   RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
 
   RestClient.delete 'http://example.com/resource'
+  
+== Multipart
 
-See RestClient module docs for details.
+Yeah, that's right!  This does multipart sends for you!
+
+  RestClient.post '/data', :myfile => File.new("/path/to/image.jpg")
+
+This does two things for you:
+
+* Auto-detects that you have a File value sends it as multipart
+* Auto-detects the mime of the file and sets it in the HEAD of the payload for each entry
+
+If you are sending params that do not contain a File object but the payload needs to be multipart then:
+
+  RestClient.post '/data', :foo => 'bar', :multipart => true
+
+== Streaming downloads
+
+RestClient.get('http://some/resource/lotsofdata') do |res|
+  res.read_body do |chunk|
+    .. do something with chunk ..
+  end
+end
+
+See RestClient module docs for more details.
 
 == Usage: ActiveResource-Style
 
   resource = RestClient::Resource.new 'http://example.com/resource'
   resource.get
 
-  private_resource = RestClient::Resource.new 'https://example.com/private/resource', :user => 'adam', :password => 'secret', :timeout => 20
+  private_resource = RestClient::Resource.new 'https://example.com/private/resource', 'user', 'pass'
   private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 
 See RestClient::Resource module docs for details.
@@ -65,53 +88,13 @@ Then invoke:
 
   $ restclient private_site
   
-Use as a one-off, curl-style:
-
-  $ restclient get http://example.com/resource > output_body
-
-  $ restclient put http://example.com/resource < input_body
-
-== Logging
-
-Write calls to a log filename (can also be "stdout" or "stderr"):
-
-  RestClient.log = '/tmp/restclient.log'
-
-Or set an environment variable to avoid modifying the code:
-
-  $ RESTCLIENT_LOG=stdout path/to/my/program
-
-Either produces logs like this:
-
-  RestClient.get "http://some/resource"
-  # => 200 OK | text/html 250 bytes
-  RestClient.put "http://some/resource", "payload"
-  # => 401 Unauthorized | application/xml 340 bytes
-
-Note that these logs are valid Ruby, so you can paste them into the restclient
-shell or a script to replay your sequence of rest calls.
-
-== Proxy
-
-All calls to RestClient, including Resources, will use the proxy specified by
-RestClient.proxy:
-
-  RestClient.proxy = "http://proxy.example.com/"
-  RestClient.get "http://some/resource"
-  # => response from some/resource as proxied through proxy.example.com
-
-Often the proxy url is set in an environment variable, so you can do this to
-use whatever proxy the system is configured to use:
-
-  RestClient.proxy = ENV['http_proxy']
-
 == Meta
 
 Written by Adam Wiggins (adam at heroku dot com)
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro
-Belo, Rafael Souza, Rick Olson, Aman Gupta, Blake Mizerany, Brian Donovan, Ivan
-Makfinsky, Marc-André Cournoyer, Coda Hale, and Tetsuo Watanabe
+Major modifications by Blake Mizerany
+
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, and Aman Gupta
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 

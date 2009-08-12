@@ -1,5 +1,9 @@
 require File.dirname(__FILE__) + '/base'
 
+def generate_payload(v)
+	RestClient::Payload::Base.new(v)
+end
+
 describe RestClient do
 	context "public API" do
 		it "GET" do
@@ -140,15 +144,15 @@ describe RestClient do
 			klass = mock("net:http class")
 			@request.should_receive(:net_http_request_class).with(:put).and_return(klass)
 			klass.should_receive(:new).and_return('result')
-			@request.should_receive(:transmit).with(@uri, 'result', 'payload')
+			@request.should_receive(:transmit).with(@uri, 'result', be_kind_of(RestClient::Payload::Base))
 			@request.execute_inner
 		end
 
 		it "transmits the request with Net::HTTP" do
-			@http.should_receive(:request).with('req', 'payload')
+			@http.should_receive(:request).with('req', be_kind_of(RestClient::Payload::Base))
 			@request.should_receive(:process_result)
 			@request.should_receive(:response_log)
-			@request.transmit(@uri, 'req', 'payload')
+			@request.transmit(@uri, 'req', generate_payload('payload'))
 		end
 
 		it "uses SSL when the URI refers to a https address" do
@@ -157,7 +161,7 @@ describe RestClient do
 			@http.stub!(:request)
 			@request.stub!(:process_result)
 			@request.stub!(:response_log)
-			@request.transmit(@uri, 'req', 'payload')
+			@request.transmit(@uri, 'req', generate_payload('payload'))
 		end
 
 		it "sends nil payloads" do
@@ -196,7 +200,7 @@ describe RestClient do
 			@request.stub!(:password).and_return('mypass')
 			@request.should_receive(:setup_credentials).with('req')
 
-			@request.transmit(@uri, 'req', nil)
+			@request.transmit(@uri, 'req', generate_payload(''))
 		end
 
 		it "does not attempt to send any credentials if user is nil" do
@@ -216,7 +220,8 @@ describe RestClient do
 
 		it "catches EOFError and shows the more informative ServerBrokeConnection" do
 			@http.stub!(:request).and_raise(EOFError)
-			lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
+			lambda { @request.transmit(@uri, 'req', generate_payload('')) }.
+				should raise_error(RestClient::ServerBrokeConnection)
 		end
 
 		it "execute calls execute_inner" do

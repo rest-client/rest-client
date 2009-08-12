@@ -76,7 +76,7 @@ Rake::RDocTask.new do |t|
 	t.title    = "rest-client, fetch RESTful resources effortlessly"
 	t.options << '--line-numbers' << '--inline-source' << '-A cattr_accessor=object'
 	t.options << '--charset' << 'utf-8'
-	t.rdoc_files.include('README')
+	t.rdoc_files.include('README.rdoc')
 	t.rdoc_files.include('lib/*.rb')
 end
 

@@ -41,38 +41,34 @@ module RestClient
 			end
 		end
 
-		def get(additional_headers={})
+		def get(additional_headers={}, &b)
 			Request.execute(options.merge(
 				:method => :get,
 				:url => url,
-				:headers => headers.merge(additional_headers)
-			))
+				:headers => additional_headers), &b)
 		end
 
-		def post(payload, additional_headers={})
+		def post(payload, additional_headers={}, &b)
 			Request.execute(options.merge(
 				:method => :post,
 				:url => url,
 				:payload => payload,
-				:headers => headers.merge(additional_headers)
-			))
+				:headers => additional_headers), &b)
 		end
 
-		def put(payload, additional_headers={})
+		def put(payload, additional_headers={}, &b)
 			Request.execute(options.merge(
 				:method => :put,
 				:url => url,
 				:payload => payload,
-				:headers => headers.merge(additional_headers)
-			))
+				:headers => additional_headers), &b)
 		end
 
-		def delete(additional_headers={})
+		def delete(additional_headers={}, &b)
 			Request.execute(options.merge(
 				:method => :delete,
 				:url => url,
-				:headers => headers.merge(additional_headers)
-			))
+				:headers => additional_headers), &b)
 		end
 
 		def to_s
@@ -93,6 +89,9 @@ module RestClient
 
 		def timeout
 			options[:timeout]
+				:user => user,
+				:password => password,
+				:headers => headers, &b)
 		end
 
 		# Construct a subresource, preserving authentication.
