@@ -15,6 +15,8 @@ require File.dirname(__FILE__) + '/restclient/response'
 require File.dirname(__FILE__) + '/restclient/raw_response'
 require File.dirname(__FILE__) + '/restclient/resource'
 require File.dirname(__FILE__) + '/restclient/exceptions'
+require File.dirname(__FILE__) + '/restclient/payload'
+require File.dirname(__FILE__) + '/restclient/net_http_ext'
 
 # This module's static methods are the entry point for using the REST client.
 #
