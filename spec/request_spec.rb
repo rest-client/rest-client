@@ -93,17 +93,25 @@ describe RestClient::Request do
 
 	it "merges user headers with the default headers" do
 		@request.should_receive(:default_headers).and_return({ '1' => '2' })
-		@request.make_headers('3' => '4').should == { '1' => '2', '3' => '4' }
+		headers = @request.make_headers('3' => '4')
+		headers.should have_key('1')
+		headers['1'].should == '2'
+		headers.should have_key('3')
+		headers['3'].should == '4'
 	end
 
 	it "prefers the user header when the same header exists in the defaults" do
 		@request.should_receive(:default_headers).and_return({ '1' => '2' })
-		@request.make_headers('1' => '3').should == { '1' => '3' }
+		headers = @request.make_headers('1' => '3')
+		headers.should have_key('1')
+		headers['1'].should == '3'
 	end
 
 	it "converts header symbols from :content_type to 'Content-type'" do
 		@request.should_receive(:default_headers).and_return({})
-		@request.make_headers(:content_type => 'abc').should == { 'Content-type' => 'abc' }
+		headers = @request.make_headers(:content_type => 'abc')
+		headers.should have_key('Content-type')
+		headers['Content-type'].should == 'abc'
 	end
 
 	it "converts header values to strings" do

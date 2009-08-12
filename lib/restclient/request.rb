@@ -54,10 +54,13 @@ module RestClient
 				user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
 			end
 
-			default_headers.merge(user_headers).inject({}) do |final, (key, value)|
+			headers = default_headers.merge(user_headers).inject({}) do |final, (key, value)|
 				final[key.to_s.gsub(/_/, '-').capitalize] = value.to_s
-			final
+				final
 			end
+
+			headers.merge!(@payload.headers) if @payload
+			headers
 		end
 
 		def net_http_class
