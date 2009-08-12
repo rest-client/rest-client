@@ -36,7 +36,7 @@ EOS
 			m = RestClient::Payload::Multipart.new({:foo => f})
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo"; filename="./spec/master_shake.jpg"\r
+Content-Disposition: multipart/form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
 #{IO.read(f.path)}\r
@@ -62,6 +62,11 @@ EOS
 
 		it "should return data if no of the above" do
 		  RestClient::Payload.generate("data").should be_kind_of(RestClient::Payload::Base)
+		end
+
+		it "should recognize nested multipart payloads" do
+			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+			RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
 		end
 	end
 end

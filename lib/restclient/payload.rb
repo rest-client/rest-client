@@ -8,11 +8,21 @@ module RestClient
 		def generate(params)
 			if params.is_a?(String)
 				Base.new(params)
-			elsif params.delete(:multipart) == true || 
-				params.any? { |_,v| v.respond_to?(:path) && v.respond_to?(:read) }
+			elsif params.delete(:multipart) == true || has_file?(params)
 				Multipart.new(params)
 			else
 				UrlEncoded.new(params)
+			end
+		end
+
+		def has_file?(params)
+			params.any? do |_, v|
+				case v
+				when Hash
+					has_file?(v)
+				else
+					v.respond_to?(:path) && v.respond_to?(:read)
+				end
 			end
 		end
 
@@ -92,7 +102,7 @@ module RestClient
 
 			def create_file_field(s, k, v)
 				begin
-					s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{v.path}\"#{EOL}")
+					s.write("Content-Disposition: multipart/form-data; name=\"#{k}\"; filename=\"#{File.basename(v.path)}\"#{EOL}")
 					s.write("Content-Type: #{mime_for(v.path)}#{EOL}")
 					s.write(EOL)
 					while data = v.read(8124)

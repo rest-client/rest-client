@@ -18,6 +18,10 @@ module RestClient
 		def http_code
 			@response.code.to_i if @response
 		end
+
+		def http_body
+			RestClient::Request.decode(@response['content-encoding'], @response.body) if @response
+		end
 	end
 
 	# A redirect was encountered; caught by execute to retry with the new url.
@@ -30,7 +34,7 @@ module RestClient
 		end
 	end
 
-	class NotModified < Exception
+	class NotModified < ExceptionWithResponse
 		ErrorMessage = 'NotModified'
 	end
 
@@ -44,7 +48,9 @@ module RestClient
 		ErrorMessage = 'Resource not found'
 	end
 
-	# The server broke the connection prior to the request completing.
+	# The server broke the connection prior to the request completing.  Usually
+	# this means it crashed, or sometimes that your network connection was
+	# severed before it could complete.
 	class ServerBrokeConnection < Exception
 		ErrorMessage = 'Server broke connection'
 	end
