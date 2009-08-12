@@ -8,10 +8,14 @@ module RestClient
 		def generate(params)
 			if params.is_a?(String)
 				Base.new(params)
-			elsif params.delete(:multipart) == true || has_file?(params)
-				Multipart.new(params)
+			elsif params
+				if params.delete(:multipart) == true || has_file?(params)
+					Multipart.new(params)
+				else
+					UrlEncoded.new(params)
+				end
 			else
-				UrlEncoded.new(params)
+				nil
 			end
 		end
 
