@@ -8,11 +8,21 @@ module RestClient
 		def generate(params)
 			if params.is_a?(String)
 				Base.new(params)
-			elsif params.delete(:multipart) == true || 
-				params.any? { |_,v| v.respond_to?(:path) && v.respond_to?(:read) }
+			elsif params.delete(:multipart) == true || has_file?(params)
 				Multipart.new(params)
 			else
 				UrlEncoded.new(params)
+			end
+		end
+
+		def has_file?(params)
+			params.any? do |_, v|
+				case v
+				when Hash
+					has_file?(v)
+				else
+					v.respond_to?(:path) && v.respond_to?(:read)
+				end
 			end
 		end
 

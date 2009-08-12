@@ -63,5 +63,10 @@ EOS
 		it "should return data if no of the above" do
 		  RestClient::Payload.generate("data").should be_kind_of(RestClient::Payload::Base)
 		end
+
+		it "should recognize nested multipart payloads" do
+			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+			RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
+		end
 	end
 end
