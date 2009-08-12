@@ -61,6 +61,10 @@ module RestClient
 			def close
 				@stream.close
 			end
+
+			def inspect
+				to_s.inspect
+			end
 		end
 
 		class UrlEncoded < Base
