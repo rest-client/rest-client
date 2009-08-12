@@ -88,13 +88,17 @@ module RestClient
 
 				@stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
 				@stream.write(b + EOL)
-				params.each do |k,v|
+				x = params.to_a
+				last_index = x.length - 1
+				x.each_with_index do |a, index|
+					k, v = *a
 					if v.respond_to?(:read) && v.respond_to?(:path)
 						create_file_field(@stream, k,v)
 					else
 						create_regular_field(@stream, k,v)
 					end
 					@stream.write(EOL + b)
+					@stream.write(EOL) unless last_index == index
 				end
 				@stream.write('--')
 				@stream.write(EOL)
