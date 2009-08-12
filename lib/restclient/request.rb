@@ -22,7 +22,7 @@ module RestClient
 			@url = args[:url] or raise ArgumentError, "must pass :url"
 			@headers = args[:headers] || {}
 			@cookies = @headers.delete(:cookies) || args[:cookies] || {}
-			@payload = process_payload(args[:payload])
+			@payload = Payload.generate(args[:payload])
 			@user = args[:user]
 			@password = args[:password]
 			@timeout = args[:timeout]

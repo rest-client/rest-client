@@ -115,7 +115,7 @@ describe RestClient::Request do
 		klass = mock("net:http class")
 		@request.should_receive(:net_http_request_class).with(:put).and_return(klass)
 		klass.should_receive(:new).and_return('result')
-		@request.should_receive(:transmit).with(@uri, 'result', 'payload')
+		@request.should_receive(:transmit).with(@uri, 'result', kind_of(RestClient::Payload::Base))
 		@request.execute_inner
 	end
 
