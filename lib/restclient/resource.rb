@@ -46,33 +46,37 @@ module RestClient
 		end
 
 		def get(additional_headers={}, &b)
+			headers = (options[:headers] || {}).merge(additional_headers)
 			Request.execute(options.merge(
 				:method => :get,
 				:url => url,
-				:headers => additional_headers), &b)
+				:headers => headers), &b)
 		end
 
 		def post(payload, additional_headers={}, &b)
+			headers = (options[:headers] || {}).merge(additional_headers)
 			Request.execute(options.merge(
 				:method => :post,
 				:url => url,
 				:payload => payload,
-				:headers => additional_headers), &b)
+				:headers => headers), &b)
 		end
 
 		def put(payload, additional_headers={}, &b)
+			headers = (options[:headers] || {}).merge(additional_headers)
 			Request.execute(options.merge(
 				:method => :put,
 				:url => url,
 				:payload => payload,
-				:headers => additional_headers), &b)
+				:headers => headers), &b)
 		end
 
 		def delete(additional_headers={}, &b)
+			headers = (options[:headers] || {}).merge(additional_headers)
 			Request.execute(options.merge(
 				:method => :delete,
 				:url => url,
-				:headers => additional_headers), &b)
+				:headers => headers), &b)
 		end
 
 		def to_s
