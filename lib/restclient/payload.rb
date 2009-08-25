@@ -64,6 +64,7 @@ module RestClient
 
 			def inspect
 				to_s.inspect
+				@stream.seek(0)
 			end
 		end
 
