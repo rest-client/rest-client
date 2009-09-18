@@ -47,6 +47,20 @@ Content-Type: image/jpeg\r
 --#{m.boundary}--\r
 EOS
 		end
+
+		it "should detect content type if tempfile responds to content_type" do
+			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f.instance_eval "def content_type; 'text/plain'; end" 
+			m = RestClient::Payload::Multipart.new({:foo => f})
+			m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: multipart/form-data; name="foo"; filename="master_shake.jpg"\r
+Content-Type: text/plain\r
+\r
+#{IO.read(f.path)}\r
+--#{m.boundary}--\r
+EOS
+		end
 	end
 
 	context "Payload generation" do
