@@ -94,7 +94,7 @@ Written by Adam Wiggins (adam at heroku dot com)
 
 Major modifications by Blake Mizerany
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, and Aman Gupta
+Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
