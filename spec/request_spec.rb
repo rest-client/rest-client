@@ -481,4 +481,18 @@ describe RestClient::Request do
 		@request.stub!(:response_log)
 		@request.transmit(@uri, 'req', 'payload')
 	end
+  
+	it "should still return a response object for 204 No Content responses" do
+		@request = RestClient::Request.new(
+			:method => :put, 
+			:url => 'https://some/resource', 
+			:payload => 'payload'
+		)
+		net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
+		net_http_res.stub(:read_body).and_return(nil)
+		@http.should_receive(:request).and_return(@request.fetch_body(net_http_res))
+		response = @request.transmit(@uri, 'req', 'payload')
+		response.should_not be_nil
+		response.code.should equal(204)
+	end
 end

@@ -144,7 +144,7 @@ module RestClient
 				elsif @raw_response
 					RawResponse.new(@tf, res)
 				else
-					nil
+					Response.new(nil, res)
 				end
 			end
 		rescue EOFError
