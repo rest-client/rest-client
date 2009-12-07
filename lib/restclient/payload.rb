@@ -63,8 +63,9 @@ module RestClient
 			end
 
 			def inspect
-				to_s.inspect
+				result = to_s.inspect
 				@stream.seek(0)
+				result
 			end
 		end
 
