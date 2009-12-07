@@ -21,7 +21,7 @@ describe RestClient::Payload do
 		end
 
 		it "should form properly seperated multipart data" do
-			m = RestClient::Payload::Multipart.new({:foo => "bar", :bar => "baz"})
+			m = RestClient::Payload::Multipart.new([[:bar , "baz"], [:foo, "bar"]])
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: multipart/form-data; name="bar"\r
