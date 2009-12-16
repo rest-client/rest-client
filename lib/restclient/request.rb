@@ -2,11 +2,22 @@ require 'tempfile'
 
 module RestClient
 	# This class is used internally by RestClient to send the request, but you can also
-	# access it internally if you'd like to use a method not directly supported by the
+	# call it directly if you'd like to use a method not supported by the
 	# main API.  For example:
 	#
 	#   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
 	#
+	# Mandatory parameters:
+	# * :method
+	# * :url
+	# Optional parameters (have a look at ssl and/or uri for some explanations):
+	# * :headers a hash containing the request headers
+	# * :cookies will replace possible cookies in the :headers
+	# * :user and :password for basic auth, will be replaced by a user/password available in the :url
+	# * :raw_response return a low-level RawResponse instead of a Response
+	# * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
+	# * :timeout and :open_timeout
+	# * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
 	class Request
 		attr_reader :method, :url, :payload, :headers,
 			:cookies, :user, :password, :timeout, :open_timeout,
