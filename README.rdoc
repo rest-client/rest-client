@@ -56,6 +56,10 @@ See RestClient::Resource module docs for details.
 
 See RestClient::Resource docs for details.
 
+== Lower-level access
+
+For cases not covered by the general API,  you can use the Request class which provide a lower-level API, see the class' rdoc for more information.
+
 == Shell
 
 The restclient shell command gives an IRB session with RestClient already loaded:
