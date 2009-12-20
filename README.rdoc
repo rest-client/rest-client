@@ -106,3 +106,13 @@ http://rest-client.heroku.com
 
 http://github.com/adamwiggins/rest-client
 
+Mailing list: rest.client@librelist.com (send a mail to subscribe).
+
+== Fork goal
+
+This fork has several goals:
+* merge the features of françois' version (http://github.com/francois/rest-client) into the original gem with as much as compatibility as possible
+* improve the documentation for advanced features
+* added some tests to the streaming and multipart features
+* establish a users mailing list at rest.client@librelist.com
+* avoid overall refactoring
