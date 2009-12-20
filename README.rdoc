@@ -37,7 +37,7 @@ If you are sending params that do not contain a File object but the payload need
     end
   end
 
-See RestClient module docs for more details.
+See `RestClient` module docs for more details.
 
 == Usage: ActiveResource-Style
 
@@ -47,7 +47,7 @@ See RestClient module docs for more details.
   private_resource = RestClient::Resource.new 'https://example.com/private/resource', 'user', 'pass'
   private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 
-See RestClient::Resource module docs for details.
+See `RestClient::Resource` module docs for details.
 
 == Usage: Resource Nesting
 
@@ -58,7 +58,7 @@ See RestClient::Resource docs for details.
 
 == Lower-level access
 
-For cases not covered by the general API,  you can use the Request class which provide a lower-level API, see the class' rdoc for more information.
+For cases not covered by the general API, you can use the `RestClient::Request` class which provide a lower-level API, see the class' rdoc for more information.
 
 == Shell
 
