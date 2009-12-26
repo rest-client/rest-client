@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + "/base"
 
 describe RestClient::Payload do
 	context "A regular Payload" do
-		it "should should default content-type to standard enctype" do
+		it "should use standard enctype as default content-type" do
 			RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
 				should == 'application/x-www-form-urlencoded'
 		end
@@ -11,6 +11,21 @@ describe RestClient::Payload do
 			RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s.
 				should == "foo=bar"
 		end
+
+		it "should properly handle hashes as parameter" do
+			RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz' }}).to_s.
+				should == "foo[bar]=baz"
+			RestClient::Payload::UrlEncoded.new({:foo => {:bar => {:baz => 'qux' }}}).to_s.
+				should == "foo[bar][baz]=qux"
+		end
+
+		it "should form properly use symbolas as parameters" do
+			RestClient::Payload::UrlEncoded.new({:foo => :bar}).to_s.
+				should == "foo=bar"
+			RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz }}).to_s.
+				should == "foo[bar]=baz"
+		end
+
 	end
 
 	context "A multipart Payload" do

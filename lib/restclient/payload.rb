@@ -71,11 +71,20 @@ module RestClient
 		end
 
 		class UrlEncoded < Base
-			def build_stream(params)
-				@stream = StringIO.new(params.map do |k,v| 
-					"#{escape(k)}=#{escape(v)}"
-				end.join("&"))
-				@stream.seek(0)
+			def build_stream(params = nil)
+				@stream = StringIO.new process_params(params )
+			end
+
+			def process_params(params, parent_key = nil)
+				params.keys.map do |key|
+					calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
+					value = params[key]
+					if value.is_a? Hash
+						process_params(value, calculated_key)
+					else
+						"#{calculated_key}=#{escape value}"
+					end
+				end.join( "&" )
 			end
 
 			def headers
