@@ -50,17 +50,6 @@ bar\r
 EOS
 		end
 
-		it "should handle hash in hash parameters" do
-			m = RestClient::Payload::Multipart.new({:bar , {:baz => "foo"}})
-			m.to_s.should == <<-EOS
---#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="bar[baz]"\r
-\r
-foo\r
---#{m.boundary}--\r
-EOS
-		end
-
 		it "should form properly seperated multipart data" do
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
 			m = RestClient::Payload::Multipart.new({:foo => f})
@@ -76,8 +65,8 @@ EOS
 
 		it "should detect optional (original) content type and filename" do
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      f.instance_eval "def content_type; 'text/plain'; end" 
-      f.instance_eval "def original_filename; 'foo.txt'; end" 
+			f.instance_eval "def content_type; 'text/plain'; end" 
+			f.instance_eval "def original_filename; 'foo.txt'; end" 
 			m = RestClient::Payload::Multipart.new({:foo => f})
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
@@ -88,6 +77,31 @@ Content-Type: text/plain\r
 --#{m.boundary}--\r
 EOS
 		end
+
+		it "should handle hash in hash parameters" do
+			m = RestClient::Payload::Multipart.new({:bar , {:baz => "foo"}})
+			m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: multipart/form-data; name="bar[baz]"\r
+\r
+foo\r
+--#{m.boundary}--\r
+EOS
+
+			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+			f.instance_eval "def content_type; 'text/plain'; end" 
+			f.instance_eval "def original_filename; 'foo.txt'; end" 
+			m = RestClient::Payload::Multipart.new({:foo , {:bar => f}})
+			m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: multipart/form-data; name="foo[bar]"; filename="foo.txt"\r
+Content-Type: text/plain\r
+\r
+#{IO.read(f.path)}\r
+--#{m.boundary}--\r
+EOS
+		end
+
 	end
 
 	context "Payload generation" do
@@ -112,5 +126,6 @@ EOS
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
 			RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
 		end
+
 	end
 end
