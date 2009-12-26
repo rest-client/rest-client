@@ -41,7 +41,7 @@ module RestClient
 			@raw_response = args[:raw_response] || false
 			@verify_ssl = args[:verify_ssl] || false
 			@ssl_client_cert = args[:ssl_client_cert] || nil
-			@ssl_client_key  = args[:ssl_client_key] || nil
+			@ssl_client_key = args[:ssl_client_key] || nil
 			@ssl_ca_file = args[:ssl_ca_file] || nil
 			@tf = nil # If you are a raw request, this is your tempfile
 		end
@@ -122,10 +122,10 @@ module RestClient
 			net = net_http_class.new(uri.host, uri.port)
 			net.use_ssl = uri.is_a?(URI::HTTPS)
 			if @verify_ssl == false
-        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      elsif @verify_ssl.is_a? Integer
-        net.verify_mode = @verify_ssl
-      end
+				net.verify_mode = OpenSSL::SSL::VERIFY_NONE
+			elsif @verify_ssl.is_a? Integer
+				net.verify_mode = @verify_ssl
+			end
 			net.cert = @ssl_client_cert if @ssl_client_cert
 			net.key = @ssl_client_key if @ssl_client_key
 			net.ca_file = @ssl_ca_file if @ssl_ca_file
