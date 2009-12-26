@@ -108,6 +108,8 @@ http://github.com/adamwiggins/rest-client
 
 Mailing list: rest.client@librelist.com (send a mail to subscribe).
 
+IRC: #rest-client at freenode
+
 == Fork goal
 
 This fork has several goals:
