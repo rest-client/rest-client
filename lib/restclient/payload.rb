@@ -50,6 +50,22 @@ module RestClient
 				URI.escape(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
 			end
 
+			# Flatten parameters by converting hashes of hashes to flat hashes
+			# {keys1 => {keys2 => value}} will be transformed into {keys1[key2] => value}
+			def flatten_params(params, parent_key = nil)
+				result = {}
+				params.keys.map do |key|
+					calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
+					value = params[key]
+					if value.is_a? Hash
+						result.merge!(flatten_params(value, calculated_key))
+					else
+						result[calculated_key] = value
+					end
+				end
+				result
+			end
+
 			def headers
 				{ 'Content-Length' => size.to_s }
 			end
@@ -72,19 +88,10 @@ module RestClient
 
 		class UrlEncoded < Base
 			def build_stream(params = nil)
-				@stream = StringIO.new process_params(params )
-			end
-
-			def process_params(params, parent_key = nil)
-				params.keys.map do |key|
-					calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
-					value = params[key]
-					if value.is_a? Hash
-						process_params(value, calculated_key)
-					else
-						"#{calculated_key}=#{escape value}"
-					end
-				end.join( "&" )
+				@stream = StringIO.new(flatten_params(params).map do |k,v| 
+					"#{k}=#{escape(v)}"
+				end.join("&"))
+				@stream.seek(0)
 			end
 
 			def headers
@@ -100,7 +107,13 @@ module RestClient
 
 				@stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
 				@stream.write(b + EOL)
-				x = params.to_a
+
+				if params.is_a? Hash
+					x = flatten_params(params).to_a
+				else
+					x = params.to_a
+				end
+				
 				last_index = x.length - 1
 				x.each_with_index do |a, index|
 					k, v = *a

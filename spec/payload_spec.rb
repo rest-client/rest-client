@@ -50,6 +50,17 @@ bar\r
 EOS
 		end
 
+		it "should handle hash in hash parameters" do
+			m = RestClient::Payload::Multipart.new({:bar , {:baz => "foo"}})
+			m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: multipart/form-data; name="bar[baz]"\r
+\r
+foo\r
+--#{m.boundary}--\r
+EOS
+		end
+
 		it "should form properly seperated multipart data" do
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
 			m = RestClient::Payload::Multipart.new({:foo => f})
