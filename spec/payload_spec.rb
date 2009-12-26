@@ -19,7 +19,7 @@ describe RestClient::Payload do
 				should == "foo[bar][baz]=qux"
 		end
 
-		it "should form properly use symbolas as parameters" do
+		it "should form properly use symbols as parameters" do
 			RestClient::Payload::UrlEncoded.new({:foo => :bar}).to_s.
 				should == "foo=bar"
 			RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz }}).to_s.
