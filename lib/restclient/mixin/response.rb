@@ -15,6 +15,11 @@ module RestClient
 				@headers ||= self.class.beautify_headers(@net_http_res.to_hash)
 			end
 
+			# The raw headers.
+			def raw_headers
+				@raw_headers ||= @net_http_res.to_hash
+			end
+
 			# Hash of cookies extracted from response headers
 			def cookies
 				@cookies ||= (self.headers[:set_cookie] || "").split('; ').inject({}) do |out, raw_c|
@@ -33,7 +38,7 @@ module RestClient
 			module ClassMethods
 				def beautify_headers(headers)
 					headers.inject({}) do |out, (key, value)|
-						out[key.gsub(/-/, '_').to_sym] = value.first
+						out[key.gsub(/-/, '_').downcase.to_sym] = value.first
 					out
 					end
 				end
