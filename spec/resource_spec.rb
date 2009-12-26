@@ -42,19 +42,19 @@ describe RestClient::Resource do
 		@resource.password.should == 'pass'
 	end
 
-	it "concatinates urls, inserting a slash when it needs one" do
+	it "concatenates urls, inserting a slash when it needs one" do
 		@resource.concat_urls('http://example.com', 'resource').should == 'http://example.com/resource'
 	end
 
-	it "concatinates urls, using no slash if the first url ends with a slash" do
+	it "concatenates urls, using no slash if the first url ends with a slash" do
 		@resource.concat_urls('http://example.com/', 'resource').should == 'http://example.com/resource'
 	end
 
-	it "concatinates urls, using no slash if the second url starts with a slash" do
+	it "concatenates urls, using no slash if the second url starts with a slash" do
 		@resource.concat_urls('http://example.com', '/resource').should == 'http://example.com/resource'
 	end
 
-	it "concatinates even non-string urls, :posts + 1 => 'posts/1'" do
+	it "concatenates even non-string urls, :posts + 1 => 'posts/1'" do
 		@resource.concat_urls(:posts, 1).should == 'posts/1'
 	end
 
