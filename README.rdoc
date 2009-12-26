@@ -1,9 +1,11 @@
-= REST Client -- simple DSL for accessing REST resources
+REST Client -- simple DSL for accessing REST resources
+================================
 
 A simple REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
-== Usage: Raw URL
+Usage: Raw URL
+--------------
 
   require 'rest_client'
 
@@ -14,7 +16,8 @@ of specifying actions: get, put, post, delete.
 
   RestClient.delete 'http://example.com/resource'
   
-== Multipart
+Multipart
+---------
 
 Yeah, that's right!  This does multipart sends for you!
 
@@ -29,7 +32,8 @@ If you are sending params that do not contain a File object but the payload need
 
   RestClient.post '/data', :foo => 'bar', :multipart => true
 
-== Streaming downloads
+Streaming downloads
+-------------------
 
   RestClient.get('http://some/resource/lotsofdata') do |res|
     res.read_body do |chunk|
@@ -39,7 +43,8 @@ If you are sending params that do not contain a File object but the payload need
 
 See `RestClient` module docs for more details.
 
-== Usage: ActiveResource-Style
+Usage: ActiveResource-Style
+---------------------------
 
   resource = RestClient::Resource.new 'http://example.com/resource'
   resource.get
@@ -49,18 +54,21 @@ See `RestClient` module docs for more details.
 
 See RestClient::Resource module docs for details.
 
-== Usage: Resource Nesting
+Usage: Resource Nesting
+-----------------------
 
   site = RestClient::Resource.new('http://example.com')
   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
 
 See RestClient::Resource docs for details.
 
-== Lower-level access
+Lower-level access
+------------------
 
 For cases not covered by the general API, you can use the RestClient::Resource class which provide a lower-level API, see the class' rdoc for more information.
 
-== Shell
+Shell
+-----
 
 The restclient shell command gives an IRB session with RestClient already loaded:
 
@@ -92,9 +100,10 @@ Then invoke:
 
   $ restclient private_site
   
-== Meta
+Meta
+----
 
-Written by Adam Wiggins (adam at heroku dot com)
+Written by Adam Wiggins (adam at heroku dot com), maintained by Archiloque
 
 Major modifications by Blake Mizerany
 
@@ -110,7 +119,8 @@ Mailing list: rest.client@librelist.com (send a mail to subscribe).
 
 IRC: #rest-client at freenode
 
-== Fork goal
+Fork goal
+---------
 
 This fork has several goals:
 * merge the features of françois' version (http://github.com/francois/rest-client) into the original gem with as much as compatibility as possible
