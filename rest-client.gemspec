@@ -2,14 +2,13 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rest-client}
-  s.version = "1.1.6"
+  s.version = "1.1.0"
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-  s.authors = ["Adam Wiggins"]
+  s.authors = ["Adam Wiggins", "Archiloque"]
   s.date = %q{2009-09-21}
   s.default_executable = %q{restclient}
   s.description = %q{A simple REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.}
-  s.email = %q{adam@heroku.com}
   s.executables = ["restclient"]
   s.extra_rdoc_files = [
     "README.rdoc"
@@ -40,7 +39,7 @@ Gem::Specification.new do |s|
      "spec/response_spec.rb",
      "spec/restclient_spec.rb"
   ]
-  s.homepage = %q{http://rest-client.heroku.com/}
+  s.homepage = %q{http://github.com/archiloque/rest-client}
   s.rdoc_options = ["--charset=UTF-8"]
   s.require_paths = ["lib"]
   s.rubyforge_project = %q{rest-client}
