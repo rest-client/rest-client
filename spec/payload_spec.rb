@@ -79,7 +79,7 @@ EOS
 		end
 
 		it "should handle hash in hash parameters" do
-			m = RestClient::Payload::Multipart.new({:bar , {:baz => "foo"}})
+			m = RestClient::Payload::Multipart.new({:bar => {:baz => "foo"}})
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: multipart/form-data; name="bar[baz]"\r
@@ -91,7 +91,7 @@ EOS
 			f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
 			f.instance_eval "def content_type; 'text/plain'; end" 
 			f.instance_eval "def original_filename; 'foo.txt'; end" 
-			m = RestClient::Payload::Multipart.new({:foo , {:bar => f}})
+			m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
 			m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: multipart/form-data; name="foo[bar]"; filename="foo.txt"\r
