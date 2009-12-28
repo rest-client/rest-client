@@ -29,16 +29,6 @@ If you are sending params that do not contain a File object but the payload need
 
   RestClient.post '/data', :foo => 'bar', :multipart => true
 
-== Streaming downloads
-
-  RestClient.get('http://some/resource/lotsofdata') do |res|
-    res.read_body do |chunk|
-      .. do something with chunk ..
-    end
-  end
-
-See `RestClient` module docs for more details.
-
 == Usage: ActiveResource-Style
 
   resource = RestClient::Resource.new 'http://example.com/resource'
@@ -94,27 +84,16 @@ Then invoke:
 
 == Meta
 
-Written by Adam Wiggins (adam at heroku dot com), maintained by Archiloque
-
-Major modifications by Blake Mizerany
+Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Archiloque
 
 Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
-http://rest-client.heroku.com
+Main page: http://github.com/archiloque/rest-client
 
-http://github.com/adamwiggins/rest-client
+Rdoc: http://rdoc.info/projects/archiloque/rest-client
 
 Mailing list: rest.client@librelist.com (send a mail to subscribe).
 
 IRC: #rest-client at freenode
-
-== Fork goal
-
-This fork has several goals:
-* merge the features of françois' version (http://github.com/francois/rest-client) into the original gem with as much as compatibility as possible
-* improve the documentation for advanced features
-* added some tests to the streaming and multipart features
-* establish a users mailing list at rest.client@librelist.com
-* avoid overall refactoring
