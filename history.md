@@ -1,3 +1,9 @@
+# 1.1.1
+
+- formatting changed from tabs to spaces
+- logged requests now include generated headers
+- accept and content-type headers can now be specified using extentions: RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+
 # 1.1.0
 
 - new maintainer: Archiloque, the working repo is now at http://github.com/archiloque/rest-client
