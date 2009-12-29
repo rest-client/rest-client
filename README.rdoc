@@ -12,6 +12,8 @@ of specifying actions: get, put, post, delete.
 
   RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
 
+  RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+
   RestClient.delete 'http://example.com/resource'
 
 == Multipart

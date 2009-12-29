@@ -15,6 +15,7 @@ describe RestClient::Request do
     @net.stub!(:start).and_yield(@http)
     @net.stub!(:use_ssl=)
     @net.stub!(:verify_mode=)
+    RestClient.log = 'test.log'
   end
 
   it "accept */* mimetype, preferring xml" do
@@ -112,6 +113,25 @@ describe RestClient::Request do
     headers = @request.make_headers(:content_type => 'abc')
     headers.should have_key('Content-type')
     headers['Content-type'].should == 'abc'
+  end
+
+  it "converts content-type from extension to real content-type" do
+    @request.should_receive(:default_headers).and_return({})
+    headers = @request.make_headers(:content_type => 'json')
+    headers.should have_key('Content-type')
+    headers['Content-type'].should == 'application/json'
+  end
+
+  it "converts accept from extension(s) to real content-type(s)" do
+    @request.should_receive(:default_headers).and_return({})
+    headers = @request.make_headers(:accept => 'json, mp3')
+    headers.should have_key('Accept')
+    headers['Accept'].should == 'application/json, audio/mpeg'
+
+    @request.should_receive(:default_headers).and_return({})
+    headers = @request.make_headers(:accept => :json)
+    headers.should have_key('Accept')
+    headers['Accept'].should == 'application/json'
   end
 
   it "converts header values to strings" do
@@ -270,22 +290,22 @@ describe RestClient::Request do
 
   it "logs a get request" do
     RestClient::Request.new(:method => :get, :url => 'http://url').request_log.should ==
-            'RestClient.get "http://url"'
+            'RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"}'
   end
 
   it "logs a post request with a small payload" do
     RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log.should ==
-            'RestClient.post "http://url", "foo"'
+            'RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: "foo"'
   end
 
   it "logs a post request with a large payload" do
     RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log.should ==
-            'RestClient.post "http://url", "(1000 byte payload)"'
+            'RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: 1000 byte length'
   end
 
   it "logs input headers as a hash" do
     RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).request_log.should ==
-            'RestClient.get "http://url", :accept=>"text/plain"'
+            'RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"}'
   end
 
   it "logs a response including the status code, content type, and result body size in bytes" do

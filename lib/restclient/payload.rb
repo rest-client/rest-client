@@ -1,6 +1,6 @@
-require "tempfile"
-require "stringio"
-require "mime/types"
+require 'tempfile'
+require 'stringio'
+require 'mime/types'
 
 module RestClient
   module Payload
@@ -86,6 +86,11 @@ module RestClient
         @stream.seek(0)
         result
       end
+
+      def short_inspect
+        (size > 100 ? "#{size} byte length" : inspect)
+      end
+
     end
 
     class UrlEncoded < Base

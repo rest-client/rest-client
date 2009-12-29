@@ -35,7 +35,7 @@ describe RestClient::Payload do
       m.headers['Content-Type'].should == 'multipart/form-data; boundary="123"'
     end
 
-    it "should form properly seperated multipart data" do
+    it "should form properly separated multipart data" do
       m = RestClient::Payload::Multipart.new([[:bar, "baz"], [:foo, "bar"]])
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
@@ -50,7 +50,7 @@ bar\r
       EOS
     end
 
-    it "should form properly seperated multipart data" do
+    it "should form properly separated multipart data" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS

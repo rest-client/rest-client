@@ -1,4 +1,5 @@
 require 'tempfile'
+require 'mime/types'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -19,7 +20,7 @@ module RestClient
   # * :timeout and :open_timeout
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
-    attr_reader :method, :url, :payload, :headers,
+    attr_reader :method, :url, :payload, :headers, :processed_headers,
                 :cookies, :user, :password, :timeout, :open_timeout,
                 :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
                 :raw_response
@@ -44,6 +45,7 @@ module RestClient
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @tf = nil # If you are a raw request, this is your tempfile
+      @processed_headers = make_headers headers
     end
 
     def execute
@@ -57,16 +59,30 @@ module RestClient
 
     def execute_inner
       uri = parse_url_with_auth(url)
-      transmit uri, net_http_request_class(method).new(uri.request_uri, make_headers(headers)), payload
+      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload
     end
 
-    def make_headers(user_headers)
+    def make_headers user_headers
       unless @cookies.empty?
         user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
       end
 
       headers = default_headers.merge(user_headers).inject({}) do |final, (key, value)|
-        final[key.to_s.gsub(/_/, '-').capitalize] = value.to_s
+        target_key = key.to_s.gsub(/_/, '-').capitalize
+        if 'CONTENT-TYPE' == target_key.upcase
+          target_value = value.to_s
+          final[target_key] = MIME::Types.type_for_extension target_value
+        elsif 'ACCEPT' == target_key.upcase
+            # Accept can be composed of several comma-separated values
+            if value.is_a? Array
+              target_values = value
+            else
+              target_values = value.to_s.split ','
+            end
+            final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+        else
+          final[target_key] = value.to_s
+        end
         final
       end
 
@@ -221,11 +237,13 @@ module RestClient
     end
 
     def request_log
-      out = []
-      out << "RestClient.#{method} #{url.inspect}"
-      out << (payload.size > 100 ? "(#{payload.size} byte payload)".inspect : payload.inspect) if payload
-      out << headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '') unless headers.empty?
-      out.join(', ')
+      if RestClient.log
+        out = []
+        out << "RestClient.#{method} #{url.inspect}"
+        out << "headers: #{processed_headers.inspect}"
+        out << "paylod: #{payload.short_inspect}" if payload
+        out.join(', ')
+      end
     end
 
     def response_log(res)
@@ -247,6 +265,23 @@ module RestClient
 
     def default_headers
       { :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' }
+    end
+  end
+end
+
+module MIME
+  class Types
+
+    # Return the first found content-type for a value considered as an extension or the value itself
+    def type_for_extension ext
+      candidates =  @extension_index[ext]
+      candidates.empty? ? ext : candidates[0].content_type
+    end
+
+    class << self
+      def type_for_extension ext
+        @__types__.type_for_extension ext
+      end
     end
   end
 end
