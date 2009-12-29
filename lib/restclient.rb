@@ -3,10 +3,10 @@ require 'zlib'
 require 'stringio'
 
 begin
-	require 'net/https'
+  require 'net/https'
 rescue LoadError => e
-	raise e unless RUBY_PLATFORM =~ /linux/
-	raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
+  raise e unless RUBY_PLATFORM =~ /linux/
+  raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
 end
 
 require File.dirname(__FILE__) + '/restclient/request'
@@ -63,41 +63,42 @@ require File.dirname(__FILE__) + '/restclient/net_http_ext'
 #   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
 #
 module RestClient
-	def self.get(url, headers={})
-		Request.execute(:method => :get, :url => url, :headers => headers)
-	end
 
-	def self.post(url, payload, headers={})
-		Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers)
-	end
+  def self.get(url, headers={})
+    Request.execute(:method => :get, :url => url, :headers => headers)
+  end
 
-	def self.put(url, payload, headers={})
-		Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers)
-	end
+  def self.post(url, payload, headers={})
+    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers)
+  end
 
-	def self.delete(url, headers={})
-		Request.execute(:method => :delete, :url => url, :headers => headers)
-	end
+  def self.put(url, payload, headers={})
+    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers)
+  end
 
-	def self.head(url, headers={})
-		Request.execute(:method => :head, :url => url, :headers => headers)
-	end
+  def self.delete(url, headers={})
+    Request.execute(:method => :delete, :url => url, :headers => headers)
+  end
 
-	class << self
-		attr_accessor :proxy
-	end
+  def self.head(url, headers={})
+    Request.execute(:method => :head, :url => url, :headers => headers)
+  end
 
-	# Print log of RestClient calls.  Value can be stdout, stderr, or a filename.
-	# You can also configure logging by the environment variable RESTCLIENT_LOG.
-	def self.log=(log)
-		@@log = log
-	end
+  class << self
+    attr_accessor :proxy
+  end
 
-	def self.log    # :nodoc:
-		return ENV['RESTCLIENT_LOG'] if ENV['RESTCLIENT_LOG']
-		return @@log if defined? @@log
-		nil
-	end
+  # Print log of RestClient calls.  Value can be stdout, stderr, or a filename.
+  # You can also configure logging by the environment variable RESTCLIENT_LOG.
+  def self.log=(log)
+    @@log = log
+  end
+
+  def self.log # :nodoc:
+    return ENV['RESTCLIENT_LOG'] if ENV['RESTCLIENT_LOG']
+    return @@log if defined? @@log
+    nil
+  end
 
   def self.version
     version_path = File.dirname(__FILE__) + "/../VERSION"
