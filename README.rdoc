@@ -8,6 +8,7 @@ of specifying actions: get, put, post, delete.
   require 'rest_client'
 
   RestClient.get 'http://example.com/resource'
+  
   RestClient.get 'https://user:password@example.com/private/resource'
 
   RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
