@@ -1,8 +1,9 @@
-# 1.1.1
+# 1.2.0
 
 - formatting changed from tabs to spaces
 - logged requests now include generated headers
 - accept and content-type headers can now be specified using extentions: RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+- should be 1.1.1 but renammed to 1.2.0 because 1.1.X versions has already been packaged on Debian
 
 # 1.1.0
 

@@ -2,10 +2,10 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rest-client}
-  s.version = "1.1.0"
+  s.version = "1.2.0"
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Wiggins", "Archiloque"]
-  s.date = %q{2009-12-28}
+  s.date = %q{2010-01-3}
   s.default_executable = %q{restclient}
   s.description = %q{A simple REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.}
   s.email = %q{rest.client@librelist.com}

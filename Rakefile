@@ -7,8 +7,8 @@ Jeweler::Tasks.new do |s|
 	s.description = "A simple REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete."
 	s.summary = "Simple REST client for Ruby, inspired by microframework syntax for specifying actions."
 	s.author = "Adam Wiggins"
-	s.email = "adam@heroku.com"
-	s.homepage = "http://rest-client.heroku.com/"
+	s.email = "rest.client@librelist.com"
+	s.homepage = "http://github.com/archiloque/rest-client"
 	s.rubyforge_project = "rest-client"
 	s.has_rdoc = true
 	s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
