@@ -289,23 +289,27 @@ describe RestClient::Request do
   end
 
   it "logs a get request" do
-    RestClient::Request.new(:method => :get, :url => 'http://url').request_log.should ==
-            'RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"}'
+    ['RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"}',
+     'RestClient.get "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate}'].should include
+    RestClient::Request.new(:method => :get, :url => 'http://url').request_log
   end
 
   it "logs a post request with a small payload" do
-    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log.should ==
-            'RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: "foo"'
+    ['RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: "foo"',
+     'RestClient.post "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3"}, paylod: "foo"'].should include
+    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log
   end
 
   it "logs a post request with a large payload" do
-    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log.should ==
-            'RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: 1000 byte length'
+    ['RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: 1000 byte length',
+     'RestClient.post "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"}, paylod: 1000 byte length'].should include
+    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log
   end
 
   it "logs input headers as a hash" do
-    RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).request_log.should ==
-            'RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"}'
+    ['RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"}',
+     'RestClient.get "http://url", headers: {"Accept"=>"text/plain", "Accept-encoding"=>"gzip, deflate"}'].should include
+    RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' })
   end
 
   it "logs a response including the status code, content type, and result body size in bytes" do
