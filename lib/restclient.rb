@@ -88,16 +88,14 @@ module RestClient
     attr_accessor :proxy
   end
 
-  # Print log of RestClient calls.  Value can be stdout, stderr, or a filename.
+  # Setup the log for RestClient calls.
+  # Value should be a logger but can can be stdout, stderr, or a filename.
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
-  def self.log=(log)
-    @@log = log
-  end
-
-  def self.log # :nodoc:
-    return ENV['RESTCLIENT_LOG'] if ENV['RESTCLIENT_LOG']
-    return @@log if defined? @@log
-    nil
+  def self.log= log
+    if log.is_a? String
+      warn "[warning] You should set the log with a logger"
+    end
+    @@log = create_log log
   end
 
   def self.version
@@ -105,4 +103,49 @@ module RestClient
     return File.read(version_path).chomp if File.file?(version_path)
     "0.0.0"
   end
+
+  # Create a log that respond to << like a logger
+  # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
+  def self.create_log param
+    if param
+      if param.is_a? String
+        if param == 'stdout'
+          stdout_logger = Class.new do
+            def << obj
+              STDOUT.puts obj
+            end
+          end
+          stdout_logger.new
+        elsif param == 'stderr'
+          stderr_logger = Class.new do
+            def << obj
+              STDERR.puts obj
+            end
+          end
+          stderr_logger.new
+        else
+          file_logger = Class.new do
+            attr_writer :target_file
+            def << obj
+              File.open(@target_file, 'a') { |f| f.puts obj }
+            end
+          end
+          logger = file_logger.new
+          logger.target_file = param
+          logger
+        end
+      else
+        param
+      end
+    end
+  end
+
+  @@env_log = create_log ENV['RESTCLIENT_LOG']
+
+  @@log = nil
+
+  def self.log # :nodoc:
+    @@env_log || @@log
+  end
+
 end

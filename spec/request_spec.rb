@@ -15,7 +15,7 @@ describe RestClient::Request do
     @net.stub!(:start).and_yield(@http)
     @net.stub!(:use_ssl=)
     @net.stub!(:verify_mode=)
-    RestClient.log = 'test.log'
+    RestClient.log = nil
   end
 
   it "accept */* mimetype, preferring xml" do
@@ -150,7 +150,7 @@ describe RestClient::Request do
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
     @request.should_receive(:process_result)
-    @request.should_receive(:response_log)
+    @request.should_receive(:log_response)
     @request.transmit(@uri, 'req', 'payload')
   end
 
@@ -289,71 +289,63 @@ describe RestClient::Request do
   end
 
   it "logs a get request" do
-    ['RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"}',
-     'RestClient.get "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate}'].should include
-    RestClient::Request.new(:method => :get, :url => 'http://url').request_log
+    log = RestClient.log = []
+    RestClient::Request.new(:method => :get, :url => 'http://url').log_request
+    ['RestClient.get "http://url", "Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"',
+     'RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate"'].should include(log[0])
   end
 
   it "logs a post request with a small payload" do
-    ['RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: "foo"',
-     'RestClient.post "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3"}, paylod: "foo"'].should include
-    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').request_log
+    log = RestClient.log = []
+    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log_request
+    ['RestClient.post "http://url", "foo", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"',
+     'RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3"'].should include(log[0])
   end
 
   it "logs a post request with a large payload" do
-    ['RestClient.post "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"}, paylod: 1000 byte length',
-     'RestClient.post "http://url", headers: {"Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"}, paylod: 1000 byte length'].should include
-    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).request_log
+    log = RestClient.log = []
+    RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
+    ['RestClient.post "http://url", 1000 byte length, "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"',
+     'RestClient.post "http://url", 1000 byte length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"'].should include(log[0])
   end
 
   it "logs input headers as a hash" do
-    ['RestClient.get "http://url", headers: {"Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"}',
-     'RestClient.get "http://url", headers: {"Accept"=>"text/plain", "Accept-encoding"=>"gzip, deflate"}'].should include
-    RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' })
+    log = RestClient.log = []
+    RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).log_request
+    ['RestClient.get "http://url", "Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"',
+     'RestClient.get "http://url", "Accept"=>"text/plain", "Accept-encoding"=>"gzip, deflate"'].should include(log[0])
   end
 
   it "logs a response including the status code, content type, and result body size in bytes" do
+    log = RestClient.log = []
     res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub!(:[]).with('Content-type').and_return('text/html')
-    @request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
+    @request.log_response res
+    log[0].should == "# => 200 OK | text/html 4 bytes"
   end
 
   it "logs a response with a nil Content-type" do
+    log = RestClient.log = []
     res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub!(:[]).with('Content-type').and_return(nil)
-    @request.response_log(res).should == "# => 200 OK |  4 bytes"
+    @request.log_response res
+    log[0].should == "# => 200 OK |  4 bytes"
   end
 
   it "logs a response with a nil body" do
+    log = RestClient.log = []
     res = mock('result', :code => '200', :class => Net::HTTPOK, :body => nil)
     res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-    @request.response_log(res).should == "# => 200 OK | text/html 0 bytes"
+    @request.log_response res
+    log[0].should == "# => 200 OK | text/html 0 bytes"
   end
 
   it "strips the charset from the response content type" do
+    log = RestClient.log = []
     res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-    @request.response_log(res).should == "# => 200 OK | text/html 4 bytes"
-  end
-
-  it "displays the log to stdout" do
-    RestClient.stub!(:log).and_return('stdout')
-    STDOUT.should_receive(:puts).with('xyz')
-    @request.display_log('xyz')
-  end
-
-  it "displays the log to stderr" do
-    RestClient.stub!(:log).and_return('stderr')
-    STDERR.should_receive(:puts).with('xyz')
-    @request.display_log('xyz')
-  end
-
-  it "append the log to the requested filename" do
-    RestClient.stub!(:log).and_return('/tmp/restclient.log')
-    f = mock('file handle')
-    File.should_receive(:open).with('/tmp/restclient.log', 'a').and_yield(f)
-    f.should_receive(:puts).with('xyz')
-    @request.display_log('xyz')
+    @request.log_response res
+    log[0].should == "# => 200 OK | text/html 4 bytes"
   end
 
   it "set read_timeout" do

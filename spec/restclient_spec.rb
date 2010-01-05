@@ -33,21 +33,31 @@ describe RestClient do
       RestClient.log = nil
     end
 
-    it "gets the log source from the RESTCLIENT_LOG environment variable" do
-      ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return('from env')
-      RestClient.log = 'from class method'
-      RestClient.log.should == 'from env'
+    it "uses << if the log is not a string" do
+      log = RestClient.log = []
+      log.should_receive(:<<).with('xyz')
+      RestClient.log << 'xyz'
     end
 
-    it "sets a destination for log output, used if no environment variable is set" do
-      ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
-      RestClient.log = 'from class method'
-      RestClient.log.should == 'from class method'
+    it "displays the log to stdout" do
+      RestClient.log = 'stdout'
+      STDOUT.should_receive(:puts).with('xyz')
+      RestClient.log << 'xyz'
     end
 
-    it "returns nil (no logging) if neither are set (default)" do
-      ENV.stub!(:[]).with('RESTCLIENT_LOG').and_return(nil)
-      RestClient.log.should == nil
+    it "displays the log to stderr" do
+      RestClient.log = 'stderr'
+      STDERR.should_receive(:puts).with('xyz')
+      RestClient.log << 'xyz'
+    end
+
+    it "append the log to the requested filename" do
+      RestClient.log = '/tmp/restclient.log'
+      f = mock('file handle')
+      File.should_receive(:open).with('/tmp/restclient.log', 'a').and_yield(f)
+      f.should_receive(:puts).with('xyz')
+      RestClient.log << 'xyz'
     end
   end
+
 end

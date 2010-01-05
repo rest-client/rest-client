@@ -73,13 +73,13 @@ module RestClient
           target_value = value.to_s
           final[target_key] = MIME::Types.type_for_extension target_value
         elsif 'ACCEPT' == target_key.upcase
-            # Accept can be composed of several comma-separated values
-            if value.is_a? Array
-              target_values = value
-            else
-              target_values = value.to_s.split ','
-            end
-            final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+          # Accept can be composed of several comma-separated values
+          if value.is_a? Array
+            target_values = value
+          else
+            target_values = value.to_s.split ','
+          end
+          final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
         else
           final[target_key] = value.to_s
         end
@@ -148,12 +148,12 @@ module RestClient
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
 
-      display_log request_log
+      log_request
 
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
         result = process_result(res)
-        display_log response_log(res)
+        log_response res
 
         if result.kind_of?(String) or @method == :head
           Response.new(result, res)
@@ -183,12 +183,14 @@ module RestClient
         http_response.read_body do |chunk|
           @tf.write(chunk)
           size += chunk.size
-          if size == 0
-            display_log("#{@method} #{@url} done (0 length file)")
-          elsif total == 0
-            display_log("#{@method} #{@url} (zero content length)")
-          else
-            display_log("#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
+          if RestClient.log
+            if size == 0
+              RestClient.log << "#{@method} #{@url} done (0 length file)"
+            elsif total == 0
+              RestClient.log << "#{@method} #{@url} (zero content length)"
+            else
+              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total]
+            end
           end
         end
         @tf.close
@@ -236,30 +238,20 @@ module RestClient
       end
     end
 
-    def request_log
+    def log_request
       if RestClient.log
         out = []
         out << "RestClient.#{method} #{url.inspect}"
-        out << "headers: #{processed_headers.inspect}"
-        out << "payload: #{payload.short_inspect}" if payload
-        out.join(', ')
+        out << payload.short_inspect if payload
+        out << processed_headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '')
+        RestClient.log << out.join(', ')
       end
     end
 
-    def response_log(res)
-      size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
-      "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
-    end
-
-    def display_log(msg)
-      return unless log_to = RestClient.log
-
-      if log_to == 'stdout'
-        STDOUT.puts msg
-      elsif log_to == 'stderr'
-        STDERR.puts msg
-      else
-        File.open(log_to, 'a') { |f| f.puts msg }
+    def log_response res
+      if RestClient.log
+        size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
+        RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
       end
     end
 
@@ -274,7 +266,7 @@ module MIME
 
     # Return the first found content-type for a value considered as an extension or the value itself
     def type_for_extension ext
-      candidates =  @extension_index[ext]
+      candidates = @extension_index[ext]
       candidates.empty? ? ext : candidates[0].content_type
     end
 
