@@ -512,7 +512,7 @@ describe RestClient::Request do
             :payload => 'payload'
     )
     net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
-    net_http_res.stub(:read_body).and_return(nil)
+    net_http_res.stub!(:read_body).and_return(nil)
     @http.should_receive(:request).and_return(@request.fetch_body(net_http_res))
     response = @request.transmit(@uri, 'req', 'payload')
     response.should_not be_nil
