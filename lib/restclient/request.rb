@@ -241,7 +241,7 @@ module RestClient
         out = []
         out << "RestClient.#{method} #{url.inspect}"
         out << "headers: #{processed_headers.inspect}"
-        out << "paylod: #{payload.short_inspect}" if payload
+        out << "payload: #{payload.short_inspect}" if payload
         out.join(', ')
       end
     end
