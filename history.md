@@ -1,3 +1,7 @@
+# 1.2.1
+
+- cleaner log API, add a warning for some cases but should be compatible
+
 # 1.2.0
 
 - formatting changed from tabs to spaces
