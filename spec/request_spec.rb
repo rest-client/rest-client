@@ -249,12 +249,13 @@ describe RestClient::Request do
     lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
   end
 
-  it "uses GET and clears payload when following 30x redirects" do
+  it "uses GET and clears payload and removes possible harmful headers when following 30x redirects" do
     url = "http://example.com/redirected"
 
     @request.should_receive(:execute_inner).once.ordered.and_raise(RestClient::Redirect.new(url))
 
     @request.should_receive(:execute_inner).once.ordered do
+      @request.processed_headers.should_not have_key("Content-Length")
       @request.url.should == url
       @request.method.should == :get
       @request.payload.should be_nil

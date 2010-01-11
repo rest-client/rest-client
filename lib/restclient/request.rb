@@ -55,6 +55,8 @@ module RestClient
     def execute
       execute_inner
     rescue Redirect => e
+      @processed_headers.delete("Content-Length")
+      @processed_headers.delete("Content-Type")
       @url = e.url
       @method = :get
       @payload = nil
