@@ -3,8 +3,7 @@ module RestClient
     module Response
       attr_reader :net_http_res
 
-      # HTTP status code, always 200 since RestClient throws exceptions for
-      # other codes.
+      # HTTP status code
       def code
         @code ||= @net_http_res.code.to_i
       end

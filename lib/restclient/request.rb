@@ -20,10 +20,14 @@ module RestClient
   # * :timeout and :open_timeout
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
+
+    include RestClient::Exceptions
+
     attr_reader :method, :url, :payload, :headers, :processed_headers,
                 :cookies, :user, :password, :timeout, :open_timeout,
                 :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
                 :raw_response
+
 
     def self.execute(args)
       new(args).execute
@@ -152,16 +156,7 @@ module RestClient
 
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
-        result = process_result(res)
-        log_response res
-
-        if result.kind_of?(String) or @method == :head
-          Response.new(result, res)
-        elsif @raw_response
-          RawResponse.new(@tf, res)
-        else
-          Response.new(nil, res)
-        end
+        process_result(res)
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
@@ -201,13 +196,20 @@ module RestClient
       http_response
     end
 
-    def process_result(res)
-      if res.code =~ /\A2\d{2}\z/
+    def process_result res
+      if @raw_response
         # We don't decode raw requests
-        unless @raw_response
-          self.class.decode res['content-encoding'], res.body if res.body
-        end
-      elsif %w(301 302 303).include? res.code
+        response = RawResponse.new(@tf, res)
+      else
+        response = Response.new(Request.decode(res['content-encoding'], res.body), res)
+      end
+      log_response response
+
+      code = res.code.to_i
+
+      if (200...206).include? code
+        response
+      elsif (301...303).include? code
         url = res.header['Location']
 
         if url !~ /^http/
@@ -215,24 +217,19 @@ module RestClient
           uri.path = "/#{url}".squeeze('/')
           url = uri.to_s
         end
-
         raise Redirect, url
-      elsif res.code == "304"
-        raise NotModified, res
-      elsif res.code == "401"
-        raise Unauthorized, res
-      elsif res.code == "404"
-        raise ResourceNotFound, res
+      elsif EXCEPTIONS_MAP[code]
+        raise EXCEPTIONS_MAP[code], response
       else
-        raise RequestFailed, res
+        raise RequestFailed, response
       end
     end
 
-    def self.decode(content_encoding, body)
+    def self.decode content_encoding, body
       if content_encoding == 'gzip' and not body.empty?
         Zlib::GzipReader.new(StringIO.new(body)).read
       elsif content_encoding == 'deflate'
-        Zlib::Inflate.new.inflate(body)
+        Zlib::Inflate.new.inflate body
       else
         body
       end

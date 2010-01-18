@@ -1,32 +1,54 @@
 module RestClient
+
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
   class Exception < RuntimeError
-    def message(default=nil)
-      self.class::ErrorMessage
-    end
-  end
+    attr_accessor :message, :response
 
-  # Base RestClient exception when there's a response available
-  class ExceptionWithResponse < Exception
-    attr_accessor :response
-
-    def initialize(response=nil)
+    def initialize response = nil
       @response = response
     end
 
     def http_code
-      @response.code.to_i if @response
+      @response.code if @response
     end
 
     def http_body
-      RestClient::Request.decode(@response['content-encoding'], @response.body) if @response
+      @response
     end
+
+    def inspect
+      "#{self.class} : #{http_code} #{message}"
+    end
+
+  end
+
+  # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  module Exceptions
+    # Map http status codes to the corresponding exception class
+    EXCEPTIONS_MAP = {}
+  end
+
+  {304 => 'Not Modified', 305 => 'Use Proxy',
+   400 => 'Bad Request', 401 => 'Unauthorized', 403 => 'Forbidden', 404 => 'Resource Not Found',
+   405 => 'Method Not Allowed', 406 => 'Not Acceptable', 407 => 'Proxy Authentication Required', 408 => 'Request Timeout',
+   409 => 'Conflict', 410 => 'Gone', 411 => 'Length Required', 412 => 'Precondition Failed',
+   413 => 'Request Entity Too Large', 414 => 'Request-URI Too Long', 415 => 'Unsupported Media Type', 416 => 'Requested Range Not Satisfiable',
+   417 => 'Expectation Failed',
+   500 => 'Internal Server Error', 501 => 'Not Implemented', 502 => 'Bad Gateway', 503 => 'Service Unavailable',
+   504 => 'Gateway Timeout', 505 => 'HTTP Version Not Supported'}.each_pair do |code, message|
+    klass = Class.new(Exception) do
+      send :define_method, :message, Proc.new{message}
+      message
+    end
+    klass = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
+    Exceptions::EXCEPTIONS_MAP[code] = klass
   end
 
   # A redirect was encountered; caught by execute to retry with the new url.
   class Redirect < Exception
-    ErrorMessage = "Redirect"
+
+    message = 'Redirect'
 
     attr_accessor :url
 
@@ -35,42 +57,22 @@ module RestClient
     end
   end
 
-  class NotModified < ExceptionWithResponse
-    ErrorMessage = 'NotModified'
-  end
-
-  # Authorization is required to access the resource specified.
-  class Unauthorized < ExceptionWithResponse
-    ErrorMessage = 'Unauthorized'
-  end
-
-  # No resource was found at the given URL.
-  class ResourceNotFound < ExceptionWithResponse
-    ErrorMessage = 'Resource not found'
-  end
-
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.
   class ServerBrokeConnection < Exception
-    ErrorMessage = 'Server broke connection'
+    message = 'Server broke connection'
   end
 
-  # The server took too long to respond.
-  class RequestTimeout < Exception
-    ErrorMessage = 'Request timed out'
-  end
 
   # The request failed, meaning the remote HTTP server returned a code other
   # than success, unauthorized, or redirect.
   #
-  # The exception message attempts to extract the error from the XML, using
-  # format returned by Rails: <errors><error>some message</error></errors>
-  #
   # You can get the status code by e.http_code, or see anything about the
   # response via e.response.  For example, the entire result body (which is
   # probably an HTML error page) is e.response.body.
-  class RequestFailed < ExceptionWithResponse
+  class RequestFailed < Exception
+
     def message
       "HTTP status code #{http_code}"
     end
@@ -79,6 +81,7 @@ module RestClient
       message
     end
   end
+
 end
 
 # backwards compatibility
