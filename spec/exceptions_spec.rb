@@ -2,7 +2,7 @@ require File.dirname(__FILE__) + '/base'
 
 describe RestClient::Exception do
   it "sets the exception message to ErrorMessage" do
-    RestClient::ResourceNotFound.new.message.should == 'Resource not found'
+    RestClient::ResourceNotFound.new.message.should == 'Resource Not Found'
   end
 
   it "contains exceptions in RestClient" do
@@ -29,10 +29,8 @@ describe RestClient::RequestFailed do
   end
 
   it "http_body convenience method for fetching the body (decoding when necessary)" do
-    @response.stub!(:[]).with('content-encoding').and_return('gzip')
-    @response.stub!(:body).and_return('compressed body')
-    RestClient::Request.should_receive(:decode).with('gzip', 'compressed body').and_return('plain body')
-    RestClient::RequestFailed.new(@response).http_body.should == 'plain body'
+    RestClient::RequestFailed.new(@response).http_code.should == 502
+    RestClient::RequestFailed.new(@response).message.should == 'HTTP status code 502'
   end
 
   it "shows the status code in the message" do

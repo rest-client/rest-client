@@ -2,6 +2,10 @@ module RestClient
 
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
+  # You can get the status code by e.http_code, or see anything about the
+  # response via e.response.
+  # For example, the entire result body (which is
+  # probably an HTML error page) is e.response.
   class Exception < RuntimeError
     attr_accessor :message, :response
 
@@ -10,7 +14,8 @@ module RestClient
     end
 
     def http_code
-      @response.code if @response
+      # return integer for compatibility
+      @response.code.to_i if @response
     end
 
     def http_body
@@ -81,12 +86,7 @@ module RestClient
   end
 
 
-  # The request failed, meaning the remote HTTP server returned a code other
-  # than success, unauthorized, or redirect.
-  #
-  # You can get the status code by e.http_code, or see anything about the
-  # response via e.response.  For example, the entire result body (which is
-  # probably an HTML error page) is e.response.body.
+  # The request failed with an error code not managed by the code
   class RequestFailed < Exception
 
     def message
