@@ -11,7 +11,7 @@ Gem::Specification.new do |s|
   s.email = %q{rest.client@librelist.com}
   s.executables = ["restclient"]
   s.extra_rdoc_files = [
-    "README.rdoc"
+    "README.rdoc", "history.md"
   ]
   s.files = [
     "README.rdoc",
