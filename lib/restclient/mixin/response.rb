@@ -21,10 +21,15 @@ module RestClient
 
       # Hash of cookies extracted from response headers
       def cookies
-        @cookies ||= (self.headers[:set_cookie] || "").split('; ').inject({}) do |out, raw_c|
-          key, val = raw_c.split('=')
-          unless %w(expires domain path secure).member?(key)
-            out[key] = val
+        @cookies ||= (self.headers[:set_cookie] || []).inject({}) do |out, cookie_content|
+          # correctly parse comma-separated cookies containing HTTP dates (which also contain a comma)
+          cookie_content.split(/,\s*/).inject([""]) { |array, blob| 
+            blob =~ /expires=.+?$/ ? array.push(blob) : array.last.concat(blob)
+            array
+          }.each do |cookie|
+            next if cookie.empty?
+            key, *val = cookie.split(";").first.split("=")
+            out[key] = val.join("=")
           end
           out
         end
@@ -37,7 +42,7 @@ module RestClient
       module ClassMethods
         def beautify_headers(headers)
           headers.inject({}) do |out, (key, value)|
-            out[key.gsub(/-/, '_').downcase.to_sym] = value.first
+            out[key.gsub(/-/, '_').downcase.to_sym] = %w{set-cookie}.include?(key.downcase) ? value : value.first
             out
           end
         end
