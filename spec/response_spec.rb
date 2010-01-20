@@ -18,4 +18,22 @@ describe RestClient::Response do
     @response.raw_headers["Status"][0].should == "200 OK"
     @response.headers[:status].should == "200 OK"
   end
+  
+  it "should correctly deal with one cookie" do
+    net_http_res = mock('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]})
+    response = RestClient::Response.new('abc', net_http_res)
+    response.headers[:set_cookie].should == ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]
+    response.cookies.should == {  "main_page" => "main_page_no_rewrite" }
+  end
+  
+  it "should correctly deal with multiple cookies" do
+    net_http_res = mock('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
+    response = RestClient::Response.new('abc', net_http_res)
+    response.headers[:set_cookie].should == ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]
+    response.cookies.should == {
+      "main_page" => "main_page_no_rewrite",
+      "remember_me" => "",
+      "user" => "somebody"
+    }
+  end
 end

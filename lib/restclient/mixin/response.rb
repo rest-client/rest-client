@@ -22,11 +22,9 @@ module RestClient
 
       # Hash of cookies extracted from response headers
       def cookies
-        @cookies ||= (self.headers[:set_cookie] || "").split('; ').inject({}) do |out, raw_c|
-          key, val = raw_c.split('=')
-          unless %w(expires domain path secure).member?(key)
-            out[key] = val
-          end
+        @cookies ||= (self.headers[:set_cookie] || []).inject({}) do |out, cookie|
+          key, *val = cookie.split(";").first.split("=")
+          out[key] = val.join("=")
           out
         end
       end
@@ -38,7 +36,7 @@ module RestClient
       module ClassMethods
         def beautify_headers(headers)
           headers.inject({}) do |out, (key, value)|
-            out[key.gsub(/-/, '_').downcase.to_sym] = value.first
+            out[key.gsub(/-/, '_').downcase.to_sym] = %w{set-cookie}.include?(key.downcase) ? value : value.first
             out
           end
         end
