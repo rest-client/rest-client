@@ -207,9 +207,9 @@ module RestClient
 
       code = res.code.to_i
 
-      if (200...206).include? code
+      if (200..206).include? code
         response
-      elsif (301...303).include? code
+      elsif (301..303).include? code
         url = res.header['Location']
 
         if url !~ /^http/

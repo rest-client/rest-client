@@ -5,7 +5,7 @@ class MockResponse
 
   def initialize(body, res)
     @net_http_res = res
-    @body = @body
+    @body = body
   end
 end
 
