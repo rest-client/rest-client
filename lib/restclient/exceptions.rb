@@ -60,7 +60,7 @@ module RestClient
    504 => 'Gateway Timeout',
    505 => 'HTTP Version Not Supported'}.each_pair do |code, message|
     klass = Class.new(Exception) do
-      send :define_method, :message, Proc.new{message}
+      send(:define_method, :message) {message}
     end
     klass = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
     Exceptions::EXCEPTIONS_MAP[code] = klass
