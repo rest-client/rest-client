@@ -30,6 +30,7 @@ Gem::Specification.new do |s|
      "lib/restclient/response.rb",
      "spec/base.rb",
      "spec/exceptions_spec.rb",
+     "spec/integration_spec.rb",
      "spec/master_shake.jpg",
      "spec/mixin/response_spec.rb",
      "spec/payload_spec.rb",
@@ -48,6 +49,7 @@ Gem::Specification.new do |s|
   s.test_files = [
     "spec/base.rb",
      "spec/exceptions_spec.rb",
+     "spec/integration_spec.rb",
      "spec/mixin/response_spec.rb",
      "spec/payload_spec.rb",
      "spec/raw_response_spec.rb",

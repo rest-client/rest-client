@@ -150,7 +150,6 @@ describe RestClient::Request do
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
     @request.should_receive(:process_result)
-    @request.should_receive(:log_response)
     @request.transmit(@uri, 'req', 'payload')
   end
 
@@ -235,18 +234,18 @@ describe RestClient::Request do
   end
 
   it "raises a Redirect with the new location when the response is in the 30x range" do
-    res = mock('response', :code => '301', :header => { 'Location' => 'http://new/resource' })
+    res = mock('response', :code => '301', :header => { 'Location' => 'http://new/resource'}, :[] => ['content-encoding' => ''], :body => '' )
     lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://new/resource'}
   end
 
   it "handles redirects with relative paths" do
-    res = mock('response', :code => '301', :header => { 'Location' => 'index' })
+    res = mock('response', :code => '301', :header => { 'Location' => 'index' }, :[] => ['content-encoding' => ''], :body => '' )
     lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
   end
 
   it "handles redirects with absolute paths" do
     @request.instance_variable_set('@url', 'http://some/place/else')
-    res = mock('response', :code => '301', :header => { 'Location' => '/index' })
+    res = mock('response', :code => '301', :header => { 'Location' => '/index' }, :[] => ['content-encoding' => ''], :body => '' )
     lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
   end
 
@@ -265,18 +264,18 @@ describe RestClient::Request do
   end
 
   it "raises Unauthorized when the response is 401" do
-    res = mock('response', :code => '401')
+    res = mock('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
     lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
   end
 
   it "raises ResourceNotFound when the response is 404" do
-    res = mock('response', :code => '404')
+    res = mock('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
     lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
   end
 
   it "raises RequestFailed otherwise" do
-    res = mock('response', :code => '500')
-    lambda { @request.process_result(res) }.should raise_error(RestClient::RequestFailed)
+    res = mock('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
+    lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
   end
 
   it "creates a proxy class if a proxy url is given" do

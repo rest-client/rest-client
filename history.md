@@ -2,6 +2,7 @@
 
 - cleaner log API, add a warning for some cases but should be compatible
 - accept multiple "Set-Cookie" headers, see http://www.ietf.org/rfc/rfc2109.txt (patch provided by Cyril Rohr)
+- all http error codes has now a corresponding exception class and all of them contain the Reponse
 
 # 1.2.0
 
