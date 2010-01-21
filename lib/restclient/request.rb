@@ -156,6 +156,7 @@ module RestClient
 
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
+        log_response res
         process_result(res)
       end
     rescue EOFError
@@ -203,7 +204,6 @@ module RestClient
       else
         response = Response.new(Request.decode(res['content-encoding'], res.body), res)
       end
-      log_response response
 
       code = res.code.to_i
 
