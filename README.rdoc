@@ -63,7 +63,7 @@ See RestClient::Resource docs for details.
    rescue => e
      e.response
    end
-   ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL..."
+   ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>..."
 
 == Result handling
 
@@ -72,7 +72,7 @@ Response.return! can be called to invoke the default response's behavior (return
 
   # Don't raise exceptions but return the response
   RestClient.get('http://example.com/resource'){|response| response}
-  ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL..."
+  ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>..."
 
   # Manage a specific error code
   RestClient.get('http://my-rest-service.com/resource'){ |response|
