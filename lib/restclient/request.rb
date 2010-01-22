@@ -21,19 +21,17 @@ module RestClient
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
 
-    include RestClient::Exceptions
-
     attr_reader :method, :url, :payload, :headers, :processed_headers,
                 :cookies, :user, :password, :timeout, :open_timeout,
                 :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
                 :raw_response
 
 
-    def self.execute(args)
-      new(args).execute
+    def self.execute(args, &block)
+      new(args).execute &block
     end
 
-    def initialize(args)
+    def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @url = args[:url] or raise ArgumentError, "must pass :url"
       @headers = args[:headers] || {}
@@ -52,20 +50,20 @@ module RestClient
       @processed_headers = make_headers headers
     end
 
-    def execute
-      execute_inner
+    def execute &block
+      execute_inner &block
     rescue Redirect => e
-      @processed_headers.delete("Content-Length")
-      @processed_headers.delete("Content-Type")
+      @processed_headers.delete "Content-Length"
+      @processed_headers.delete "Content-Type"
       @url = e.url
       @method = :get
       @payload = nil
-      execute
+      execute &block
     end
 
-    def execute_inner
+    def execute_inner &block
       uri = parse_url_with_auth(url)
-      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload
+      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, &block
     end
 
     def make_headers user_headers
@@ -138,8 +136,8 @@ module RestClient
       end
     end
 
-    def transmit(uri, req, payload)
-      setup_credentials(req)
+    def transmit uri, req, payload, &block
+      setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
@@ -159,7 +157,7 @@ module RestClient
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
         log_response res
-        process_result(res)
+        process_result res, &block
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
@@ -179,7 +177,7 @@ module RestClient
         @tf = Tempfile.new("rest-client")
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|
-          @tf.write(chunk)
+          @tf.write chunk
           size += chunk.size
           if RestClient.log
             if size == 0
@@ -209,9 +207,7 @@ module RestClient
 
       code = res.code.to_i
 
-      if (200..206).include? code
-        response
-      elsif (301..303).include? code
+      if (301..303).include? code
         url = res.header['Location']
 
         if url !~ /^http/
@@ -220,10 +216,12 @@ module RestClient
           url = uri.to_s
         end
         raise Redirect, url
-      elsif EXCEPTIONS_MAP[code]
-        raise EXCEPTIONS_MAP[code], response
       else
-        raise RequestFailed, response
+        if block_given?
+          yield response
+        else
+          response.return!
+        end
       end
     end
 

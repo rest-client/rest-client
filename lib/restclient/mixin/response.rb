@@ -35,6 +35,18 @@ module RestClient
         end
       end
 
+      # Return the default behavior corresponding to the response code:
+      # the response itself for code in 200..206 and an exception in other cases
+      def return!
+        if (200..206).include? code
+          self
+        elsif Exceptions::EXCEPTIONS_MAP[code]
+          raise Exceptions::EXCEPTIONS_MAP[code], self
+        else
+          raise RequestFailed, self
+        end
+      end
+
       def self.included(receiver)
         receiver.extend(RestClient::Mixin::Response::ClassMethods)
       end

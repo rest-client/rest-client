@@ -49,6 +49,44 @@ See RestClient::Resource module docs for details.
 
 See RestClient::Resource docs for details.
 
+== Exceptions
+
+* for results code between 200 and 206 a RestClient::Response will be returned
+* for results code between 301 and 303 the redirection will be automatically followed
+* for other result codes a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
+
+   RestClient.get 'http://example.com/resource'
+   ➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
+
+   begin
+     RestClient.get 'http://example.com/resource'
+   rescue => e
+     e.response
+   end
+   ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL..."
+
+== Result handling
+
+A block can be passed to the RestClient method, this block will then be called with the Response.
+Response.return! can be called to invoke the default response's behavior (return the Response for 200..206, raise an exception in other cases).
+
+  # Don't raise exceptions but return the response
+  RestClient.get('http://example.com/resource'){|response| response}
+  ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>\n</head><body>\n<h1>Not Found</h1>\n<p>The requested URL..."
+
+  # Manage a specific error code
+  RestClient.get('http://my-rest-service.com/resource'){ |response|
+    case response.code
+    when 200
+      p "It worked !"
+      response
+    when 423
+      raise SomeCustomExceptionIfYouWant
+    else
+      response.return!
+    end
+  }
+
 == Lower-level access
 
 For cases not covered by the general API, you can use the RestClient::Resource class which provide a lower-level API, see the class' rdoc for more information.
@@ -58,17 +96,17 @@ For cases not covered by the general API, you can use the RestClient::Resource c
 The restclient shell command gives an IRB session with RestClient already loaded:
 
   $ restclient
-  >> RestClient.get 'http://example.com'
+  ➔ RestClient.get 'http://example.com'
 
 Specify a URL argument for get/post/put/delete on that resource:
 
   $ restclient http://example.com
-  >> put '/resource', 'data'
+  ➔ put '/resource', 'data'
 
 Add a user and password for authenticated resources:
 
   $ restclient https://example.com user pass
-  >> delete '/private/resource'
+  ➔ delete '/private/resource'
 
 Create ~/.restclient for named sessions:
 
@@ -87,9 +125,9 @@ Then invoke:
 
 == Meta
 
-Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Archiloque
+Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Julien Kirch
 
-Patches contributed by: Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
+Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 

@@ -64,24 +64,24 @@ require File.dirname(__FILE__) + '/restclient/net_http_ext'
 #
 module RestClient
 
-  def self.get(url, headers={})
-    Request.execute(:method => :get, :url => url, :headers => headers)
+  def self.get(url, headers={}, &block)
+    Request.execute(:method => :get, :url => url, :headers => headers, &block)
   end
 
-  def self.post(url, payload, headers={})
-    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers)
+  def self.post(url, payload, headers={}, &block)
+    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers, &block)
   end
 
-  def self.put(url, payload, headers={})
-    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers)
+  def self.put(url, payload, headers={}, &block)
+    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
   end
 
-  def self.delete(url, headers={})
-    Request.execute(:method => :delete, :url => url, :headers => headers)
+  def self.delete(url, headers={}, &block)
+    Request.execute(:method => :delete, :url => url, :headers => headers, &block)
   end
 
-  def self.head(url, headers={})
-    Request.execute(:method => :head, :url => url, :headers => headers)
+  def self.head(url, headers={}, &block)
+    Request.execute(:method => :head, :url => url, :headers => headers, &block)
   end
 
   class << self
