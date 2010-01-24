@@ -181,11 +181,11 @@ module RestClient
           size += chunk.size
           if RestClient.log
             if size == 0
-              RestClient.log << "#{@method} #{@url} done (0 length file)"
+              RestClient.log << "#{@method} #{@url} done (0 length file\n)"
             elsif total == 0
-              RestClient.log << "#{@method} #{@url} (zero content length)"
+              RestClient.log << "#{@method} #{@url} (zero content length)\n"
             else
-              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total]
+              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)\n" % [(size * 100) / total, size, total]
             end
           end
         end
@@ -241,14 +241,14 @@ module RestClient
         out << "RestClient.#{method} #{url.inspect}"
         out << payload.short_inspect if payload
         out << processed_headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '')
-        RestClient.log << out.join(', ')
+        RestClient.log << out.join(', ') + "\n"
       end
     end
 
     def log_response res
       if RestClient.log
         size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
-        RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
+        RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
       end
     end
 
