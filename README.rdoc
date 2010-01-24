@@ -1,6 +1,6 @@
-= REST Client -- simple DSL for accessing REST resources
+= REST Client -- simple DSL for accessing HTTP and REST resources
 
-A simple REST client for Ruby, inspired by the Sinatra's microframework style
+A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
 == Usage: Raw URL
@@ -86,6 +86,13 @@ Response.return! can be called to invoke the default response's behavior (return
       response.return!
     end
   }
+
+== Non-normalized URIs.
+
+If you want to use non-normalized URIs, you can normalize them with the adressable gem (http://addressable.rubyforge.org/api/).
+
+  require 'addressable/uri'
+  RestClient.get(Addressable::URI.parse("http://www.詹姆斯.com/").normalize.to_str)
 
 == Lower-level access
 
