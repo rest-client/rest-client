@@ -1,7 +1,7 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
-  s.name = %q{rest-client}
+  s.name = %q{rest-client-next}
   s.version = "1.3.0"
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Wiggins", "Julien Kirch"]
@@ -21,7 +21,7 @@ Gem::Specification.new do |s|
      "lib/rest_client.rb",
      "lib/restclient.rb",
      "lib/restclient/exceptions.rb",
-     "lib/restclient/mixin/response.rb",
+     "lib/restclient/abstract_response.rb",
      "lib/restclient/net_http_ext.rb",
      "lib/restclient/payload.rb",
      "lib/restclient/raw_response.rb",
@@ -32,7 +32,7 @@ Gem::Specification.new do |s|
      "spec/exceptions_spec.rb",
      "spec/integration_spec.rb",
      "spec/master_shake.jpg",
-     "spec/mixin/response_spec.rb",
+     "spec/abstract_response_spec.rb",
      "spec/payload_spec.rb",
      "spec/raw_response_spec.rb",
      "spec/request_spec.rb",

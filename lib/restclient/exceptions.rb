@@ -19,7 +19,7 @@ module RestClient
     end
 
     def http_body
-      @response
+      @response.body
     end
 
     def inspect

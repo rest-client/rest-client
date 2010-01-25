@@ -7,11 +7,11 @@ describe RestClient::Response do
   end
 
   it "behaves like string" do
-    @response.should == 'abc'
+    @response.should.to_s == 'abc'
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
-    RestClient::Response.new(nil, @net_http_res).should == ""
+    RestClient::Response.new(nil, @net_http_res).should.to_s == ""
   end
 
   it "test headers and raw headers" do
