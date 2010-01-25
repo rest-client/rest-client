@@ -32,6 +32,18 @@ module RestClient
   class ExceptionWithResponse < Exception
   end
 
+  # The request failed with an error code not managed by the code
+  class RequestFailed < ExceptionWithResponse
+
+    def message
+      "HTTP status code #{http_code}"
+    end
+
+    def to_s
+      message
+    end
+  end
+
   # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
   module Exceptions
     # Map http status codes to the corresponding exception class
@@ -67,11 +79,14 @@ module RestClient
    503 => 'Service Unavailable',
    504 => 'Gateway Timeout',
    505 => 'HTTP Version Not Supported'}.each_pair do |code, message|
-    klass = Class.new(ExceptionWithResponse) do
+
+    # Compatibility
+    superclass = ([304, 401, 404].include? code) ? ExceptionWithResponse : RequestFailed
+    klass = Class.new(superclass) do
       send(:define_method, :message) {message}
     end
-    klass = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
-    Exceptions::EXCEPTIONS_MAP[code] = klass
+    klass_constant = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
+    Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
   # A redirect was encountered; caught by execute to retry with the new url.
@@ -94,17 +109,6 @@ module RestClient
   end
 
 
-  # The request failed with an error code not managed by the code
-  class RequestFailed < Exception
-
-    def message
-      "HTTP status code #{http_code}"
-    end
-
-    def to_s
-      message
-    end
-  end
 
 end
 
