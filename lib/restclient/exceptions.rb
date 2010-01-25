@@ -28,6 +28,10 @@ module RestClient
 
   end
 
+  # Compatibility
+  class ExceptionWithResponse < Exception
+  end
+
   # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
   module Exceptions
     # Map http status codes to the corresponding exception class
@@ -63,7 +67,7 @@ module RestClient
    503 => 'Service Unavailable',
    504 => 'Gateway Timeout',
    505 => 'HTTP Version Not Supported'}.each_pair do |code, message|
-    klass = Class.new(Exception) do
+    klass = Class.new(ExceptionWithResponse) do
       send(:define_method, :message) {message}
     end
     klass = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
