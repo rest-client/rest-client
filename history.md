@@ -4,7 +4,7 @@
 - cleaner log API, add a warning for some cases but should be compatible
 - accept multiple "Set-Cookie" headers, see http://www.ietf.org/rfc/rfc2109.txt (patch provided by Cyril Rohr)
 - remove "Content-Length" and "Content-Type" headers when following a redirection (patch provided by haarts)
-- all http error codes have now a corresponding exception class and all of them contain the Reponse
+- all http error codes have now a corresponding exception class and all of them contain the Reponse -> this means that the raised exception can be different
 - changed "Content-Disposition: multipart/form-data" to "Content-Disposition: form-data" per RFC 2388 (patch provided by Kyle Crawford)
 
 # 1.2.0
