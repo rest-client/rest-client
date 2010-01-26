@@ -48,6 +48,11 @@ module RestClient
       end
     end
 
+    def inspect
+     "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+    end
+
+
     def AbstractResponse.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
         out[key.gsub(/-/, '_').downcase.to_sym] = %w{set-cookie}.include?(key.downcase) ? value : value.first

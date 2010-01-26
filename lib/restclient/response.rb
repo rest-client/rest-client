@@ -24,8 +24,8 @@ module RestClient
       body.to_s
     end
 
-    def inspect
-      "Code #{code} #{headers[:content_type] ? "#{headers[:content_type] } ": ''} #{body.size} byte(s)"
+    def size
+      body.size
     end
 
   end

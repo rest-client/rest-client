@@ -23,5 +23,9 @@ module RestClient
       @file.read
     end
 
+    def size
+      File.size file
+    end
+
   end
 end
