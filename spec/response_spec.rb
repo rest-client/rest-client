@@ -60,9 +60,11 @@ describe RestClient::Response do
 
     it "should throw an exception for other codes" do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
-        net_http_res = mock('net http response', :code => code.to_i)
-        response = RestClient::Response.new('abc', net_http_res)
-        lambda { response.return!}.should raise_error
+        unless (200..206).include? code
+          net_http_res = mock('net http response', :code => code.to_i)
+          response = RestClient::Response.new('abc', net_http_res)
+          lambda { response.return!}.should raise_error
+        end
       end
     end
 

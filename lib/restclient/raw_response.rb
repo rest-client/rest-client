@@ -13,8 +13,8 @@ module RestClient
 
     attr_reader :file
 
-    def initialize(tempfile, net_http_res)
-      @net_http_res = net_http_res
+    def initialize tempfile, net_http_res
+      super net_http_res
       @file = tempfile
     end
 

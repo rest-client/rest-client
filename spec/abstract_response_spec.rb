@@ -3,7 +3,7 @@ require File.dirname(__FILE__) + '/base'
 describe RestClient::AbstractResponse do
   before do
     @net_http_res = mock('net http response')
-    @response = AbstractResponse.new('abc', @net_http_res)
+    @response = RestClient::AbstractResponse.new(@net_http_res)
   end
 
   it "fetches the numeric response code" do

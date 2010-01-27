@@ -4,6 +4,10 @@ module RestClient
 
     attr_reader :net_http_res
 
+    def initialize net_http_res
+      @net_http_res = net_http_res
+    end
+
     # HTTP status code
     def code
       @code ||= @net_http_res.code.to_i

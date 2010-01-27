@@ -6,8 +6,8 @@ module RestClient
 
     attr_reader :body
 
-    def initialize(body, net_http_res)
-      @net_http_res = net_http_res
+    def initialize body, net_http_res
+      super net_http_res
       @body = body || ""
     end
 
