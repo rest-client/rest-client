@@ -45,7 +45,8 @@ describe RestClient::Request do
     res.stub!(:code).and_return("200")
     res.stub!(:body).and_return('body')
     res.stub!(:[]).with('content-encoding').and_return(nil)
-    @request.process_result(res).should == 'body'
+    @request.process_result(res).body.should == 'body'
+    @request.process_result(res).to_s.should == 'body'
   end
 
   it "doesn't classify successful requests as failed" do
@@ -324,8 +325,8 @@ describe RestClient::Request do
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      ['RestClient.post "http://url", 1000 byte length, "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"' + "\n",
-       'RestClient.post "http://url", 1000 byte length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"' + "\n"].should include(log[0])
+      ['RestClient.post "http://url", 1000 byte(s) length, "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"' + "\n",
+       'RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"' + "\n"].should include(log[0])
     end
 
     it "logs input headers as a hash" do

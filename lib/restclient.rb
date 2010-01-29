@@ -11,7 +11,7 @@ end
 
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
-require File.dirname(__FILE__) + '/restclient/mixin/response'
+require File.dirname(__FILE__) + '/restclient/abstract_response'
 require File.dirname(__FILE__) + '/restclient/response'
 require File.dirname(__FILE__) + '/restclient/raw_response'
 require File.dirname(__FILE__) + '/restclient/resource'
