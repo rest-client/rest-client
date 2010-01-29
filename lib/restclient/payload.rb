@@ -54,14 +54,17 @@ module RestClient
       # Flatten parameters by converting hashes of hashes to flat hashes
       # {keys1 => {keys2 => value}} will be transformed into {keys1[key2] => value}
       def flatten_params(params, parent_key = nil)
-        result = {}
-        params.keys.map do |key|
+        result = []
+        params.each do |key, value|
           calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
-          value = params[key]
           if value.is_a? Hash
-            result.merge!(flatten_params(value, calculated_key))
+            result << flatten_params(value, calculated_key).flatten
+          elsif value.is_a? Array
+            value.each do |elem|
+              result << [calculated_key, elem]
+            end
           else
-            result[calculated_key] = value
+            result << [calculated_key, value]
           end
         end
         result
@@ -95,8 +98,8 @@ module RestClient
 
     class UrlEncoded < Base
       def build_stream(params = nil)
-        @stream = StringIO.new(flatten_params(params).map do |k, v|
-          "#{k}=#{escape(v)}"
+        @stream = StringIO.new(flatten_params(params).collect do |entry|
+          "#{entry[0]}=#{escape(entry[1])}"
         end.join("&"))
         @stream.seek(0)
       end
@@ -116,9 +119,9 @@ module RestClient
         @stream.write(b + EOL)
 
         if params.is_a? Hash
-          x = flatten_params(params).to_a
+          x = flatten_params(params)
         else
-          x = params.to_a
+          x = params
         end
 
         last_index = x.length - 1

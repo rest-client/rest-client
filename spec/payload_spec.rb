@@ -10,6 +10,8 @@ describe RestClient::Payload do
     it "should form properly encoded params" do
       RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s.
               should == "foo=bar"
+      RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s.
+              should == "foo=bar&baz=qux"
     end
 
     it "should properly handle hashes as parameter" do
@@ -24,6 +26,13 @@ describe RestClient::Payload do
               should == "foo=bar"
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz }}).to_s.
               should == "foo[bar]=baz"
+    end
+
+    it "should properyl handle arrays as repeated parameters" do
+      RestClient::Payload::UrlEncoded.new({:foo => ['bar']}).to_s.
+              should == "foo=bar"
+      RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
+              should == "foo=bar&foo=baz"
     end
 
   end
