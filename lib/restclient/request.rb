@@ -21,11 +21,10 @@ module RestClient
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
 
-    attr_reader :method, :url, :payload, :headers, :processed_headers,
-                :cookies, :user, :password, :timeout, :open_timeout,
-                :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
-                :raw_response
-
+    attr_reader :method, :url, :headers, :cookies,
+                :payload, :user, :password, :timeout,
+                :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
 
     def self.execute(args, &block)
       new(args).execute &block
@@ -48,6 +47,7 @@ module RestClient
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @tf = nil # If you are a raw request, this is your tempfile
       @processed_headers = make_headers headers
+      @args = args
     end
 
     def execute &block
@@ -151,6 +151,10 @@ module RestClient
       net.ca_file = @ssl_ca_file if @ssl_ca_file
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
+
+      RestClient.before_execution_procs.each do |b|
+        b.call(req, params)
+      end
 
       log_request
 
