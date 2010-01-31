@@ -1,9 +1,26 @@
+# 1.4.0
+
+- Response is no more a String, and the mixin is replaced by an abstract_response, existing calls are redirected to response body with a warning.
+
+The response change may be breaking in rare cases.
+
+# 1.3.0
+
+- a block can be used to process a request's result, this enable to handle custom error codes or paththrought (design by Cyril Rohr)
+- cleaner log API, add a warning for some cases but should be compatible
+- accept multiple "Set-Cookie" headers, see http://www.ietf.org/rfc/rfc2109.txt (patch provided by Cyril Rohr)
+- remove "Content-Length" and "Content-Type" headers when following a redirection (patch provided by haarts)
+- all http error codes have now a corresponding exception class and all of them contain the Reponse -> this means that the raised exception can be different
+- changed "Content-Disposition: multipart/form-data" to "Content-Disposition: form-data" per RFC 2388 (patch provided by Kyle Crawford)
+
+The only breaking change should be the exception classes, but as the new classes inherits from the existing ones, the breaking cases should be rare.
+
 # 1.2.0
 
 - formatting changed from tabs to spaces
 - logged requests now include generated headers
 - accept and content-type headers can now be specified using extentions: RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
-- should be 1.1.1 but renammed to 1.2.0 because 1.1.X versions has already been packaged on Debian
+- should be 1.1.1 but renamed to 1.2.0 because 1.1.X versions has already been packaged on Debian
 
 # 1.1.0
 

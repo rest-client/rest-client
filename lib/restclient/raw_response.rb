@@ -1,5 +1,3 @@
-require File.dirname(__FILE__) + '/mixin/response'
-
 module RestClient
   # The response from RestClient on a raw request looks like a string, but is
   # actually one of these.  99% of the time you're making a rest call all you
@@ -11,19 +9,22 @@ module RestClient
   # In addition, if you do not use the response as a string, you can access
   # a Tempfile object at res.file, which contains the path to the raw
   # downloaded request body.
-  class RawResponse
-    include RestClient::Mixin::Response
+  class RawResponse < AbstractResponse
 
     attr_reader :file
 
-    def initialize(tempfile, net_http_res)
-      @net_http_res = net_http_res
+    def initialize tempfile, net_http_res
+      super net_http_res
       @file = tempfile
     end
 
     def to_s
       @file.open
       @file.read
+    end
+
+    def size
+      File.size file
     end
 
   end

@@ -34,10 +34,11 @@ module RestClient
   #   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
   #
   class Resource
-    attr_reader :url, :options
+    attr_reader :url, :options, :block
 
-    def initialize(url, options={}, backwards_compatibility=nil)
+    def initialize(url, options={}, backwards_compatibility=nil, &block)
       @url = url
+      @block = block
       if options.class == Hash
         @options = options
       else # compatibility with previous versions
@@ -45,38 +46,38 @@ module RestClient
       end
     end
 
-    def get(additional_headers={}, &b)
+    def get(additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :get,
               :url => url,
-              :headers => headers), &b)
+              :headers => headers), &(block || @block))
     end
 
-    def post(payload, additional_headers={}, &b)
+    def post(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :post,
               :url => url,
               :payload => payload,
-              :headers => headers), &b)
+              :headers => headers), &(block || @block))
     end
 
-    def put(payload, additional_headers={}, &b)
+    def put(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :put,
               :url => url,
               :payload => payload,
-              :headers => headers), &b)
+              :headers => headers), &(block || @block))
     end
 
-    def delete(additional_headers={}, &b)
+    def delete(additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :delete,
               :url => url,
-              :headers => headers), &b)
+              :headers => headers), &(block || @block))
     end
 
     def to_s

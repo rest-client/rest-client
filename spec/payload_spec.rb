@@ -48,11 +48,11 @@ describe RestClient::Payload do
       m = RestClient::Payload::Multipart.new([[:bar, "baz"], [:foo, "bar"]])
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="bar"\r
+Content-Disposition: form-data; name="bar"\r
 \r
 baz\r
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo"\r
+Content-Disposition: form-data; name="foo"\r
 \r
 bar\r
 --#{m.boundary}--\r
@@ -64,7 +64,7 @@ bar\r
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo"; filename="master_shake.jpg"\r
+Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
 #{IO.read(f.path)}\r
@@ -79,7 +79,7 @@ Content-Type: image/jpeg\r
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo"; filename="foo.txt"\r
+Content-Disposition: form-data; name="foo"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
 #{IO.read(f.path)}\r
@@ -91,7 +91,7 @@ Content-Type: text/plain\r
       m = RestClient::Payload::Multipart.new({:bar => {:baz => "foo"}})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="bar[baz]"\r
+Content-Disposition: form-data; name="bar[baz]"\r
 \r
 foo\r
 --#{m.boundary}--\r
@@ -103,7 +103,7 @@ foo\r
       m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
-Content-Disposition: multipart/form-data; name="foo[bar]"; filename="foo.txt"\r
+Content-Disposition: form-data; name="foo[bar]"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
 #{IO.read(f.path)}\r

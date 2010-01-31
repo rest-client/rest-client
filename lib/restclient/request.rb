@@ -20,16 +20,18 @@ module RestClient
   # * :timeout and :open_timeout
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
+
     attr_reader :method, :url, :payload, :headers, :processed_headers,
                 :cookies, :user, :password, :timeout, :open_timeout,
                 :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
                 :raw_response
 
-    def self.execute(args)
-      new(args).execute
+
+    def self.execute(args, &block)
+      new(args).execute &block
     end
 
-    def initialize(args)
+    def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @url = args[:url] or raise ArgumentError, "must pass :url"
       @headers = args[:headers] || {}
@@ -48,23 +50,25 @@ module RestClient
       @processed_headers = make_headers headers
     end
 
-    def execute
-      execute_inner
+    def execute &block
+      execute_inner &block
     rescue Redirect => e
+      @processed_headers.delete "Content-Length"
+      @processed_headers.delete "Content-Type"
       @url = e.url
       @method = :get
       @payload = nil
-      execute
+      execute &block
     end
 
-    def execute_inner
+    def execute_inner &block
       uri = parse_url_with_auth(url)
-      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload
+      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, &block
     end
 
     def make_headers user_headers
       unless @cookies.empty?
-        user_headers[:cookie] = @cookies.map {|key, val| "#{key.to_s}=#{val}" }.join('; ')
+        user_headers[:cookie] = @cookies.map {|(key, val)| "#{key.to_s}=#{val}" }.sort.join(",")
       end
 
       headers = default_headers.merge(user_headers).inject({}) do |final, (key, value)|
@@ -73,13 +77,13 @@ module RestClient
           target_value = value.to_s
           final[target_key] = MIME::Types.type_for_extension target_value
         elsif 'ACCEPT' == target_key.upcase
-            # Accept can be composed of several comma-separated values
-            if value.is_a? Array
-              target_values = value
-            else
-              target_values = value.to_s.split ','
-            end
-            final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+          # Accept can be composed of several comma-separated values
+          if value.is_a? Array
+            target_values = value
+          else
+            target_values = value.to_s.split ','
+          end
+          final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
         else
           final[target_key] = value.to_s
         end
@@ -132,8 +136,8 @@ module RestClient
       end
     end
 
-    def transmit(uri, req, payload)
-      setup_credentials(req)
+    def transmit uri, req, payload, &block
+      setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
@@ -148,20 +152,12 @@ module RestClient
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
 
-      display_log request_log
+      log_request
 
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
-        result = process_result(res)
-        display_log response_log(res)
-
-        if result.kind_of?(String) or @method == :head
-          Response.new(result, res)
-        elsif @raw_response
-          RawResponse.new(@tf, res)
-        else
-          Response.new(nil, res)
-        end
+        log_response res
+        process_result res, &block
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
@@ -181,14 +177,16 @@ module RestClient
         @tf = Tempfile.new("rest-client")
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|
-          @tf.write(chunk)
+          @tf.write chunk
           size += chunk.size
-          if size == 0
-            display_log("#{@method} #{@url} done (0 length file)")
-          elsif total == 0
-            display_log("#{@method} #{@url} (zero content length)")
-          else
-            display_log("#{@method} #{@url} %d%% done (%d of %d)" % [(size * 100) / total, size, total])
+          if RestClient.log
+            if size == 0
+              RestClient.log << "#{@method} #{@url} done (0 length file\n)"
+            elsif total == 0
+              RestClient.log << "#{@method} #{@url} (zero content length)\n"
+            else
+              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)\n" % [(size * 100) / total, size, total]
+            end
           end
         end
         @tf.close
@@ -199,13 +197,17 @@ module RestClient
       http_response
     end
 
-    def process_result(res)
-      if res.code =~ /\A2\d{2}\z/
+    def process_result res
+      if @raw_response
         # We don't decode raw requests
-        unless @raw_response
-          self.class.decode res['content-encoding'], res.body if res.body
-        end
-      elsif %w(301 302 303).include? res.code
+        response = RawResponse.new(@tf, res)
+      else
+        response = Response.new(Request.decode(res['content-encoding'], res.body), res)
+      end
+
+      code = res.code.to_i
+
+      if (301..303).include? code
         url = res.header['Location']
 
         if url !~ /^http/
@@ -213,53 +215,40 @@ module RestClient
           uri.path = "/#{url}".squeeze('/')
           url = uri.to_s
         end
-
         raise Redirect, url
-      elsif res.code == "304"
-        raise NotModified, res
-      elsif res.code == "401"
-        raise Unauthorized, res
-      elsif res.code == "404"
-        raise ResourceNotFound, res
       else
-        raise RequestFailed, res
+        if block_given?
+          yield response
+        else
+          response.return!
+        end
       end
     end
 
-    def self.decode(content_encoding, body)
+    def self.decode content_encoding, body
       if content_encoding == 'gzip' and not body.empty?
         Zlib::GzipReader.new(StringIO.new(body)).read
       elsif content_encoding == 'deflate'
-        Zlib::Inflate.new.inflate(body)
+        Zlib::Inflate.new.inflate body
       else
         body
       end
     end
 
-    def request_log
+    def log_request
       if RestClient.log
         out = []
         out << "RestClient.#{method} #{url.inspect}"
-        out << "headers: #{processed_headers.inspect}"
-        out << "paylod: #{payload.short_inspect}" if payload
-        out.join(', ')
+        out << payload.short_inspect if payload
+        out << processed_headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '')
+        RestClient.log << out.join(', ') + "\n"
       end
     end
 
-    def response_log(res)
-      size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
-      "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes"
-    end
-
-    def display_log(msg)
-      return unless log_to = RestClient.log
-
-      if log_to == 'stdout'
-        STDOUT.puts msg
-      elsif log_to == 'stderr'
-        STDERR.puts msg
-      else
-        File.open(log_to, 'a') { |f| f.puts msg }
+    def log_response res
+      if RestClient.log
+        size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
+        RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
       end
     end
 
@@ -274,7 +263,7 @@ module MIME
 
     # Return the first found content-type for a value considered as an extension or the value itself
     def type_for_extension ext
-      candidates =  @extension_index[ext]
+      candidates = @extension_index[ext]
       candidates.empty? ? ext : candidates[0].content_type
     end
 

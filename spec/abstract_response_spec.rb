@@ -1,18 +1,9 @@
-require File.dirname(__FILE__) + '/../base'
+require File.dirname(__FILE__) + '/base'
 
-class MockResponse
-  include RestClient::Mixin::Response
-
-  def initialize(body, res)
-    @net_http_res = res
-    @body = @body
-  end
-end
-
-describe RestClient::Mixin::Response do
+describe RestClient::AbstractResponse do
   before do
     @net_http_res = mock('net http response')
-    @response = MockResponse.new('abc', @net_http_res)
+    @response = RestClient::AbstractResponse.new(@net_http_res)
   end
 
   it "fetches the numeric response code" do

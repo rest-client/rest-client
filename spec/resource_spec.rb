@@ -1,5 +1,8 @@
 require File.dirname(__FILE__) + '/base'
 
+require 'webmock/rspec'
+include WebMock
+
 describe RestClient::Resource do
   before do
     @resource = RestClient::Resource.new('http://some/resource', :user => 'jane', :password => 'mypass', :headers => { 'X-Something' => '1'})
@@ -71,5 +74,26 @@ describe RestClient::Resource do
 
   it "prints its url with to_s" do
     RestClient::Resource.new('x').to_s.should == 'x'
+  end
+
+  describe 'block' do
+    it 'can use block when creating the resource' do
+      stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
+      resource = RestClient::Resource.new('www.example.com'){|response| 'foo'}
+      resource.get.should == 'foo'
+    end
+
+    it 'can use block when executing the resource' do
+      stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
+      resource = RestClient::Resource.new('www.example.com')
+      resource.get{|response| 'foo'}.should == 'foo'
+    end
+
+    it 'execution block override resource block' do
+      stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
+      resource = RestClient::Resource.new('www.example.com'){|response| 'foo'}
+      resource.get{|response| 'bar'}.should == 'bar'
+    end
+
   end
 end
