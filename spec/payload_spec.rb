@@ -10,8 +10,8 @@ describe RestClient::Payload do
     it "should form properly encoded params" do
       RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s.
               should == "foo=bar"
-      RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s.
-              should == "foo=bar&baz=qux"
+      ["foo=bar&baz=qux", "baz=qux&foo=bar"].should include(
+      RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s)
     end
 
     it "should properly handle hashes as parameter" do
