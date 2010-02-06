@@ -2,6 +2,7 @@
 
 - Response is no more a String, and the mixin is replaced by an abstract_response, existing calls are redirected to response body with a warning.
 - enable repeated parameters  RestClient.post 'http://example.com/resource', :param1 => ['one', 'two', 'three'], => :param2 => 'foo' (patch provided by Rodrigo Panachi)
+- fixed the redirect code concerning relative path and query string combination (patch provided by Kevin Read)
 
 The response change may be breaking in rare cases.
 

@@ -209,11 +209,8 @@ module RestClient
 
       if (301..303).include? code
         url = res.header['Location']
-
         if url !~ /^http/
-          uri = URI.parse(@url)
-          uri.path = "/#{url}".squeeze('/')
-          url = uri.to_s
+          url = URI.parse(@url).merge(url).to_s
         end
         raise Redirect, url
       else
