@@ -1,6 +1,5 @@
 module RestClient
 
-
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',
               200 => 'OK',
@@ -40,6 +39,18 @@ module RestClient
               504 => 'Gateway Timeout',
               505 => 'HTTP Version Not Supported'}
 
+  # Compatibility : make the Response act like a Net::HTTPResponse when needed
+  module ResponseForException
+    def method_missing symbol, *args
+      if net_http_res.respond_to? symbol
+        warn "[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code"
+        net_http_res.send symbol, *args
+      else
+        super
+      end
+    end
+  end
+
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
   # You can get the status code by e.http_code, or see anything about the
@@ -51,6 +62,9 @@ module RestClient
 
     def initialize response = nil
       @response = response
+
+      # compatibility: this make the exception behave like a Net::HTTPResponse
+      response.extend ResponseForException
     end
 
     def http_code
