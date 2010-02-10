@@ -52,8 +52,8 @@ See RestClient::Resource docs for details.
 == Exceptions
 
 * for results code between 200 and 206 a RestClient::Response will be returned
-* for results code between 301 and 303 the redirection will be automatically followed
-* for other result codes a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
+* for results code between 301 and 303 the redirection will be followed if the request is a get or a head
+* for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
 
    RestClient.get 'http://example.com/resource'
    ➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
@@ -68,14 +68,14 @@ See RestClient::Resource docs for details.
 == Result handling
 
 A block can be passed to the RestClient method, this block will then be called with the Response.
-Response.return! can be called to invoke the default response's behavior (return the Response for 200..206, raise an exception in other cases).
+Response.return! can be called to invoke the default response's behavior.
 
   # Don't raise exceptions but return the response
-  RestClient.get('http://example.com/resource'){|response| response}
+  RestClient.get('http://example.com/resource'){|response| response }
   ➔ 404 Resource Not Found | text/html 282 bytes
 
   # Manage a specific error code
-  RestClient.get('http://my-rest-service.com/resource'){ |response|
+  RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
     case response.code
     when 200
       p "It worked !"
@@ -83,7 +83,16 @@ Response.return! can be called to invoke the default response's behavior (return
     when 423
       raise SomeCustomExceptionIfYouWant
     else
-      response.return!
+      response.return! &block
+    end
+  }
+
+  # Follow redirections for all request types and not only for get and head
+  RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
+    if (301..303).include? code
+      follow_redirection
+    else
+      response.return! &block
     end
   }
 

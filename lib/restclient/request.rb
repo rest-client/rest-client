@@ -21,11 +21,10 @@ module RestClient
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
 
-    attr_reader :method, :url, :payload, :headers, :processed_headers,
-                :cookies, :user, :password, :timeout, :open_timeout,
-                :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
-                :raw_response
-
+    attr_reader :method, :url, :headers, :cookies,
+                :payload, :user, :password, :timeout,
+                :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
 
     def self.execute(args, &block)
       new(args).execute &block
@@ -48,20 +47,10 @@ module RestClient
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @tf = nil # If you are a raw request, this is your tempfile
       @processed_headers = make_headers headers
+      @args = args
     end
 
     def execute &block
-      execute_inner &block
-    rescue Redirect => e
-      @processed_headers.delete "Content-Length"
-      @processed_headers.delete "Content-Type"
-      @url = e.url
-      @method = :get
-      @payload = nil
-      execute &block
-    end
-
-    def execute_inner &block
       uri = parse_url_with_auth(url)
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, &block
     end
@@ -197,29 +186,20 @@ module RestClient
       http_response
     end
 
-    def process_result res
+    def process_result res, &block
       if @raw_response
         # We don't decode raw requests
-        response = RawResponse.new(@tf, res)
+        response = RawResponse.new(@tf, res, args)
       else
-        response = Response.new(Request.decode(res['content-encoding'], res.body), res)
+        response = Response.new(Request.decode(res['content-encoding'], res.body), res, args)
       end
 
-      code = res.code.to_i
-
-      if (301..303).include? code
-        url = res.header['Location']
-        if url !~ /^http/
-          url = URI.parse(@url).merge(url).to_s
-        end
-        raise Redirect, url
+      if block_given?
+        block.call response, &block
       else
-        if block_given?
-          yield response
-        else
-          response.return!
-        end
+        response.return! &block
       end
+
     end
 
     def self.decode content_encoding, body

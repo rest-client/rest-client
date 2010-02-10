@@ -2,10 +2,11 @@ module RestClient
 
   class AbstractResponse
 
-    attr_reader :net_http_res
+    attr_reader :net_http_res, :args
 
-    def initialize net_http_res
+    def initialize net_http_res, args
       @net_http_res = net_http_res
+      @args = args
     end
 
     # HTTP status code
@@ -41,10 +42,16 @@ module RestClient
     end
 
     # Return the default behavior corresponding to the response code:
-    # the response itself for code in 200..206 and an exception in other cases
-    def return!
+    # the response itself for code in 200..206, redirection for 301..303 in get and head cases, and an exception in other cases
+    def return! &block
       if (200..206).include? code
         self
+      elsif (301..303).include? code
+        unless [:get, :head].include? args[:method]
+          raise Exceptions::EXCEPTIONS_MAP[code], self
+        else
+          follow_redirection &block
+        end
       elsif Exceptions::EXCEPTIONS_MAP[code]
         raise Exceptions::EXCEPTIONS_MAP[code], self
       else
@@ -53,9 +60,19 @@ module RestClient
     end
 
     def inspect
-     "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+      "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
+    # Follow a redirection
+    def follow_redirection &block
+      url = headers[:location]
+      if url !~ /^http/
+        url = URI.parse(args[:url]).merge(url).to_s
+      end
+      redirected_args = args.dup
+      redirected_args[:url] = url
+      Request.execute redirected_args, &block
+    end
 
     def AbstractResponse.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
