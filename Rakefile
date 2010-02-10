@@ -3,7 +3,7 @@ require 'rake'
 require 'jeweler'
 
 Jeweler::Tasks.new do |s|
-  s.name = "rest-client-next"
+  s.name = "rest-client"
   s.description = "A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete."
   s.summary = "Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions."
   s.author = "Adam Wiggins"
