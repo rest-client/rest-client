@@ -93,6 +93,12 @@ describe RestClient::Response do
       lambda { response.return!}.should raise_error(RestClient::MovedPermanently)
     end
 
+    it "follows a redirection when the request is a post and result is a 303" do
+      stub_request(:put, 'http://some/resource').to_return(:body => '', :status => 303, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :put).body.should == 'Foo'
+    end
+
     it "follows a redirection when the request is a head" do
       stub_request(:head, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:head, 'http://new/resource').to_return(:body => 'Foo')
