@@ -89,8 +89,11 @@ Response.return! can be called to invoke the default response's behavior.
   }
 
   # Follow redirections for all request types and not only for get and head
+  # RFC : "If the 301 (or 302) status code is received in response to a request other than GET or HEAD,
+  #        the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
+  #        since this might change the conditions under which the request was issued."
   RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
-    if [301, 303].include? code
+    if [301, 302].include? code
       follow_redirection &block
     else
       response.return! &block
