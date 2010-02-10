@@ -91,7 +91,7 @@ Response.return! can be called to invoke the default response's behavior.
   # Follow redirections for all request types and not only for get and head
   RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
     if [301, 303].include? code
-      follow_redirection
+      follow_redirection &block
     else
       response.return! &block
     end
