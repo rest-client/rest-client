@@ -1,3 +1,7 @@
+# 1.3.1
+
+- added compatibility to enable responses in exception to act like Net::HTTPResponse
+
 # 1.3.0
 
 - a block can be used to process a request's result, this enable to handle custom error codes or paththrought (design by Cyril Rohr)
