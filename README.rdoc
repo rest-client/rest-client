@@ -49,10 +49,11 @@ See RestClient::Resource module docs for details.
 
 See RestClient::Resource docs for details.
 
-== Exceptions
+== Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
 * for results code between 200 and 206 a RestClient::Response will be returned
-* for results code between 301 and 303 the redirection will be followed if the request is a get or a head
+* for results code 301 and 302 the redirection will be followed if the request is a get or a head
+* for result code 303 the redirection will be followed and the request transformed into a get
 * for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
 
    RestClient.get 'http://example.com/resource'
@@ -89,7 +90,7 @@ Response.return! can be called to invoke the default response's behavior.
 
   # Follow redirections for all request types and not only for get and head
   RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
-    if (301..303).include? code
+    if [301, 303].include? code
       follow_redirection
     else
       response.return! &block
