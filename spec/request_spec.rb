@@ -1,5 +1,8 @@
 require File.dirname(__FILE__) + '/base'
 
+require 'webmock/rspec'
+include WebMock
+
 describe RestClient::Request do
   before do
     @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
@@ -154,7 +157,7 @@ describe RestClient::Request do
     @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
     klass.should_receive(:new).and_return('result')
     @request.should_receive(:transmit).with(@uri, 'result', kind_of(RestClient::Payload::Base))
-    @request.execute_inner
+    @request.execute
   end
 
   it "transmits the request with Net::HTTP" do
@@ -226,49 +229,11 @@ describe RestClient::Request do
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
-  it "execute calls execute_inner" do
-    @request.should_receive(:execute_inner)
-    @request.execute
-  end
-
   it "class method execute wraps constructor" do
     req = mock("rest request")
     RestClient::Request.should_receive(:new).with(1 => 2).and_return(req)
     req.should_receive(:execute)
     RestClient::Request.execute(1 => 2)
-  end
-
-  describe "redirection" do
-    it "raises a Redirect with the new location when the response is in the 30x range" do
-      res = mock('response', :code => '301', :header => { 'Location' => 'http://new/resource'}, :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://new/resource'}
-    end
-
-    it "handles redirects with relative paths" do
-      res = mock('response', :code => '301', :header => { 'Location' => 'index' }, :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
-    end
-
-    it "handles redirects with absolute paths" do
-      @request.instance_variable_set('@url', 'http://some/place/else')
-      res = mock('response', :code => '301', :header => { 'Location' => '/index' }, :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::Redirect) { |e| e.url.should == 'http://some/index' }
-    end
-
-    it "uses GET and clears payload and removes possible harmful headers when following 30x redirects" do
-      url = "http://example.com/redirected"
-
-      @request.should_receive(:execute_inner).once.ordered.and_raise(RestClient::Redirect.new(url))
-
-      @request.should_receive(:execute_inner).once.ordered do
-        @request.processed_headers.should_not have_key("Content-Length")
-        @request.url.should == url
-        @request.method.should == :get
-        @request.payload.should be_nil
-      end
-
-      @request.execute
-    end
   end
 
   describe "exception" do

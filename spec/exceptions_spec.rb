@@ -1,5 +1,8 @@
 require File.dirname(__FILE__) + '/base'
 
+require 'webmock/rspec'
+include WebMock
+
 describe RestClient::Exception do
   it "sets the exception message to ErrorMessage" do
     RestClient::ResourceNotFound.new.message.should == 'Resource Not Found'
@@ -17,10 +20,11 @@ describe RestClient::RequestFailed do
   end
 
   it "stores the http response on the exception" do
+    response = "response"
     begin
-      raise RestClient::RequestFailed, :response
+      raise RestClient::RequestFailed, response
     rescue RestClient::RequestFailed => e
-      e.response.should == :response
+      e.response.should == response
     end
   end
 
@@ -40,10 +44,11 @@ end
 
 describe RestClient::ResourceNotFound do
   it "also has the http response attached" do
+    response = "response"
     begin
-      raise RestClient::ResourceNotFound, :response
+      raise RestClient::ResourceNotFound, response
     rescue RestClient::ResourceNotFound => e
-      e.response.should == :response
+      e.response.should == response
     end
   end
 end
@@ -59,5 +64,16 @@ describe "backwards compatibility" do
 
   it "alias RestClient::Request::RequestFailed to RestClient::RequestFailed" do
     RestClient::Request::RequestFailed.should == RestClient::RequestFailed
+  end
+
+  it "make the exception's response act like an Net::HTTPResponse" do
+    body = "body"
+    stub_request(:get, "www.example.com").to_return(:body => body, :status => 404)
+    begin
+      RestClient.get "www.example.com"
+      raise
+    rescue RestClient::ResourceNotFound => e
+      e.response.body.should == body
+    end
   end
 end

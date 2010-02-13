@@ -49,11 +49,12 @@ See RestClient::Resource module docs for details.
 
 See RestClient::Resource docs for details.
 
-== Exceptions
+== Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
 * for results code between 200 and 206 a RestClient::Response will be returned
-* for results code between 301 and 303 the redirection will be automatically followed
-* for other result codes a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
+* for results code 301 and 302 the redirection will be followed if the request is a get or a head
+* for result code 303 the redirection will be followed and the request transformed into a get
+* for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
 
    RestClient.get 'http://example.com/resource'
    ➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
@@ -63,19 +64,19 @@ See RestClient::Resource docs for details.
    rescue => e
      e.response
    end
-   ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>..."
+   ➔ 404 Resource Not Found | text/html 282 bytes
 
 == Result handling
 
 A block can be passed to the RestClient method, this block will then be called with the Response.
-Response.return! can be called to invoke the default response's behavior (return the Response for 200..206, raise an exception in other cases).
+Response.return! can be called to invoke the default response's behavior.
 
   # Don't raise exceptions but return the response
-  RestClient.get('http://example.com/resource'){|response| response}
-  ➔ "<!DOCTYPE HTML PUBLIC \"-//IETF//DTD HTML 2.0//EN\">\n<html><head>\n<title>404 Not Found</title>..."
+  RestClient.get('http://example.com/resource'){|response| response }
+  ➔ 404 Resource Not Found | text/html 282 bytes
 
   # Manage a specific error code
-  RestClient.get('http://my-rest-service.com/resource'){ |response|
+  RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
     case response.code
     when 200
       p "It worked !"
@@ -83,7 +84,19 @@ Response.return! can be called to invoke the default response's behavior (return
     when 423
       raise SomeCustomExceptionIfYouWant
     else
-      response.return!
+      response.return! &block
+    end
+  }
+
+  # Follow redirections for all request types and not only for get and head
+  # RFC : "If the 301 (or 302) status code is received in response to a request other than GET or HEAD,
+  #        the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
+  #        since this might change the conditions under which the request was issued."
+  RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
+    if [301, 302].include? code
+      follow_redirection &block
+    else
+      response.return! &block
     end
   }
 
@@ -103,17 +116,17 @@ For cases not covered by the general API, you can use the RestClient::Resource c
 The restclient shell command gives an IRB session with RestClient already loaded:
 
   $ restclient
-  ➔ RestClient.get 'http://example.com'
+  >> RestClient.get 'http://example.com'
 
 Specify a URL argument for get/post/put/delete on that resource:
 
   $ restclient http://example.com
-  ➔ put '/resource', 'data'
+  >> put '/resource', 'data'
 
 Add a user and password for authenticated resources:
 
   $ restclient https://example.com user pass
-  ➔ delete '/private/resource'
+  >> delete '/private/resource'
 
 Create ~/.restclient for named sessions:
 

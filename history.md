@@ -2,8 +2,15 @@
 
 - Response is no more a String, and the mixin is replaced by an abstract_response, existing calls are redirected to response body with a warning.
 - enable repeated parameters  RestClient.post 'http://example.com/resource', :param1 => ['one', 'two', 'three'], => :param2 => 'foo' (patch provided by Rodrigo Panachi)
+- fixed the redirect code concerning relative path and query string combination (patch provided by Kevin Read)
+- redirection code moved to Response so redirection can be customized using the block syntax
+- only get and head redirections are now followed by default, as stated in the specification
 
 The response change may be breaking in rare cases.
+
+# 1.3.1
+
+- added compatibility to enable responses in exception to act like Net::HTTPResponse
 
 # 1.3.0
 
