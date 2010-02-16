@@ -212,7 +212,7 @@ Self-signed certificates can be generated with the openssl command-line tool.
 
 == Hook
 
-The RestClient.add_before_execution_proc can be used to add a Proc to be called before each execution, it's handy if you need to modify the http request directly
+RestClient.add_before_execution_proc add a Proc to be called before each execution, it's handy if you need a direct access to the http request.
 
 Example:
 
