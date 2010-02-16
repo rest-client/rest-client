@@ -5,6 +5,7 @@
 - fixed the redirect code concerning relative path and query string combination (patch provided by Kevin Read)
 - redirection code moved to Response so redirection can be customized using the block syntax
 - only get and head redirections are now followed by default, as stated in the specification
+- added RestClient.add_before_execution_proc to hack the http request, like for oauth
 
 The response change may be breaking in rare cases.
 

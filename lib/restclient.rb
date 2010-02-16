@@ -151,7 +151,8 @@ module RestClient
 
   @@before_execution_procs = []
 
-  # Add a Proc to be called before each request in executed
+  # Add a Proc to be called before each request in executed.
+  # The proc parameters will be the http request and the request params.
   def self.add_before_execution_proc &proc
     @@before_execution_procs << proc
   end
