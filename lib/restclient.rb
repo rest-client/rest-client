@@ -126,6 +126,7 @@ module RestClient
         else
           file_logger = Class.new do
             attr_writer :target_file
+
             def << obj
               File.open(@target_file, 'a') { |f| f.puts obj }
             end
@@ -146,6 +147,18 @@ module RestClient
 
   def self.log # :nodoc:
     @@env_log || @@log
+  end
+
+  @@before_execution_procs = []
+
+  # Add a Proc to be called before each request in executed.
+  # The proc parameters will be the http request and the request params.
+  def self.add_before_execution_proc &proc
+    @@before_execution_procs << proc
+  end
+
+  def self.before_execution_procs # :nodoc:
+    @@before_execution_procs
   end
 
 end

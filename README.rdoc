@@ -210,6 +210,22 @@ extract and set headers for them as needed:
 
 Self-signed certificates can be generated with the openssl command-line tool.
 
+== Hook
+
+RestClient.add_before_execution_proc add a Proc to be called before each execution, it's handy if you need a direct access to the http request.
+
+Example:
+
+  # Add oath support using the oauth gem
+  require 'oauth'
+  access_token = ...
+
+  RestClient.add_before_execution_proc do |req, params|
+    access_token.sign! req
+  end
+
+  RestClient.get 'http://example.com'
+
 == Meta
 
 Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Julien Kirch
