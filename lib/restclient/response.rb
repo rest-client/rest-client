@@ -20,6 +20,18 @@ module RestClient
       end
     end
 
+    def == o
+      if super
+        true
+      else
+        equal_body = (body == o)
+        if equal_body
+          warn "[warning] The Response is no more a String, please update your code"
+        end
+        equal_body
+      end
+    end
+
     def to_s
       body.to_s
     end
