@@ -6,6 +6,8 @@ module RestClient
 
     attr_reader :body
 
+    WARNING_MESSAGE = '[warning] The Response is no more a String and the Response content is now accessed through Response.body, please update your code'
+
     def initialize body, net_http_res, args
       super net_http_res, args
       @body = body || ""
@@ -13,7 +15,7 @@ module RestClient
 
     def method_missing symbol, *args
       if body.respond_to? symbol
-        warn "[warning] The Response is no more a String, please update your code"
+        warn WARNING_MESSAGE
         body.send symbol, *args
       else
         super
@@ -26,7 +28,7 @@ module RestClient
       else
         equal_body = (body == o)
         if equal_body
-          warn "[warning] The Response is no more a String, please update your code"
+          warn WARNING_MESSAGE
         end
         equal_body
       end
