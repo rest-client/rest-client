@@ -26,9 +26,15 @@ describe RestClient::Request do
   end
 
   describe "compression" do
+
     it "decodes an uncompressed result body by passing it straight through" do
       RestClient::Request.decode(nil, 'xyz').should == 'xyz'
     end
+
+    it "doesn't fail for nil bodies" do
+      RestClient::Request.decode('gzip', nil).should be_nil
+    end
+
 
     it "decodes a gzip body" do
       RestClient::Request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should == "i'm gziped\n"
