@@ -1,3 +1,7 @@
+# 1.5.0
+
+- fixed parameters managment when using hash with several values
+
 # 1.4.0
 
 - Response is no more a String, and the mixin is replaced by an abstract_response, existing calls are redirected to response body with a warning.

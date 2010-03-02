@@ -58,7 +58,7 @@ module RestClient
         params.each do |key, value|
           calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
           if value.is_a? Hash
-            result << flatten_params(value, calculated_key).flatten
+            result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
             value.each do |elem|
               result << [calculated_key, elem]
@@ -67,6 +67,7 @@ module RestClient
             result << [calculated_key, value]
           end
         end
+        p result.length
         result
       end
 
