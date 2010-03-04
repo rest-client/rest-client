@@ -67,7 +67,6 @@ module RestClient
             result << [calculated_key, value]
           end
         end
-        p result.length
         result
       end
 
