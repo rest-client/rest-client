@@ -61,7 +61,7 @@ module RestClient
             result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
             value.each do |elem|
-              result << [calculated_key, elem]
+              result << ["#{calculated_key}[]", elem]
             end
           else
             result << [calculated_key, value]
