@@ -1,6 +1,6 @@
-# 1.5.0
+# 1.4.1
 
-- fixed parameters managment when using hash with several values
+- fixed parameters managment when using hash
 
 # 1.4.0
 
