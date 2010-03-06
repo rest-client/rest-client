@@ -141,8 +141,8 @@ module RestClient
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
 
-      RestClient.before_execution_procs.each do |block|
-        block.call(req, args)
+      RestClient.before_execution_procs.each do |before_proc|
+        before_proc.call(req, args)
       end
 
       log_request

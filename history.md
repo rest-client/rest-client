@@ -1,3 +1,7 @@
+# 1.5.0
+
+- fixed RestClient.add_before_execution_proc (patch provided by Nicholas Wieland)
+
 # 1.4.1
 
 - fixed parameters managment when using hash
