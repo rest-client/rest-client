@@ -64,7 +64,7 @@ module RestClient
       @response = response
 
       # compatibility: this make the exception behave like a Net::HTTPResponse
-      response.extend ResponseForException
+      response.extend ResponseForException if response
     end
 
     def http_code
