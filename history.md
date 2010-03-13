@@ -1,6 +1,7 @@
-# 1.5.0
+# 1.4.2
 
 - fixed RestClient.add_before_execution_proc (patch provided by Nicholas Wieland)
+- fixed error when an exception is raised without a response (patch provided by Caleb Land)
 
 # 1.4.1
 
