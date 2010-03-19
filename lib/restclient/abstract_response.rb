@@ -63,6 +63,10 @@ module RestClient
       end
     end
 
+    def to_i
+      code
+    end
+
     def inspect
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end

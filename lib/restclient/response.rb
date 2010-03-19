@@ -38,6 +38,10 @@ module RestClient
       body.to_s
     end
 
+    def to_str
+      body.to_str
+    end
+
     def size
       body.size
     end
