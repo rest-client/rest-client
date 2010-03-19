@@ -1,3 +1,7 @@
+# 1.4.3
+
+- added Response.to_str and AbstractResponse.to_i to improve semantic and compatibility
+
 # 1.4.2
 
 - fixed RestClient.add_before_execution_proc (patch provided by Nicholas Wieland)

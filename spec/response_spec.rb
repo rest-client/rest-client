@@ -5,12 +5,14 @@ include WebMock
 
 describe RestClient::Response do
   before do
-    @net_http_res = mock('net http response', :to_hash => {"Status" => ["200 OK"]})
+    @net_http_res = mock('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
     @response = RestClient::Response.new('abc', @net_http_res, {})
   end
 
   it "behaves like string" do
     @response.should.to_s == 'abc'
+    @response.to_str.should == 'abc'
+    @response.to_i.should == 200
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
