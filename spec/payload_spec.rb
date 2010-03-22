@@ -77,6 +77,19 @@ Content-Type: image/jpeg\r
       EOS
     end
 
+    it "should ignore the name attribute when it's not set" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      m = RestClient::Payload::Multipart.new({nil => f})
+      m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: form-data; filename="master_shake.jpg"\r
+Content-Type: image/jpeg\r
+\r
+#{IO.read(f.path)}\r
+--#{m.boundary}--\r
+      EOS
+    end
+
     it "should detect optional (original) content type and filename" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       f.instance_eval "def content_type; 'text/plain'; end"

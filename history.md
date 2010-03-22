@@ -1,6 +1,7 @@
 # 1.4.3
 
 - added Response.to_str and AbstractResponse.to_i to improve semantic and compatibility
+- multipart Payloads ignores the name attribute if it's not set (patch provided by Tekin Suleyman)
 
 # 1.4.2
 
