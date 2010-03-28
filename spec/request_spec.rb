@@ -108,12 +108,12 @@ describe RestClient::Request do
 
   describe "user headers" do
     it "merges user headers with the default headers" do
-      @request.should_receive(:default_headers).and_return({ '1' => '2' })
-      headers = @request.make_headers('3' => '4')
-      headers.should have_key('1')
-      headers['1'].should == '2'
-      headers.should have_key('3')
-      headers['3'].should == '4'
+      @request.should_receive(:default_headers).and_return({ :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' })
+      headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
+      headers.should have_key "Accept-Encoding"
+      headers["Accept-Encoding"].should == "gzip"
+      headers.should have_key "Accept"
+      headers["Accept"].should == "application/json"
     end
 
     it "prefers the user header when the same header exists in the defaults" do
@@ -126,18 +126,18 @@ describe RestClient::Request do
 
   describe "header symbols" do
 
-    it "converts header symbols from :content_type to 'Content-type'" do
+    it "converts header symbols from :content_type to 'Content-Type'" do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:content_type => 'abc')
-      headers.should have_key('Content-type')
-      headers['Content-type'].should == 'abc'
+      headers.should have_key('Content-Type')
+      headers['Content-Type'].should == 'abc'
     end
 
     it "converts content-type from extension to real content-type" do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:content_type => 'json')
-      headers.should have_key('Content-type')
-      headers['Content-type'].should == 'application/json'
+      headers.should have_key('Content-Type')
+      headers['Content-Type'].should == 'application/json'
     end
 
     it "converts accept from extension(s) to real content-type(s)" do
@@ -282,29 +282,25 @@ describe RestClient::Request do
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url').log_request
-      ['RestClient.get "http://url", "Accept-encoding"=>"gzip, deflate", "Accept"=>"*/*; q=0.5, application/xml"' + "\n",
-       'RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate"' + "\n"].should include(log[0])
+      log[0].should == %Q{RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log_request
-      ['RestClient.post "http://url", "foo", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3", "Accept"=>"*/*; q=0.5, application/xml"' + "\n",
-       'RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"3"' + "\n"].should include(log[0])
+      log[0].should == %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      ['RestClient.post "http://url", 1000 byte(s) length, "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000", "Accept"=>"*/*; q=0.5, application/xml"' + "\n",
-       'RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-encoding"=>"gzip, deflate", "Content-Length"=>"1000"' + "\n"].should include(log[0])
+      log[0].should == %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
     end
 
     it "logs input headers as a hash" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).log_request
-      ['RestClient.get "http://url", "Accept-encoding"=>"gzip, deflate", "Accept"=>"text/plain"' + "\n",
-       'RestClient.get "http://url", "Accept"=>"text/plain", "Accept-encoding"=>"gzip, deflate"' + "\n"].should include(log[0])
+      log[0].should == %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
     it "logs a response including the status code, content type, and result body size in bytes" do

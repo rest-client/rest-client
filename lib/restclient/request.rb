@@ -59,26 +59,7 @@ module RestClient
       unless @cookies.empty?
         user_headers[:cookie] = @cookies.map {|(key, val)| "#{key.to_s}=#{val}" }.sort.join(",")
       end
-
-      headers = default_headers.merge(user_headers).inject({}) do |final, (key, value)|
-        target_key = key.to_s.gsub(/_/, '-').capitalize
-        if 'CONTENT-TYPE' == target_key.upcase
-          target_value = value.to_s
-          final[target_key] = MIME::Types.type_for_extension target_value
-        elsif 'ACCEPT' == target_key.upcase
-          # Accept can be composed of several comma-separated values
-          if value.is_a? Array
-            target_values = value
-          else
-            target_values = value.to_s.split ','
-          end
-          final[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
-        else
-          final[target_key] = value.to_s
-        end
-        final
-      end
-
+      headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
       headers.merge!(@payload.headers) if @payload
       headers
     end
@@ -223,7 +204,7 @@ module RestClient
         out = []
         out << "RestClient.#{method} #{url.inspect}"
         out << payload.short_inspect if payload
-        out << processed_headers.inspect.gsub(/^\{/, '').gsub(/\}$/, '')
+        out << processed_headers.to_a.sort.map{|(k,v)| [k.inspect, v.inspect].join("=>")}.join(", ")
         RestClient.log << out.join(', ') + "\n"
       end
     end
@@ -235,9 +216,32 @@ module RestClient
       end
     end
 
+    # Return a hash of headers whose keys are capitalized strings
+    def stringify_headers headers
+      headers.inject({}) do |result, (key, value)|
+        target_key = key.to_s.split(/_/).map{|w| w.capitalize}.join('-')
+        if 'CONTENT-TYPE' == target_key.upcase
+          target_value = value.to_s
+          result[target_key] = MIME::Types.type_for_extension target_value
+        elsif 'ACCEPT' == target_key.upcase
+          # Accept can be composed of several comma-separated values
+          if value.is_a? Array
+            target_values = value
+          else
+            target_values = value.to_s.split ','
+          end
+          result[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+        else
+          result[target_key] = value.to_s
+        end
+        result
+      end
+    end
+
     def default_headers
       { :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' }
     end
+
   end
 end
 

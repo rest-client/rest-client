@@ -2,6 +2,7 @@
 
 - added Response.to_str and AbstractResponse.to_i to improve semantic and compatibility
 - multipart Payloads ignores the name attribute if it's not set (patch provided by Tekin Suleyman)
+- correctly takes into account user headers whose keys are strings (path provided by Cyril Rohr)
 
 # 1.4.2
 
