@@ -17,6 +17,16 @@ of specifying actions: get, put, post, delete.
 
   RestClient.delete 'http://example.com/resource'
 
+  response = RestClient.get 'http://example.com/resource'
+  response.code
+  ➔ 200
+  response.cookies
+  ➔ {"Foo"=>"BAR", "QUUX"=>"QUUUUX"}
+  response.headers
+  ➔ {:content_type=>"text/html; charset=utf-8", :vary=>"Accept-Encoding", :content_encoding=>"gzip", :age=>"0", :cache_control=>"private" ...
+  response.to_str
+  ➔ \n<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n   \"http://www.w3.org/TR/html4/strict.dtd\">\n\n<html ....
+
 == Multipart
 
 Yeah, that's right!  This does multipart sends for you!

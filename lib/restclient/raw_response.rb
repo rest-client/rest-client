@@ -9,12 +9,15 @@ module RestClient
   # In addition, if you do not use the response as a string, you can access
   # a Tempfile object at res.file, which contains the path to the raw
   # downloaded request body.
-  class RawResponse < AbstractResponse
+  class RawResponse
+
+    include AbstractResponse
 
     attr_reader :file
 
     def initialize tempfile, net_http_res, args
-      super net_http_res, args
+      @net_http_res = net_http_res
+      @args = args
       @file = tempfile
     end
 

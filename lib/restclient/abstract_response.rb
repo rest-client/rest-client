@@ -1,13 +1,8 @@
 module RestClient
 
-  class AbstractResponse
+  module AbstractResponse
 
     attr_reader :net_http_res, :args
-
-    def initialize net_http_res, args
-      @net_http_res = net_http_res
-      @args = args
-    end
 
     # HTTP status code
     def code
@@ -17,7 +12,7 @@ module RestClient
     # A hash of the headers, beautified with symbols and underscores.
     # e.g. "Content-type" will become :content_type.
     def headers
-      @headers ||= self.class.beautify_headers(@net_http_res.to_hash)
+      @headers ||= AbstractResponse.beautify_headers(@net_http_res.to_hash)
     end
 
     # The raw headers.
@@ -67,7 +62,7 @@ module RestClient
       code
     end
 
-    def inspect
+    def desription
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
