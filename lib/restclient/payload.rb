@@ -91,7 +91,7 @@ module RestClient
       end
 
       def short_inspect
-        (size > 100 ? "#{size} byte(s) length" : inspect)
+        (size > 500 ? "#{size} byte(s) length" : inspect)
       end
 
     end
