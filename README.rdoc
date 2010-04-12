@@ -27,6 +27,18 @@ of specifying actions: get, put, post, delete.
   response.to_str
   ➔ \n<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n   \"http://www.w3.org/TR/html4/strict.dtd\">\n\n<html ....
 
+  RestClient.post( url,
+    {
+      :transfer => {
+        :path => '/foo/bar',
+        :owner => 'that_guy',
+        :group => 'those_guys'
+      },
+       :upload => {
+        :file => File.new(path)
+      }
+    })
+
 == Multipart
 
 Yeah, that's right!  This does multipart sends for you!
