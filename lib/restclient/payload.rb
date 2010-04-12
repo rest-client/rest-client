@@ -116,6 +116,7 @@ module RestClient
         b = "--#{boundary}"
 
         @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
+        @stream.binmode
         @stream.write(b + EOL)
 
         if params.is_a? Hash
