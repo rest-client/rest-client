@@ -4,6 +4,7 @@
 - multipart Payloads ignores the name attribute if it's not set (patch provided by Tekin Suleyman)
 - correctly takes into account user headers whose keys are strings (path provided by Cyril Rohr)
 - use binary mode for payload temp file
+- concatenate cookies with ';'
 
 # 1.4.2
 

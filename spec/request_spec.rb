@@ -99,7 +99,7 @@ describe RestClient::Request do
     URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'foo' => 'bar'})
-    headers = @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1,user_id=someone'}
+    headers = @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1;user_id=someone'}
   end
 
   it "determines the Net::HTTP class to instantiate by the method name" do
