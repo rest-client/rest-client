@@ -5,6 +5,7 @@
 - correctly takes into account user headers whose keys are strings (path provided by Cyril Rohr)
 - use binary mode for payload temp file
 - concatenate cookies with ';'
+- fixed deeper parameter handling
 
 # 1.4.2
 

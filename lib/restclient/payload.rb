@@ -52,7 +52,7 @@ module RestClient
       end
 
       # Flatten parameters by converting hashes of hashes to flat hashes
-      # {keys1 => {keys2 => value}} will be transformed into {keys1[key2] => value}
+      # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
       def flatten_params(params, parent_key = nil)
         result = []
         params.each do |key, value|
@@ -60,11 +60,23 @@ module RestClient
           if value.is_a? Hash
             result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
-            value.each do |elem|
-              result << ["#{calculated_key}[]", elem]
-            end
+            result += flatten_params_array(value, calculated_key)
           else
             result << [calculated_key, value]
+          end
+        end
+        result
+      end
+
+      def flatten_params_array value, calculated_key
+        result = []
+        value.each do |elem|
+          if elem.is_a? Hash
+            result +=  flatten_params(elem, calculated_key)
+          elsif elem.is_a? Array
+            result += flatten_params_array(elem, calculated_key)
+          else
+            result << ["#{calculated_key}[]", elem]
           end
         end
         result
