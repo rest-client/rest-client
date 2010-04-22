@@ -6,6 +6,7 @@
 - use binary mode for payload temp file
 - concatenate cookies with ';'
 - fixed deeper parameter handling
+- do not quote the boundary in the Content-Type header (path provided by W. Andrew Loe III)
 
 # 1.4.2
 
