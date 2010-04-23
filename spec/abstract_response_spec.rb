@@ -13,7 +13,6 @@ describe RestClient::AbstractResponse do
       @args = args
     end
 
-
   end
 
   before do
@@ -27,7 +26,7 @@ describe RestClient::AbstractResponse do
   end
 
   it "has a nice description" do
-    @net_http_res.should_receive(:to_hash).and_return({'Content-Type' => 'application/pdf'})
+    @net_http_res.should_receive(:to_hash).and_return({'Content-Type' => ['application/pdf']})
     @net_http_res.should_receive(:code).and_return('200')
     @response.description == '200 OK | application/pdf  bytes\n'
   end

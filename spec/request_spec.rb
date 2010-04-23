@@ -509,6 +509,6 @@ describe RestClient::Request do
     @http.should_receive(:request).and_return(@request.fetch_body(net_http_res))
     response = @request.transmit(@uri, 'req', 'payload')
     response.should_not be_nil
-    response.code.should equal(204)
+    response.code.should == 204
   end
 end
