@@ -2,48 +2,22 @@ module RestClient
 
   # A Response from RestClient, you can access the response body, the code or the headers.
   #
-  class Response < AbstractResponse
+  module Response
 
-    attr_reader :body
+    include AbstractResponse
 
-    WARNING_MESSAGE = '[warning] The Response is no more a String and the Response content is now accessed through Response.body, please update your code'
+    attr_accessor :body, :net_http_res, :args
 
-    def initialize body, net_http_res, args
-      super net_http_res, args
-      @body = body || ""
+    def body
+      self
     end
 
-    def method_missing symbol, *args
-      if body.respond_to? symbol
-        warn WARNING_MESSAGE
-        body.send symbol, *args
-      else
-        super
-      end
-    end
-
-    def == o
-      if super
-        true
-      else
-        equal_body = (body == o)
-        if equal_body
-          warn WARNING_MESSAGE
-        end
-        equal_body
-      end
-    end
-
-    def to_s
-      body.to_s
-    end
-
-    def to_str
-      body.to_str
-    end
-
-    def size
-      body.size
+    def Response.create body, net_http_res, args
+      result = body || ''
+      result.extend Response
+      result.net_http_res = net_http_res
+      result.args = args
+      result
     end
 
   end

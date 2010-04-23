@@ -176,7 +176,7 @@ module RestClient
         # We don't decode raw requests
         response = RawResponse.new(@tf, res, args)
       else
-        response = Response.new(Request.decode(res['content-encoding'], res.body), res, args)
+        response = Response.create(Request.decode(res['content-encoding'], res.body), res, args)
       end
 
       if block_given?
