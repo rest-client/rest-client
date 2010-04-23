@@ -1,6 +1,6 @@
 # 1.5.0
 
-- the response is now a string with the Response module
+- the response is now a String with the Response module a.k.a. the change in 1.4.0 was a mistake (Response.body is returning self for compatability)
 - added AbstractResponse.to_i to improve semantic
 - multipart Payloads ignores the name attribute if it's not set (patch provided by Tekin Suleyman)
 - correctly takes into account user headers whose keys are strings (path provided by Cyril Rohr)
