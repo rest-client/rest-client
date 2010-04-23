@@ -62,7 +62,7 @@ module RestClient
       code
     end
 
-    def desription
+    def description
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 

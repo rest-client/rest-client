@@ -6,11 +6,14 @@ describe RestClient::AbstractResponse do
 
     include RestClient::AbstractResponse
 
+    attr_accessor :size
+
     def initialize net_http_res, args
       @net_http_res = net_http_res
       @args = args
     end
-    
+
+
   end
 
   before do
@@ -21,6 +24,12 @@ describe RestClient::AbstractResponse do
   it "fetches the numeric response code" do
     @net_http_res.should_receive(:code).and_return('200')
     @response.code.should == 200
+  end
+
+  it "has a nice description" do
+    @net_http_res.should_receive(:to_hash).and_return({'Content-Type' => 'application/pdf'})
+    @net_http_res.should_receive(:code).and_return('200')
+    @response.description == '200 OK | application/pdf  bytes\n'
   end
 
   it "beautifies the headers by turning the keys to symbols" do
