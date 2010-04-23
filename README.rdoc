@@ -248,6 +248,12 @@ Example:
 
   RestClient.get 'http://example.com'
 
+== More
+
+Need caching, more advanced logging or any ability provided by a rack middleware ?
+
+Have a look at rest-client-components http://github.com/crohr/rest-client-components
+
 == Meta
 
 Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Julien Kirch
