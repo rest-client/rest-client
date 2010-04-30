@@ -3,6 +3,10 @@
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
+* Main page: http://github.com/archiloque/rest-client
+* Mailing list: rest.client@librelist.com (send a mail to subscribe).
+* IRC: #rest-client at freenode
+
 == Usage: Raw URL
 
   require 'rest_client'
@@ -261,11 +265,3 @@ Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Ju
 Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
-
-Main page: http://github.com/archiloque/rest-client
-
-Rdoc: http://rdoc.info/projects/archiloque/rest-client
-
-Mailing list: rest.client@librelist.com (send a mail to subscribe).
-
-IRC: #rest-client at freenode
