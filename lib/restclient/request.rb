@@ -219,20 +219,22 @@ module RestClient
     # Return a hash of headers whose keys are capitalized strings
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
-        target_key = key.to_s.split(/_/).map{|w| w.capitalize}.join('-')
-        if 'CONTENT-TYPE' == target_key.upcase
+        if key.is_a? Symbol
+          key = key.to_s.split(/_/).map{|w| w.capitalize}.join('-')
+        end
+        if 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s
-          result[target_key] = MIME::Types.type_for_extension target_value
-        elsif 'ACCEPT' == target_key.upcase
+          result[key] = MIME::Types.type_for_extension target_value
+        elsif 'ACCEPT' == key.upcase
           # Accept can be composed of several comma-separated values
           if value.is_a? Array
             target_values = value
           else
             target_values = value.to_s.split ','
           end
-          result[target_key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+          result[key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
         else
-          result[target_key] = value.to_s
+          result[key] = value.to_s
         end
         result
       end

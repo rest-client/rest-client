@@ -1,3 +1,7 @@
+# 1.5.1
+
+- only converts headers keys which are Symbols
+
 # 1.5.0
 
 - the response is now a String with the Response module a.k.a. the change in 1.4.0 was a mistake (Response.body is returning self for compatability)
