@@ -1,3 +1,5 @@
+require 'cgi'
+
 module RestClient
 
   module AbstractResponse
@@ -22,15 +24,11 @@ module RestClient
 
     # Hash of cookies extracted from response headers
     def cookies
-      @cookies ||= (self.headers[:set_cookie] || []).inject({}) do |out, cookie_content|
-        # correctly parse comma-separated cookies containing HTTP dates (which also contain a comma)
-        cookie_content.split(/,\s*/).inject([""]) { |array, blob|
-          blob =~ /expires=.+?$/ ? array.push(blob) : array.last.concat(blob)
-          array
-        }.each do |cookie|
-          next if cookie.empty?
-          key, *val = cookie.split(";").first.split("=")
-          out[key] = val.join("=")
+      @cookies ||= (self.headers[:set_cookie] || {}).inject({}) do |out, cookie_content|
+        CGI::Cookie::parse(cookie_content).each do |key, cookie|
+          unless ['expires', 'path'].include? key
+            out[key] = cookie.value[0] || ''
+          end
         end
         out
       end

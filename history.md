@@ -1,6 +1,7 @@
 # 1.5.1
 
 - only converts headers keys which are Symbols
+- use CGI for cookie parsing instead of custom code
 
 # 1.5.0
 

@@ -51,6 +51,11 @@ describe RestClient::AbstractResponse do
     @response.cookies.should == { 'session_id' => '1' }
   end
 
+  it "extract strange cookies" do
+    @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=ZJ/HQVH6YE+rVkTpn0zvTQ==; path=/'])
+    @response.cookies.should == { 'session_id' => 'ZJ/HQVH6YE rVkTpn0zvTQ==' }
+  end
+
   it "can access the net http result directly" do
     @response.net_http_res.should == @net_http_res
   end
