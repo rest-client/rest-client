@@ -1,5 +1,6 @@
 require 'tempfile'
 require 'mime/types'
+require 'cgi'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -84,8 +85,8 @@ module RestClient
 
     def parse_url_with_auth(url)
       uri = parse_url(url)
-      @user = uri.user if uri.user
-      @password = uri.password if uri.password
+      @user = CGI.unescape(uri.user) if uri.user
+      @password = CGI.unescape(uri.password) if uri.password
       uri
     end
 

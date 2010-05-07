@@ -86,6 +86,13 @@ describe RestClient::Request do
       @request.password.should == 'pass1'
     end
 
+    it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
+      URI.stub!(:parse).and_return(mock('uri', :user => 'joe%20', :password => 'pass1'))
+      @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
+      @request.user.should == 'joe '
+      @request.password.should == 'pass1'
+    end
+
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
       URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
       @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')

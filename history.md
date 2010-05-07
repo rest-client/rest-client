@@ -2,6 +2,7 @@
 
 - only converts headers keys which are Symbols
 - use CGI for cookie parsing instead of custom code
+- unescape user and password before using them (patch provided by Lars Gierth)
 
 # 1.5.0
 
