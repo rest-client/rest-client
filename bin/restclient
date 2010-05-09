@@ -77,7 +77,7 @@ if File.exists? ".irbrc"
 	ENV['IRBRC'] = ".irbrc"
 end
 
-if File.exists?(rcfile = "~/.restclientrc")
+if File.exists?( File.expand_path(rcfile = "~/.restclientrc") )
 	load(rcfile)
 end
 
