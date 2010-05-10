@@ -39,7 +39,7 @@ of specifying actions: get, put, post, delete.
         :group => 'those_guys'
       },
        :upload => {
-        :file => File.new(path)
+        :file => File.new(path, 'rb')
       }
     })
 
@@ -47,7 +47,7 @@ of specifying actions: get, put, post, delete.
 
 Yeah, that's right!  This does multipart sends for you!
 
-  RestClient.post '/data', :myfile => File.new("/path/to/image.jpg")
+  RestClient.post '/data', :myfile => File.new("/path/to/image.jpg", 'rb')
 
 This does two things for you:
 
