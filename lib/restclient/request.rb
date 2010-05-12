@@ -28,7 +28,7 @@ module RestClient
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args
 
     def self.execute(args, &block)
-      new(args).execute &block
+      new(args).execute(&block)
     end
 
     def initialize args
@@ -183,7 +183,7 @@ module RestClient
       if block_given?
         block.call response, &block
       else
-        response.return! &block
+        response.return!(&block)
       end
 
     end

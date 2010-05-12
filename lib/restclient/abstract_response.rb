@@ -43,12 +43,12 @@ module RestClient
         unless [:get, :head].include? args[:method]
           raise Exceptions::EXCEPTIONS_MAP[code], self
         else
-          follow_redirection &block
+          follow_redirection(&block)
         end
       elsif code == 303
         args[:method] = :get
         args.delete :payload
-        follow_redirection &block
+        follow_redirection(&block)
       elsif Exceptions::EXCEPTIONS_MAP[code]
         raise Exceptions::EXCEPTIONS_MAP[code], self
       else
