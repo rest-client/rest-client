@@ -116,6 +116,13 @@ module RestClient
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       elsif @verify_ssl.is_a? Integer
         net.verify_mode = @verify_ssl
+        net.verify_callback = lambda do |preverify_ok, ssl_context|
+          if (!preverify_ok) || ssl_context.error != 0
+            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
+            raise SSLCertificateNotVerified.new(err_msg)
+          end
+          true
+        end
       end
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key

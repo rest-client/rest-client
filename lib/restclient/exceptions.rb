@@ -134,8 +134,12 @@ module RestClient
     message = 'Server broke connection'
   end
 
-
-
+  class SSLCertificateNotVerified < Exception
+    def initialize(message)
+      super(nil)
+      self.message = message
+    end
+  end
 end
 
 # backwards compatibility

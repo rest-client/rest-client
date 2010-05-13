@@ -4,6 +4,7 @@
 - use CGI for cookie parsing instead of custom code
 - unescape user and password before using them (patch provided by Lars Gierth)
 - expand ~ in ~/.restclientrc (patch provided by Mike Fletcher)
+- ssl verification raise an exception when the ca certificate is incorrect (patch provided by Braintree)
 
 # 1.5.0
 
