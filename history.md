@@ -1,3 +1,7 @@
+# 1.5.2
+
+- forgot to include rest-client.rb in the gem
+
 # 1.5.1
 
 - only converts headers keys which are Symbols

@@ -19,6 +19,7 @@ Gem::Specification.new do |s|
           "VERSION",
           "bin/restclient",
           "lib/rest_client.rb",
+          "lib/rest-client.rb",
           "lib/restclient.rb",
           "lib/restclient/exceptions.rb",
           "lib/restclient/abstract_response.rb",
