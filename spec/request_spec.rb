@@ -276,7 +276,7 @@ describe RestClient::Request do
   describe "block usage" do
     it "returns what asked to" do
       res = mock('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      @request.process_result(res){|response| "foo"}.should == "foo"
+      @request.process_result(res){|response, request| "foo"}.should == "foo"
     end
   end
 

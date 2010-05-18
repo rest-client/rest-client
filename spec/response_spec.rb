@@ -6,6 +6,7 @@ include WebMock
 describe RestClient::Response do
   before do
     @net_http_res = mock('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
+    @request = mock('http request', :user => nil, :password => nil)
     @response = RestClient::Response.create('abc', @net_http_res, {})
   end
 
@@ -59,7 +60,7 @@ describe RestClient::Response do
       (200..206).each do |code|
         net_http_res = mock('net http response', :code => '200')
         response = RestClient::Response.create('abc', net_http_res, {})
-        response.return!
+        response.return! @request
       end
     end
 
@@ -83,16 +84,22 @@ describe RestClient::Response do
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should == 'Foo'
     end
 
+    it "follows a redirection and keep the parameters" do
+      stub_request(:get, 'http://foo:bar@some/resource').with(:headers => {'Accept' => 'application/json'}).to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://foo:bar@new/resource').with(:headers => {'Accept' => 'application/json'}).to_return(:body => 'Foo')
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body.should == 'Foo'
+    end
+
     it "doesn't follow a redirection when the request is a post" do
       net_http_res = mock('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
-      lambda { response.return!}.should raise_error(RestClient::MovedPermanently)
+      lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a redirection when the request is a put" do
       net_http_res = mock('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :put})
-      lambda { response.return!}.should raise_error(RestClient::MovedPermanently)
+      lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 
     it "follows a redirection when the request is a post and result is a 303" do

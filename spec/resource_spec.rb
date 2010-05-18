@@ -79,20 +79,20 @@ describe RestClient::Resource do
   describe 'block' do
     it 'can use block when creating the resource' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
-      resource = RestClient::Resource.new('www.example.com'){|response| 'foo'}
+      resource = RestClient::Resource.new('www.example.com'){|response, request| 'foo'}
       resource.get.should == 'foo'
     end
 
     it 'can use block when executing the resource' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
       resource = RestClient::Resource.new('www.example.com')
-      resource.get{|response| 'foo'}.should == 'foo'
+      resource.get{|response, request| 'foo'}.should == 'foo'
     end
 
     it 'execution block override resource block' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
-      resource = RestClient::Resource.new('www.example.com'){|response| 'foo'}
-      resource.get{|response| 'bar'}.should == 'bar'
+      resource = RestClient::Resource.new('www.example.com'){|response, request| 'foo'}
+      resource.get{|response, request| 'bar'}.should == 'bar'
     end
 
   end

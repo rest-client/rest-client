@@ -1,6 +1,7 @@
-# 1.5.2
+# 1.6.0
 
 - forgot to include rest-client.rb in the gem
+- user, password and user-defined headers should survive a redirect
 
 # 1.5.1
 
