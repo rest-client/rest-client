@@ -90,10 +90,22 @@ describe RestClient::Response do
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body.should == 'Foo'
     end
 
-    it "doesn't follow a redirection when the request is a post" do
+    it "doesn't follow a 301 when the request is a post" do
       net_http_res = mock('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
+    end
+
+    it "doesn't follow a 302 when the request is a post" do
+      net_http_res = mock('net http response', :code => 302)
+      response = RestClient::Response.create('abc', net_http_res, {:method => :post})
+      lambda { response.return!(@request)}.should raise_error(RestClient::Found)
+    end
+
+    it "doesn't follow a 307 when the request is a post" do
+      net_http_res = mock('net http response', :code => 307)
+      response = RestClient::Response.create('abc', net_http_res, {:method => :post})
+      lambda { response.return!(@request)}.should raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do

@@ -2,6 +2,7 @@
 
 - forgot to include rest-client.rb in the gem
 - user, password and user-defined headers should survive a redirect
+- added 207 and 307 status code
 
 # 1.5.1
 

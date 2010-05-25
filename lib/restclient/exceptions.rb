@@ -16,6 +16,8 @@ module RestClient
               303 => 'See Other',
               304 => 'Not Modified',
               305 => 'Use Proxy',
+              305 => 'Use Proxy',
+              307 => 'Temporary Redirect',
               400 => 'Bad Request',
               401 => 'Unauthorized',
               403 => 'Forbidden',

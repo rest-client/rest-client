@@ -78,7 +78,7 @@ See RestClient::Resource docs for details.
 == Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
 * for results code between 200 and 207 a RestClient::Response will be returned
-* for results code 301 and 302 the redirection will be followed if the request is a get or a head
+* for results code 301, 302 or 307 the redirection will be followed if the request is a get or a head
 * for result code 303 the redirection will be followed and the request transformed into a get
 * for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes
 
@@ -115,11 +115,11 @@ Response.return! can be called to invoke the default response's behavior.
   }
 
   # Follow redirections for all request types and not only for get and head
-  # RFC : "If the 301 (or 302) status code is received in response to a request other than GET or HEAD,
+  # RFC : "If the 301, 302 or 307 status code is received in response to a request other than GET or HEAD,
   #        the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
   #        since this might change the conditions under which the request was issued."
   RestClient.get('http://my-rest-service.com/resource'){ |response, request, &block|
-    if [301, 302].include? response.code
+    if [301, 302, 307].include? response.code
       response.follow_redirection(request, &block)
     else
       response.return!(request, &block)
