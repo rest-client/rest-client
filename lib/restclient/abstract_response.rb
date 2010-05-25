@@ -36,19 +36,19 @@ module RestClient
 
     # Return the default behavior corresponding to the response code:
     # the response itself for code in 200..206, redirection for 301 and 302 in get and head cases, redirection for 303 and an exception in other cases
-    def return! request, & block
+    def return! request  = nil, &block
       if (200..206).include? code
         self
       elsif [301, 302].include? code
         unless [:get, :head].include? args[:method]
           raise Exceptions::EXCEPTIONS_MAP[code], self
         else
-          follow_redirection(request, & block)
+          follow_redirection(request, &block)
         end
       elsif code == 303
         args[:method] = :get
         args.delete :payload
-        follow_redirection(request, & block)
+        follow_redirection(request, &block)
       elsif Exceptions::EXCEPTIONS_MAP[code]
         raise Exceptions::EXCEPTIONS_MAP[code], self
       else
@@ -65,16 +65,18 @@ module RestClient
     end
 
     # Follow a redirection
-    def follow_redirection request, & block
+    def follow_redirection request = nil, &block
       url = headers[:location]
       if url !~ /^http/
         url = URI.parse(args[:url]).merge(url).to_s
       end
       args[:url] = url
-      args[:password] = request.password
-      args[:user] = request.user
-      args[:headers] = request.headers
-      Request.execute args, & block
+      if request
+        args[:password] = request.password
+        args[:user] = request.user
+        args[:headers] = request.headers
+      end
+      Request.execute args, &block
     end
 
     def AbstractResponse.beautify_headers(headers)

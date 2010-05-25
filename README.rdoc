@@ -98,11 +98,11 @@ A block can be passed to the RestClient method, this block will then be called w
 Response.return! can be called to invoke the default response's behavior.
 
   # Don't raise exceptions but return the response
-  RestClient.get('http://example.com/resource'){|response| response }
+  RestClient.get('http://example.com/resource'){|response, request| response }
   ➔ 404 Resource Not Found | text/html 282 bytes
 
   # Manage a specific error code
-  RestClient.get('http://my-rest-service.com/resource'){ |response, &block|
+  RestClient.get('http://my-rest-service.com/resource'){ |response, request, &block|
     case response.code
     when 200
       p "It worked !"
@@ -110,7 +110,7 @@ Response.return! can be called to invoke the default response's behavior.
     when 423
       raise SomeCustomExceptionIfYouWant
     else
-      response.return! &block
+      response.return!(request, &block)
     end
   }
 
@@ -120,9 +120,9 @@ Response.return! can be called to invoke the default response's behavior.
   #        since this might change the conditions under which the request was issued."
   RestClient.get('http://my-rest-service.com/resource'){ |response, request, &block|
     if [301, 302].include? response.code
-      response.follow_redirection(request) &block
+      response.follow_redirection(request, &block)
     else
-      response.return!(request) &block
+      response.return!(request, &block)
     end
   }
 

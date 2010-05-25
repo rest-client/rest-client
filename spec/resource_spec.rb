@@ -5,32 +5,32 @@ include WebMock
 
 describe RestClient::Resource do
   before do
-    @resource = RestClient::Resource.new('http://some/resource', :user => 'jane', :password => 'mypass', :headers => { 'X-Something' => '1'})
+    @resource = RestClient::Resource.new('http://some/resource', :user => 'jane', :password => 'mypass', :headers => {'X-Something' => '1'})
   end
 
   context "Resource delegation" do
     it "GET" do
-      RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => { 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.get
     end
 
     it "POST" do
-      RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'abc', :headers => { :content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.post 'abc', :content_type => 'image/jpg'
     end
 
     it "PUT" do
-      RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'abc', :headers => { :content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.put 'abc', :content_type => 'image/jpg'
     end
 
     it "DELETE" do
-      RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => { 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.delete
     end
 
     it "overrides resource headers" do
-      RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => { 'X-Something' => '2'}, :user => 'jane', :password => 'mypass')
+      RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '2'}, :user => 'jane', :password => 'mypass')
       @resource.get 'X-Something' => '2'
     end
   end
@@ -79,20 +79,20 @@ describe RestClient::Resource do
   describe 'block' do
     it 'can use block when creating the resource' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
-      resource = RestClient::Resource.new('www.example.com'){|response, request| 'foo'}
+      resource = RestClient::Resource.new('www.example.com') { |response, request| 'foo' }
       resource.get.should == 'foo'
     end
 
     it 'can use block when executing the resource' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
       resource = RestClient::Resource.new('www.example.com')
-      resource.get{|response, request| 'foo'}.should == 'foo'
+      resource.get { |response, request| 'foo' }.should == 'foo'
     end
 
     it 'execution block override resource block' do
       stub_request(:get, 'www.example.com').to_return(:body => '', :status => 404)
-      resource = RestClient::Resource.new('www.example.com'){|response, request| 'foo'}
-      resource.get{|response, request| 'bar'}.should == 'bar'
+      resource = RestClient::Resource.new('www.example.com') { |response, request| 'foo' }
+      resource.get { |response, request| 'bar' }.should == 'bar'
     end
 
   end
