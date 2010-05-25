@@ -77,7 +77,7 @@ See RestClient::Resource docs for details.
 
 == Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
-* for results code between 200 and 206 a RestClient::Response will be returned
+* for results code between 200 and 207 a RestClient::Response will be returned
 * for results code 301 and 302 the redirection will be followed if the request is a get or a head
 * for result code 303 the redirection will be followed and the request transformed into a get
 * for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for know error codes

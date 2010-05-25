@@ -59,7 +59,7 @@ describe RestClient::Request do
   end
 
   it "doesn't classify successful requests as failed" do
-    203.upto(206) do |code|
+    203.upto(207) do |code|
       res = mock("result")
       res.stub!(:code).and_return(code.to_s)
       res.stub!(:body).and_return("")
