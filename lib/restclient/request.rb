@@ -27,14 +27,18 @@ module RestClient
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args
 
-    def self.execute(args, &block)
-      new(args).execute(&block)
+    def self.execute(args, & block)
+      new(args).execute(& block)
     end
 
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
-      @url = args[:url] or raise ArgumentError, "must pass :url"
       @headers = args[:headers] || {}
+      if args[:url]
+        @url = process_get_params(args[:url], headers)
+      else
+        raise ArgumentError, "must pass :url"
+      end
       @cookies = @headers.delete(:cookies) || args[:cookies] || {}
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
@@ -51,14 +55,37 @@ module RestClient
       @args = args
     end
 
-    def execute &block
+    def execute & block
       uri = parse_url_with_auth(url)
-      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, &block
+      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
+    end
+
+    # Extract the query parameters for get request and append them to the url
+    def process_get_params url, headers
+      if method == :get
+        get_params = {}
+        headers.delete_if do |key, value|
+          if 'params' == key.to_s.downcase
+            get_params.merge! value
+            true
+          else
+            false
+          end
+        end
+        unless get_params.empty?
+          query_string = get_params.collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
+          url + "?#{query_string}"
+        else
+          url
+        end
+      else
+        url
+      end
     end
 
     def make_headers user_headers
       unless @cookies.empty?
-        user_headers[:cookie] = @cookies.map {|(key, val)| "#{key.to_s}=#{val}" }.sort.join(';')
+        user_headers[:cookie] = @cookies.map { |(key, val)| "#{key.to_s}=#{val}" }.sort.join(';')
       end
       headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
       headers.merge!(@payload.headers) if @payload
@@ -107,7 +134,7 @@ module RestClient
       end
     end
 
-    def transmit uri, req, payload, &block
+    def transmit uri, req, payload, & block
       setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
@@ -139,7 +166,7 @@ module RestClient
       net.start do |http|
         res = http.request(req, payload) { |http_response| fetch_body(http_response) }
         log_response res
-        process_result res, &block
+        process_result res, & block
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
@@ -179,7 +206,7 @@ module RestClient
       http_response
     end
 
-    def process_result res, &block
+    def process_result res, & block
       if @raw_response
         # We don't decode raw requests
         response = RawResponse.new(@tf, res, args)
@@ -188,9 +215,9 @@ module RestClient
       end
 
       if block_given?
-        block.call(response, self, &block)
+        block.call(response, self, & block)
       else
-        response.return!(self, &block)
+        response.return!(self, & block)
       end
 
     end
@@ -212,7 +239,7 @@ module RestClient
         out = []
         out << "RestClient.#{method} #{url.inspect}"
         out << payload.short_inspect if payload
-        out << processed_headers.to_a.sort.map{|(k,v)| [k.inspect, v.inspect].join("=>")}.join(", ")
+        out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
         RestClient.log << out.join(', ') + "\n"
       end
     end
@@ -228,7 +255,7 @@ module RestClient
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
         if key.is_a? Symbol
-          key = key.to_s.split(/_/).map{|w| w.capitalize}.join('-')
+          key = key.to_s.split(/_/).map { |w| w.capitalize }.join('-')
         end
         if 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s
@@ -240,7 +267,7 @@ module RestClient
           else
             target_values = value.to_s.split ','
           end
-          result[key] = target_values.map{ |ext| MIME::Types.type_for_extension(ext.to_s.strip)}.join(', ')
+          result[key] = target_values.map { |ext| MIME::Types.type_for_extension(ext.to_s.strip) }.join(', ')
         else
           result[key] = value.to_s
         end
@@ -249,7 +276,7 @@ module RestClient
     end
 
     def default_headers
-      { :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' }
+      {:accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate'}
     end
 
   end
