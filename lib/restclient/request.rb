@@ -65,7 +65,7 @@ module RestClient
       if method == :get
         get_params = {}
         headers.delete_if do |key, value|
-          if 'params' == key.to_s.downcase
+          if 'params' == key.to_s.downcase && value.is_a?(Hash)
             get_params.merge! value
             true
           else
