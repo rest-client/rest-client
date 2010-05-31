@@ -2,7 +2,7 @@
 
 - forgot to include rest-client.rb in the gem
 - user, password and user-defined headers should survive a redirect
-- added 207 and 307 status code
+- added all missing status codes
 - added parameter passing for get request using the :param key in header
 
 # 1.5.1
