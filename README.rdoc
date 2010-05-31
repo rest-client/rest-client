@@ -13,7 +13,9 @@ of specifying actions: get, put, post, delete.
 
   RestClient.get 'http://example.com/resource'
   
-  RestClient.get 'https://user:password@example.com/private/resource', {:accept => :json, :params => {'foo' => 'bar'}}
+  RestClient.get 'http://example.com/resource', {:params => {:id => 50, 'foo' => 'bar'}}
+
+  RestClient.get 'https://user:password@example.com/private/resource', {:accept => :json}
 
   RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
 
