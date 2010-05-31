@@ -14,6 +14,11 @@ describe RestClient::Payload do
               RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s)
     end
 
+    it "should escape parameters" do
+      RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'}).to_s.
+              should == "foo%20=bar"
+    end
+
     it "should properly handle hashes as parameter" do
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz' }}).to_s.
               should == "foo[bar]=baz"
@@ -70,6 +75,17 @@ baz\r
 Content-Disposition: form-data; name="foo"\r
 \r
 bar\r
+--#{m.boundary}--\r
+      EOS
+    end
+
+    it "should not escape parameters names" do
+      m = RestClient::Payload::Multipart.new([["bar ", "baz"]])
+      m.to_s.should == <<-EOS
+--#{m.boundary}\r
+Content-Disposition: form-data; name="bar "\r
+\r
+baz\r
 --#{m.boundary}--\r
       EOS
     end

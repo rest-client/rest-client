@@ -47,16 +47,12 @@ module RestClient
 
       alias :to_s :read
 
-      def escape(v)
-        URI.escape(v.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-      end
-
       # Flatten parameters by converting hashes of hashes to flat hashes
       # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
       def flatten_params(params, parent_key = nil)
         result = []
         params.each do |key, value|
-          calculated_key = parent_key ? "#{parent_key}[#{escape key}]" : escape(key)
+          calculated_key = parent_key ? "#{parent_key}[#{handle_key(key)}]" : handle_key(key)
           if value.is_a? Hash
             result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
@@ -111,9 +107,14 @@ module RestClient
     class UrlEncoded < Base
       def build_stream(params = nil)
         @stream = StringIO.new(flatten_params(params).collect do |entry|
-          "#{entry[0]}=#{escape(entry[1])}"
+          "#{entry[0]}=#{handle_key(entry[1])}"
         end.join("&"))
         @stream.seek(0)
+      end
+
+      # for UrlEncoded escape the keys
+      def handle_key key
+        URI.escape(key.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
 
       def headers
@@ -182,6 +183,11 @@ module RestClient
 
       def boundary
         @boundary ||= rand(1_000_000).to_s
+      end
+
+      # for Multipart do not escape the keys
+      def handle_key key
+        key
       end
 
       def headers
