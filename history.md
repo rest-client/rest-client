@@ -4,6 +4,7 @@
 - user, password and user-defined headers should survive a redirect
 - added all missing status codes
 - added parameter passing for get request using the :param key in header
+- the warning about the logger when using a string was a bad idea
 
 # 1.5.1
 

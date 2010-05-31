@@ -92,9 +92,6 @@ module RestClient
   # Value should be a logger but can can be stdout, stderr, or a filename.
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
   def self.log= log
-    if log.is_a? String
-      warn "[warning] You should set the log with a logger"
-    end
     @@log = create_log log
   end
 
