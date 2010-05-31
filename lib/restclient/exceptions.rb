@@ -2,23 +2,26 @@ module RestClient
 
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',
-              102 => 'Processing',
+              102 => 'Processing', #WebDAV
 
               200 => 'OK',
               201 => 'Created',
               202 => 'Accepted',
-              203 => 'Non-Authoritative Information',
+              203 => 'Non-Authoritative Information', # http/1.1
               204 => 'No Content',
               205 => 'Reset Content',
               206 => 'Partial Content',
-              207 => 'Multi-Status',
+              207 => 'Multi-Status', #WebDAV
+
               300 => 'Multiple Choices',
               301 => 'Moved Permanently',
               302 => 'Found',
-              303 => 'See Other',
+              303 => 'See Other', # http/1.1
               304 => 'Not Modified',
-              305 => 'Use Proxy',
-              307 => 'Temporary Redirect',
+              305 => 'Use Proxy', # http/1.1
+              306 => 'Switch Proxy', # no longer used
+              307 => 'Temporary Redirect', # http/1.1
+              
               400 => 'Bad Request',
               401 => 'Unauthorized',
               402 => 'Payment Required',
@@ -37,11 +40,16 @@ module RestClient
               415 => 'Unsupported Media Type',
               416 => 'Requested Range Not Satisfiable',
               417 => 'Expectation Failed',
-              422 => 'Unprocessable Entity',
-              423 => 'Locked',
-              424 => 'Failed Dependency',
-              425 => 'No Code',
-              426 => 'Upgrade Required',
+              418 => 'I\'m A Teapot',
+              421 => 'Too Many Connections From This IP',
+              422 => 'Unprocessable Entity', #WebDAV
+              423 => 'Locked', #WebDAV
+              424 => 'Failed Dependency', #WebDAV
+              425 => 'Unordered Collection', #WebDAV
+              426 => 'Upgrade Required', 
+              449 => 'Retry With', #Microsoft
+              450 => 'Blocked By Windows Parental Controls', #Microsoft
+
               500 => 'Internal Server Error',
               501 => 'Not Implemented',
               502 => 'Bad Gateway',
@@ -49,7 +57,8 @@ module RestClient
               504 => 'Gateway Timeout',
               505 => 'HTTP Version Not Supported',
               506 => 'Variant Also Negotiates',
-              507 => 'Insufficient Storage',
+              507 => 'Insufficient Storage', #WebDAV
+              509 => 'Bandwidth Limit Exceeded', #Apache
               510 => 'Not Extended'}
 
   # Compatibility : make the Response act like a Net::HTTPResponse when needed
@@ -124,7 +133,7 @@ module RestClient
     klass = Class.new(superclass) do
       send(:define_method, :message) {message}
     end
-    klass_constant = const_set message.gsub(/ /, '').gsub(/-/, ''), klass
+    klass_constant = const_set message.delete(' \-\''), klass
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
