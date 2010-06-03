@@ -6,6 +6,7 @@
 - added parameter passing for get request using the :param key in header
 - the warning about the logger when using a string was a bad idea
 - multipart parameters names should not be escaped
+- remove the cookie escaping introduced by migrating to CGI cookie parsing in 1.5.1
 
 # 1.5.1
 

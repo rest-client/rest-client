@@ -27,7 +27,7 @@ module RestClient
       @cookies ||= (self.headers[:set_cookie] || {}).inject({}) do |out, cookie_content|
         CGI::Cookie::parse(cookie_content).each do |key, cookie|
           unless ['expires', 'path'].include? key
-            out[key] = cookie.value[0] || ''
+            out[CGI::escape(key)] = cookie.value[0] ? (CGI::escape(cookie.value[0]) || '') : ''
           end
         end
         out

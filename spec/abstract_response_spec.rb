@@ -53,7 +53,12 @@ describe RestClient::AbstractResponse do
 
   it "extract strange cookies" do
     @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=ZJ/HQVH6YE+rVkTpn0zvTQ==; path=/'])
-    @response.cookies.should == { 'session_id' => 'ZJ/HQVH6YE rVkTpn0zvTQ==' }
+    @response.cookies.should == { 'session_id' => 'ZJ%2FHQVH6YE+rVkTpn0zvTQ%3D%3D' }
+  end
+
+  it "doesn't escape cookies" do
+    @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=BAh7BzoNYXBwX25hbWUiEGFwcGxpY2F0aW9uOgpsb2dpbiIKYWRtaW4%3D%0A--08114ba654f17c04d20dcc5228ec672508f738ca; path=/'])
+    @response.cookies.should == { 'session_id' => 'BAh7BzoNYXBwX25hbWUiEGFwcGxpY2F0aW9uOgpsb2dpbiIKYWRtaW4%3D%0A--08114ba654f17c04d20dcc5228ec672508f738ca' }
   end
 
   it "can access the net http result directly" do
