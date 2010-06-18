@@ -157,6 +157,33 @@ Content-Type: text/plain\r
 
   end
 
+  context "streamed payloads" do
+    it "should properly determine the size of file payloads" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      payload = RestClient::Payload.generate(f)
+      payload.size.should == 22_545
+      payload.length.should == 22_545
+    end
+
+    it "should properly determine the size of other kinds of streaming payloads" do
+      s = StringIO.new 'foo'
+      payload = RestClient::Payload.generate(s)
+      payload.size.should == 3
+      payload.length.should == 3
+
+      begin
+        f = Tempfile.new "rest-client"
+        f.write 'foo bar'
+
+        payload = RestClient::Payload.generate(f)
+        payload.size.should == 7
+        payload.length.should == 7
+      ensure
+        f.close
+      end
+    end
+  end
+
   context "Payload generation" do
     it "should recognize standard urlencoded params" do
       RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
@@ -180,5 +207,13 @@ Content-Type: text/plain\r
       RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
+    it "should recognize file payloads that can be streamed" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      RestClient::Payload.generate(f).should be_kind_of(RestClient::Payload::Streamed)
+    end
+
+    it "should recognize other payloads that can be streamed" do
+      RestClient::Payload.generate(StringIO.new('foo')).should be_kind_of(RestClient::Payload::Streamed)
+    end
   end
 end

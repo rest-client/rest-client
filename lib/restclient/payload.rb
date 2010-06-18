@@ -9,6 +9,8 @@ module RestClient
     def generate(params)
       if params.is_a?(String)
         Base.new(params)
+      elsif params.respond_to?(:read)
+        Streamed.new(params)
       elsif params
         if params.delete(:multipart) == true || has_file?(params)
           Multipart.new(params)
@@ -79,7 +81,7 @@ module RestClient
       end
 
       def headers
-        { 'Content-Length' => size.to_s }
+        {'Content-Length' => size.to_s}
       end
 
       def size
@@ -104,6 +106,22 @@ module RestClient
 
     end
 
+    class Streamed < Base
+      def build_stream(params = nil)
+        @stream = params
+      end
+
+      def size
+        if @stream.respond_to?(:size)
+          @stream.size
+        elsif @stream.is_a?(IO)
+          @stream.stat.size
+        end
+      end
+
+      alias :length :size
+    end
+
     class UrlEncoded < Base
       def build_stream(params = nil)
         @stream = StringIO.new(flatten_params(params).collect do |entry|
@@ -118,7 +136,7 @@ module RestClient
       end
 
       def headers
-        super.merge({ 'Content-Type' => 'application/x-www-form-urlencoded' })
+        super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
     end
 
@@ -140,7 +158,7 @@ module RestClient
 
         last_index = x.length - 1
         x.each_with_index do |a, index|
-          k, v = *a
+          k, v = * a
           if v.respond_to?(:read) && v.respond_to?(:path)
             create_file_field(@stream, k, v)
           else
