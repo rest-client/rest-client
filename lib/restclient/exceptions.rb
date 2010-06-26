@@ -95,7 +95,7 @@ module RestClient
     end
 
     def http_body
-      @response.body
+      @response.body if @response
     end
 
     def inspect

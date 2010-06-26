@@ -8,6 +8,7 @@
 - multipart parameters names should not be escaped
 - remove the cookie escaping introduced by migrating to CGI cookie parsing in 1.5.1
 - add a streamed payload type (patch provided by Caleb Land)
+- Exception#http_body works even when no response
 
 # 1.5.1
 
