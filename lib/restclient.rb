@@ -84,6 +84,10 @@ module RestClient
     Request.execute(:method => :head, :url => url, :headers => headers, &block)
   end
 
+  def self.options(url, headers={}, &block)
+    Request.execute(:method => :options, :url => url, :headers => headers, &block)
+  end
+
   class << self
     attr_accessor :proxy
   end

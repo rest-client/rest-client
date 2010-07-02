@@ -26,6 +26,11 @@ describe RestClient do
       RestClient::Request.should_receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {})
       RestClient.head('http://some/resource')
     end
+
+    it "OPTIONS" do
+      RestClient::Request.should_receive(:execute).with(:method => :options, :url => 'http://some/resource', :headers => {})
+      RestClient.options('http://some/resource')
+    end
   end
 
   describe "logging" do

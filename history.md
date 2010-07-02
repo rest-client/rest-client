@@ -1,6 +1,7 @@
 # 1.6.1
 
 - add response body in Exception#inspect
+- add support for RestClient.options
 
 # 1.6.0
 

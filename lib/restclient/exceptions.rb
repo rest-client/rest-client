@@ -82,8 +82,9 @@ module RestClient
   class Exception < RuntimeError
     attr_accessor :message, :response
 
-    def initialize response = nil
+    def initialize response = nil, initial_response_code = nil
       @response = response
+      @initial_response_code = initial_response_code
 
       # compatibility: this make the exception behave like a Net::HTTPResponse
       response.extend ResponseForException if response
@@ -91,7 +92,11 @@ module RestClient
 
     def http_code
       # return integer for compatibility
-      @response.code.to_i if @response
+      if @response
+        @response.code.to_i
+      else
+        @initial_response_code
+      end
     end
 
     def http_body
@@ -99,7 +104,7 @@ module RestClient
     end
 
     def inspect
-      "#{message} #{http_code}: #{http_body}"
+      "#{message}: #{http_body}"
     end
 
     def to_s
@@ -135,7 +140,7 @@ module RestClient
     # Compatibility
     superclass = ([304, 401, 404].include? code) ? ExceptionWithResponse : RequestFailed
     klass = Class.new(superclass) do
-      send(:define_method, :message) {message}
+      send(:define_method, :message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
     end
     klass_constant = const_set message.delete(' \-\''), klass
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
@@ -162,7 +167,7 @@ module RestClient
 
   class SSLCertificateNotVerified < Exception
     def initialize(message)
-      super(nil)
+      super nil, nil
       self.message = message
     end
   end
