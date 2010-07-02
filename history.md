@@ -1,3 +1,7 @@
+# 1.6.1
+
+- add response body in Exception#inspect
+
 # 1.6.0
 
 - forgot to include rest-client.rb in the gem

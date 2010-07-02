@@ -99,7 +99,7 @@ module RestClient
     end
 
     def inspect
-      "#{message} #{http_code}"
+      "#{message} #{http_code}: #{http_body}"
     end
 
     def to_s
