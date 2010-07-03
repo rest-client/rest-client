@@ -130,8 +130,13 @@ module RestClient
     #   comments = first_post['comments']
     #   comments.post 'Hello', :content_type => 'text/plain'
     #
-    def [](suburl)
-      self.class.new(concat_urls(url, suburl), options)
+    def [](suburl, &new_block)
+      case
+        when block_given? then self.class.new(concat_urls(url, suburl), options, &new_block)
+        when block        then self.class.new(concat_urls(url, suburl), options, &block)
+      else
+        self.class.new(concat_urls(url, suburl), options)
+      end
     end
 
     def concat_urls(url, suburl) # :nodoc:

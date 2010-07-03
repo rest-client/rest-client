@@ -72,6 +72,31 @@ describe RestClient::Resource do
     parent['posts'].password.should == 'password'
   end
 
+  it "passes a given block to subresources" do
+    block = Proc.new{|r| r}
+    parent = RestClient::Resource.new('http://example.com', &block)
+    parent['posts'].block.should == block
+  end
+
+  it "the block should be overrideable" do
+    block1 = Proc.new{|r| r}
+    block2 = Proc.new{|r| r}
+    parent = RestClient::Resource.new('http://example.com', &block1)
+    # parent['posts', &block2].block.should == block2 # ruby 1.9 syntax
+    parent.send(:[], 'posts', &block2).block.should == block2
+  end
+
+  it "the block should be overrideable in ruby 1.9 syntax" do
+    block = Proc.new{|r| r}
+    parent = RestClient::Resource.new('http://example.com', &block)
+    r19_syntax = %q{
+      parent['posts', &->(r){r}].block.should_not == block
+    }
+    is_ruby_19?
+      eval(r19_syntax)
+    end
+  end
+
   it "prints its url with to_s" do
     RestClient::Resource.new('x').to_s.should == 'x'
   end
