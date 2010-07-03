@@ -1,4 +1,4 @@
-require File.dirname(__FILE__) + '/base'
+require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
 
 describe RestClient do
   describe "API" do
