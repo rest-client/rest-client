@@ -2,6 +2,7 @@
 
 - add response body in Exception#inspect
 - add support for RestClient.options
+- fix tests for 1.9.2 (patch provided by Niko Dittmann)
 
 # 1.6.0
 
