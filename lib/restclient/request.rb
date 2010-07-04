@@ -215,9 +215,9 @@ module RestClient
       end
 
       if block_given?
-        block.call(response, self, & block)
+        block.call(response, self, res, & block)
       else
-        response.return!(self, & block)
+        response.return!(self, res, & block)
       end
 
     end

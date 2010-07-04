@@ -90,6 +90,12 @@ describe RestClient::Response do
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body.should == 'Foo'
     end
 
+    it "follows a redirection and keep the cookies" do
+      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => CGI::Cookie.new('Foo', 'Bar'), 'Location' => 'http://new/resource', })
+      stub_request(:get, 'http://new/resource').with(:headers => {'Cookie' => 'Foo=Bar'}).to_return(:body => 'Qux')
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should == 'Qux'
+    end
+
     it "doesn't follow a 301 when the request is a post" do
       net_http_res = mock('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})

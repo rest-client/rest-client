@@ -4,6 +4,7 @@
 - add support for RestClient.options
 - fix tests for 1.9.2 (patch provided by Niko Dittmann)
 - block passing in Resource#[] (patch provided by Niko Dittmann)
+- cookies set in a response should be kept in a redirect
 
 # 1.6.0
 
