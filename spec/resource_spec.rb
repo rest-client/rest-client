@@ -92,7 +92,7 @@ describe RestClient::Resource do
     r19_syntax = %q{
       parent['posts', &->(r){r}].block.should_not == block
     }
-    is_ruby_19?
+    if is_ruby_19?
       eval(r19_syntax)
     end
   end
