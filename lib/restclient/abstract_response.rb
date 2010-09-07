@@ -47,7 +47,7 @@ module RestClient
       elsif Exceptions::EXCEPTIONS_MAP[code]
         raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
       else
-        raise RequestFailed self
+        raise RequestFailed(self)
       end
     end
 
