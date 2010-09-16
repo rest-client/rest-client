@@ -1,3 +1,7 @@
+# 1.6.2
+
+- add support for HEAD in resources (patch provided by tpresa)
+
 # 1.6.1
 
 - add response body in Exception#inspect

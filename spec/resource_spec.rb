@@ -14,6 +14,11 @@ describe RestClient::Resource do
       @resource.get
     end
 
+    it "HEAD" do
+      RestClient::Request.should_receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      @resource.head
+    end
+
     it "POST" do
       RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.post 'abc', :content_type => 'image/jpg'
