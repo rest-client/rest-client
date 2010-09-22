@@ -6,16 +6,17 @@ Jeweler::Tasks.new do |s|
   s.name = "rest-client"
   s.description = "A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete."
   s.summary = "Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions."
-  s.author = "Adam Wiggins"
+  s.authors = ["Adam Wiggins", "Julien Kirch"]
   s.email = "rest.client@librelist.com"
   s.homepage = "http://github.com/archiloque/rest-client"
   s.rubyforge_project = "rest-client"
   s.has_rdoc = true
   s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
   s.executables = %w(restclient)
-  s.add_dependency("mime-types", ">= 1.16")
+  s.add_runtime_dependency("mime-types", ">= 1.16")
   s.add_development_dependency("webmock", ">= 0.9.1")
   s.add_development_dependency("rspec")
+  s.extra_rdoc_files = [ 'README.rdoc', 'history.md']
 end
 
 Jeweler::RubyforgeTasks.new
