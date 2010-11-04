@@ -1,6 +1,8 @@
 # 1.6.2
 
 - add support for HEAD in resources (patch provided by tpresa)
+- fix shell for 1.9.2
+- workaround when some gem monkeypatch net/http (patch provided by Ian Warshak)
 
 # 1.6.1
 
