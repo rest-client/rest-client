@@ -13,7 +13,9 @@ def usage(why = nil)
   exit(1)
 end
 
-if %w( get put post delete ).include? ARGV.first
+POSSIBLE_VERBS = ['get', 'put', 'post', 'delete']
+
+if POSSIBLE_VERBS.include? ARGV.first
   @verb = ARGV.shift
 else
   @verb = nil
@@ -52,7 +54,7 @@ if @verb
   end
 end
 
-%w( get post put delete ).each do |m|
+POSSIBLE_VERBS.each do |m|
   eval <<-end_eval
 def  #{m} (path, *args, &b)
 	r[path]. #{m} (*args, &b)
@@ -61,12 +63,15 @@ end
 end
 
 def method_missing(s, * args, & b)
-  super unless r.respond_to?(s)
-  begin
-    r.send(s, * args, & b)
-  rescue RestClient::RequestFailed => e
-    print STDERR, e.response.body
-    raise e
+  if POSSIBLE_VERBS.include? s
+    begin
+      r.send(s, * args, & b)
+    rescue RestClient::RequestFailed => e
+      print STDERR, e.response.body
+      raise e
+    end
+  else
+    super
   end
 end
 
