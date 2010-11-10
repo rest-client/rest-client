@@ -62,7 +62,7 @@ module RestClient
 
     # Extract the query parameters for get request and append them to the url
     def process_get_params url, headers
-      if [:get, :head].include? method
+      if [:get, :head, :delete].include? method
         get_params = {}
         headers.delete_if do |key, value|
           if 'params' == key.to_s.downcase && value.is_a?(Hash)

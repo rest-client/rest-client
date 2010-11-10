@@ -3,6 +3,7 @@
 - add support for HEAD in resources (patch provided by tpresa)
 - fix shell for 1.9.2
 - workaround when some gem monkeypatch net/http (patch provided by Ian Warshak)
+- DELETE requests should process parameters just like GET and HEAD
 
 # 1.6.1
 
