@@ -65,7 +65,7 @@ end
 def method_missing(s, * args, & b)
   if POSSIBLE_VERBS.include? s
     begin
-      r.send(s, * args, & b)
+      r.send(s, *args, & b)
     rescue RestClient::RequestFailed => e
       print STDERR, e.response.body
       raise e
