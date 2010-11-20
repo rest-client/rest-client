@@ -80,7 +80,8 @@ module RestClient
   # For example, the entire result body (which is
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
-    attr_accessor :message, :response
+    attr_accessor :response
+    attr_writer   :message
 
     def initialize response = nil, initial_response_code = nil
       @response = response
@@ -109,6 +110,10 @@ module RestClient
 
     def to_s
       inspect
+    end
+    
+    def message
+      @message || self.class.name
     end
 
   end
@@ -162,7 +167,10 @@ module RestClient
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.
   class ServerBrokeConnection < Exception
-    message = 'Server broke connection'
+    def initialize(message = 'Server broke connection')
+      super nil, nil
+      self.message = message
+    end
   end
 
   class SSLCertificateNotVerified < Exception
