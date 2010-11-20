@@ -4,6 +4,18 @@ require 'webmock/rspec'
 include WebMock
 
 describe RestClient::Exception do
+  it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
+    e = RestClient::Exception.new
+    e.message.should == "RestClient::Exception"
+  end
+  
+  it "returns the 'message' that was set" do
+    e = RestClient::Exception.new
+    message = "An explicitly set message"
+    e.message = message
+    e.message.should == message
+  end
+  
   it "sets the exception message to ErrorMessage" do
     RestClient::ResourceNotFound.new.message.should == 'Resource Not Found'
   end
@@ -11,6 +23,13 @@ describe RestClient::Exception do
   it "contains exceptions in RestClient" do
     RestClient::Unauthorized.new.should be_a_kind_of(RestClient::Exception)
     RestClient::ServerBrokeConnection.new.should be_a_kind_of(RestClient::Exception)
+  end
+end
+
+describe RestClient::ServerBrokeConnection do
+  it "should have a default message of 'Server broke connection'" do
+    e = RestClient::ServerBrokeConnection.new
+    e.message.should == 'Server broke connection'
   end
 end
 
