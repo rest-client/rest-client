@@ -25,7 +25,8 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
+                :ssl_client_key, :ssl_ca_file, :max_redirects,
+                :processed_headers, :args
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -50,6 +51,7 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
+      @max_redirects = args[:max_redirects] || 10
       @tf = nil # If you are a raw request, this is your tempfile
       @processed_headers = make_headers headers
       @args = args
