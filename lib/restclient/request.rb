@@ -164,7 +164,7 @@ module RestClient
       log_request
 
       net.start do |http|
-        res = http.request(req, payload.to_s) { |http_response| fetch_body(http_response) }
+        res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
         log_response res
         process_result res, & block
       end
