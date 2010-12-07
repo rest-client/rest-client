@@ -4,6 +4,7 @@
 - fix shell for 1.9.2
 - workaround when some gem monkeypatch net/http (patch provided by Ian Warshak)
 - DELETE requests should process parameters just like GET and HEAD
+- adding :block_response parameter for manual processing
 
 # 1.6.1
 

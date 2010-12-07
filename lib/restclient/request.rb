@@ -16,6 +16,7 @@ module RestClient
   # * :headers a hash containing the request headers
   # * :cookies will replace possible cookies in the :headers
   # * :user and :password for basic auth, will be replaced by a user/password available in the :url
+  # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout
@@ -45,6 +46,7 @@ module RestClient
       @password = args[:password]
       @timeout = args[:timeout]
       @open_timeout = args[:open_timeout]
+      @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
       @verify_ssl = args[:verify_ssl] || false
       @ssl_client_cert = args[:ssl_client_cert] || nil
@@ -164,9 +166,13 @@ module RestClient
       log_request
 
       net.start do |http|
-        res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
-        log_response res
-        process_result res, & block
+        if @block_response
+          http.request(req, payload ? payload.to_s : nil, & @block_response)
+        else
+          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          log_response res
+          process_result res, & block
+        end
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
