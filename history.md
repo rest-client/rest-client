@@ -14,6 +14,8 @@
 - block passing in Resource#[] (patch provided by Niko Dittmann)
 - cookies set in a response should be kept in a redirect
 - HEAD requests should process parameters just like GET (patch provided by Rob Eanes)
+- Exception message should never be nil (patch provided by Michael Klett)
+- Limit number of redirections (patch provided by Chris Dinn)
 
 # 1.6.0
 

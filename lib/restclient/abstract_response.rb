@@ -67,9 +67,13 @@ module RestClient
       end
       args[:url] = url
       if request
+        if request.max_redirects == 0
+          raise MaxRedirectsReached
+        end
         args[:password] = request.password
         args[:user] = request.user
         args[:headers] = request.headers
+        args[:max_redirects] = request.max_redirects - 1
         # pass any cookie set in the result
         if result && result['set-cookie']
           args[:headers][:cookies] = (args[:headers][:cookies] || {}).merge(parse_cookie(result['set-cookie']))
