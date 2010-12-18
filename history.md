@@ -5,6 +5,7 @@
 - workaround when some gem monkeypatch net/http (patch provided by Ian Warshak)
 - DELETE requests should process parameters just like GET and HEAD
 - adding :block_response parameter for manual processing
+- Limit number of redirections (patch provided by Chris Dinn)
 
 # 1.6.1
 
@@ -15,7 +16,6 @@
 - cookies set in a response should be kept in a redirect
 - HEAD requests should process parameters just like GET (patch provided by Rob Eanes)
 - Exception message should never be nil (patch provided by Michael Klett)
-- Limit number of redirections (patch provided by Chris Dinn)
 
 # 1.6.0
 
