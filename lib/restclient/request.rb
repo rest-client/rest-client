@@ -17,6 +17,7 @@ module RestClient
   # * :cookies will replace possible cookies in the :headers
   # * :user and :password for basic auth, will be replaced by a user/password available in the :url
   # * :raw_response return a low-level RawResponse instead of a Response
+  # * :max_redirects maximum number of redirections (default to 10)
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
