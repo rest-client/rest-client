@@ -112,7 +112,7 @@ describe RestClient::Request do
   it "correctly escapes cookies" do
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => 'BAh7BzoKbG9naW4iDXJob2FkbWluOg1hcHBfbmFtZSIQYXBwbGljYXRpb24%3D%0A--03793957abf47f143eb6075703cf5649d58edfb3' })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
-    @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=BAh7BzoKbG9naW4iDXJob2FkbWluOg1hcHBfbmFtZSIQYXBwbGljYXRpb24%253D%250A--03793957abf47f143eb6075703cf5649d58edfb3'}
+    @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=BAh7BzoKbG9naW4iDXJob2FkbWluOg1hcHBfbmFtZSIQYXBwbGljYXRpb24%3D%0A--03793957abf47f143eb6075703cf5649d58edfb3'}
   end
 
   it "determines the Net::HTTP class to instantiate by the method name" do
