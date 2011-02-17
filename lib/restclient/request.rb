@@ -164,7 +164,7 @@ module RestClient
       log_request
 
       net.start do |http|
-        res = http.request(req, payload) { |http_response| fetch_body(http_response) }
+        res = http.request(req, payload) { |http_response| fetch_body(http_response, &block) }
         log_response res
         process_result res, & block
       end
@@ -178,7 +178,7 @@ module RestClient
       req.basic_auth(user, password) if user
     end
 
-    def fetch_body(http_response)
+    def fetch_body(http_response, &block)
       if @raw_response
         # Taken from Chef, which as in turn...
         # Stolen from http://www.ruby-forum.com/topic/166423
@@ -201,7 +201,7 @@ module RestClient
         @tf.close
         @tf
       else
-        http_response.read_body
+        http_response.read_body &block
       end
       http_response
     end
@@ -223,7 +223,7 @@ module RestClient
     end
 
     def self.decode content_encoding, body
-      if (!body) || body.empty?
+      if (!body) || (body.is_a?(Net::ReadAdapter)) || body.empty?
         body
       elsif content_encoding == 'gzip'
         Zlib::GzipReader.new(StringIO.new(body)).read
