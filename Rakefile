@@ -9,17 +9,12 @@ Jeweler::Tasks.new do |s|
   s.authors = ["Adam Wiggins", "Julien Kirch"]
   s.email = "rest.client@librelist.com"
   s.homepage = "http://github.com/archiloque/rest-client"
-  s.rubyforge_project = "rest-client"
-  s.has_rdoc = true
   s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
-  s.executables = %w(restclient)
   s.add_runtime_dependency("mime-types", ">= 1.16")
   s.add_development_dependency("webmock", ">= 0.9.1")
   s.add_development_dependency("rspec")
   s.extra_rdoc_files = [ 'README.rdoc', 'history.md']
 end
-
-Jeweler::RubyforgeTasks.new
 
 ############################
 

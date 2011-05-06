@@ -9,8 +9,7 @@ Gem::Specification.new do |s|
 
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Wiggins", "Julien Kirch"]
-  s.date = %q{2011-02-13}
-  s.default_executable = %q{restclient}
+  s.date = %q{2011-05-06}
   s.description = %q{A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.}
   s.email = %q{rest.client@librelist.com}
   s.executables = ["restclient"]
@@ -52,8 +51,7 @@ Gem::Specification.new do |s|
   ]
   s.homepage = %q{http://github.com/archiloque/rest-client}
   s.require_paths = ["lib"]
-  s.rubyforge_project = %q{rest-client}
-  s.rubygems_version = %q{1.5.2}
+  s.rubygems_version = %q{1.7.2}
   s.summary = %q{Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.}
   s.test_files = [
     "spec/abstract_response_spec.rb",
