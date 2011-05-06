@@ -6,7 +6,6 @@ Gem::Specification.new do |s|
   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
   s.authors = ["Adam Wiggins", "Julien Kirch"]
   s.date = %q{2010-07-24}
-  s.default_executable = %q{restclient}
   s.description = %q{A simple Simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.}
   s.email = %q{rest.client@librelist.com}
   s.executables = ["restclient"]
