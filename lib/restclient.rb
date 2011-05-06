@@ -157,6 +157,11 @@ module RestClient
   def self.add_before_execution_proc &proc
     @@before_execution_procs << proc
   end
+  
+  # Reset the procs to be called before each request is executed.
+  def self.reset_before_execution_procs
+    @@before_execution_procs = []
+  end
 
   def self.before_execution_procs # :nodoc:
     @@before_execution_procs

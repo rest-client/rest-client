@@ -8,6 +8,7 @@
 - limit number of redirections (patch provided by Chris Dinn)
 - close and unlink the temp file created by playload (patch provided by Chris Green)
 - make gemspec Rubygems 1.8 compatible (patch provided by David Backeus)
+- added RestClient.reset_before_execution_procs (patch provided by Cloudify)
 
 # 1.6.1
 
