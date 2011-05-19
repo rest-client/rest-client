@@ -190,7 +190,7 @@ module RestClient
             s.write(data)
           end
         ensure
-          v.close
+          v.close if v.respond_to?(:close)
         end
       end
 
