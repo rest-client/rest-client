@@ -236,7 +236,13 @@ module RestClient
       elsif content_encoding == 'gzip'
         Zlib::GzipReader.new(StringIO.new(body)).read
       elsif content_encoding == 'deflate'
-        Zlib::Inflate.new.inflate body
+        begin
+          Zlib::Inflate.new.inflate body
+        rescue Zlib::DataError
+          # No luck with Zlib decompression. Let's try with raw deflate,
+          # like some broken web servers do.
+          Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate body
+        end
       else
         body
       end

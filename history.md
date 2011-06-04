@@ -10,6 +10,7 @@
 - make gemspec Rubygems 1.8 compatible (patch provided by David Backeus)
 - added RestClient.reset_before_execution_procs (patch provided by Cloudify)
 - added PATCH method (patch provided by Jeff Remer)
+- hack for HTTP servers that use raw DEFLATE compression, see http://www.ruby-forum.com/topic/136825 (path provided by James Reeves)
 
 # 1.6.1
 
