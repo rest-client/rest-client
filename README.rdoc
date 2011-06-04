@@ -5,7 +5,6 @@ of specifying actions: get, put, post, delete.
 
 * Main page: http://github.com/archiloque/rest-client
 * Mailing list: rest.client@librelist.com (send a mail to subscribe).
-* IRC: #rest-client at freenode
 
 == Usage: Raw URL
 
