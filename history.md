@@ -1,3 +1,6 @@
+# 1.6.3
+- 1.6.2 was yanked
+
 # 1.6.2
 
 - add support for HEAD in resources (patch provided by tpresa)
