@@ -1,4 +1,9 @@
+# 1.6.4
+
+- fix restclient script compatibility with 1.9.2
+
 # 1.6.3
+
 - 1.6.2 was yanked
 
 # 1.6.2

@@ -1,9 +1,10 @@
 #!/usr/bin/env ruby
 
 $:.unshift File.dirname(__FILE__) + "/../lib"
-require 'restclient'
 
-require "yaml"
+require 'rubygems'
+require 'restclient'
+require 'yaml'
 
 def usage(why = nil)
   puts "failed for reason: #{why}" if why
@@ -56,8 +57,8 @@ end
 
 POSSIBLE_VERBS.each do |m|
   eval <<-end_eval
-def  #{m} (path, *args, &b)
-	r[path]. #{m} (*args, &b)
+def  #{m}(path, *args, &b)
+	r[path].#{m}(*args, &b)
 end
   end_eval
 end
