@@ -37,7 +37,7 @@ module RestClient
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @headers = args[:headers] || {}
       if args[:url]
-        @url = process_get_params(args[:url], headers)
+        @url = process_url_params(args[:url], headers)
       else
         raise ArgumentError, "must pass :url"
       end
@@ -64,24 +64,20 @@ module RestClient
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
     end
 
-    # Extract the query parameters for get request and append them to the url
-    def process_get_params url, headers
-      if [:get, :head, :delete].include? method
-        get_params = {}
-        headers.delete_if do |key, value|
-          if 'params' == key.to_s.downcase && value.is_a?(Hash)
-            get_params.merge! value
-            true
-          else
-            false
-          end
-        end
-        unless get_params.empty?
-          query_string = get_params.collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
-          url + "?#{query_string}"
+    # Extract the query parameters and append them to the url
+    def process_url_params url, headers
+      url_params = {}
+      headers.delete_if do |key, value|
+        if 'params' == key.to_s.downcase && value.is_a?(Hash)
+          url_params .merge! value
+          true
         else
-          url
+          false
         end
+      end
+      unless url_params .empty?
+        query_string = url_params .collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
+        url + "?#{query_string}"
       else
         url
       end
