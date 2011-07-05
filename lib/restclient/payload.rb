@@ -91,7 +91,7 @@ module RestClient
       alias :length :size
 
       def close
-        @stream.close
+        @stream.close!
       end
 
       def inspect
