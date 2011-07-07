@@ -54,6 +54,11 @@ describe RestClient::Payload do
       RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
               should == "foo[]=bar&foo[]=baz"
     end
+    
+    it 'should not close if stream already closed' do
+      p = RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'})
+      3.times {p.close}
+    end
 
   end
 
@@ -62,6 +67,11 @@ describe RestClient::Payload do
       m = RestClient::Payload::Multipart.new({})
       m.stub!(:boundary).and_return(123)
       m.headers['Content-Type'].should == 'multipart/form-data; boundary=123'
+    end
+    
+    it 'should not error on close if stream already closed' do
+      m = RestClient::Payload::Multipart.new(:file => File.new(File.join(File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg')))
+      3.times {m.close}
     end
 
     it "should form properly separated multipart data" do

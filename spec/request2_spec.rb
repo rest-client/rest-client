@@ -23,5 +23,18 @@ describe RestClient::Request do
     response_value.should == "foo"
   end
 
+  it 'closes payload if not nil' do
+    test_file = File.new(File.join( File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg'))
+    initial_count = tmp_count
+
+    stub_request(:post, 'http://some/resource').with(:headers => {'Accept'=>'*/*; q=0.5, application/xml', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
+    RestClient::Request.execute(:url => 'http://some/resource', :method => :post, :payload => {:file => test_file})
+
+    tmp_count.should == initial_count
+  end
+
 end
 
+def tmp_count
+  Dir.glob(Dir::tmpdir + "/*").size
+end
