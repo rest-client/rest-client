@@ -217,6 +217,15 @@ use whatever proxy the system is configured to use:
 
   RestClient.proxy = ENV['http_proxy']
 
+== Query parameters
+
+Request objects know about query parameters and will automatically add them to
+the url for GET, HEAD and DELETE requests and escape the keys and values as 
+needed:
+
+  RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
+  # will GET http://example.com/resource?foo=bar&baz=qux
+
 == Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically
