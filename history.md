@@ -1,3 +1,7 @@
+# 1.6.4
+- fix unlinking temp file (patch provided by Evan Smith)
+- monkeypatching ruby for http patch method (patch provided by Syl Turner)
+
 # 1.6.3
 - 1.6.2 was yanked
 
