@@ -2,6 +2,7 @@
 
 - RFC6265 requires single SP after ';' for separating parameters pairs in the 'Cookie:' header (patch provided by Hiroshi Nakamura)
 - enable url parameters for all actions
+- detect file parameters in arrays
 
 # 1.6.4
 

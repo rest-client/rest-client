@@ -27,9 +27,24 @@ module RestClient
         case v
           when Hash
             has_file?(v)
+          when Array
+            has_file_array?(v)
           else
             v.respond_to?(:path) && v.respond_to?(:read)
         end
+      end
+    end
+
+    def has_file_array?(params)
+      params.any? do |v|
+        case v
+          when Hash
+            has_file?(v)
+          when Array
+            has_file_array?(v)
+          else
+            v.respond_to?(:path) && v.respond_to?(:read)
+          end
       end
     end
 
@@ -70,7 +85,7 @@ module RestClient
         result = []
         value.each do |elem|
           if elem.is_a? Hash
-            result +=  flatten_params(elem, calculated_key)
+            result += flatten_params(elem, calculated_key)
           elsif elem.is_a? Array
             result += flatten_params_array(elem, calculated_key)
           else
