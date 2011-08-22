@@ -106,7 +106,7 @@ module RestClient
       alias :length :size
 
       def close
-        @stream.close
+        @stream.close unless @stream.closed?
       end
 
       def inspect

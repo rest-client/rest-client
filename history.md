@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 1.6.5
 
 - RFC6265 requires single SP after ';' for separating parameters pairs in the 'Cookie:' header (patch provided by Hiroshi Nakamura)
@@ -8,6 +9,8 @@
 # 1.6.4
 
 - fix restclient script compatibility with 1.9.2
+- fix unlinking temp file (patch provided by Evan Smith)
+- monkeypatching ruby for http patch method (patch provided by Syl Turner)
 
 # 1.6.3
 
