@@ -1,4 +1,7 @@
-<<<<<<< HEAD
+# 1.6.6
+
+- 1.6.6 was yanked
+
 # 1.6.5
 
 - RFC6265 requires single SP after ';' for separating parameters pairs in the 'Cookie:' header (patch provided by Hiroshi Nakamura)
