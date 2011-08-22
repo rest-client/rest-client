@@ -20,7 +20,7 @@ module RestClient
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
-  # * :timeout and :open_timeout
+  # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
 
@@ -69,14 +69,14 @@ module RestClient
       url_params = {}
       headers.delete_if do |key, value|
         if 'params' == key.to_s.downcase && value.is_a?(Hash)
-          url_params .merge! value
+          url_params.merge! value
           true
         else
           false
         end
       end
-      unless url_params .empty?
-        query_string = url_params .collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
+      unless url_params.empty?
+        query_string = url_params.collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
         url + "?#{query_string}"
       else
         url
@@ -156,6 +156,10 @@ module RestClient
       net.ca_file = @ssl_ca_file if @ssl_ca_file
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
+
+      # disable the timeout if the timeout value is -1
+      net.read_timeout = nil if @timeout == -1
+      net.out_timeout = nil if @open_timeout == -1
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
