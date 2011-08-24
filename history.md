@@ -1,6 +1,10 @@
+# 1.6.7
+
+- rebuild with 1.8.7 to avoid https://github.com/rubygems/rubygems/pull/57
+
 # 1.6.6
 
-- 1.6.6 was yanked
+- 1.6.5 was yanked
 
 # 1.6.5
 
