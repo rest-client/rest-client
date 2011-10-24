@@ -1,6 +1,7 @@
 require 'tempfile'
 require 'mime/types'
 require 'cgi'
+require 'uri'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -78,10 +79,10 @@ module RestClient
         end
       end
       unless url_params.empty?
-        query_string = url_params.collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
-        url + "?#{query_string}"
+        query_string = url_params.collect { |k, v| "#{k.to_s}=#{v.to_s}" }.join('&')
+        URI.escape(url + "?#{query_string}")
       else
-        url
+        URI.escape(url)
       end
     end
 
