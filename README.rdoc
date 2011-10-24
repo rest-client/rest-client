@@ -57,7 +57,7 @@ This does two things for you:
 
 If you are sending params that do not contain a File object but the payload needs to be multipart then:
 
-  RestClient.post '/data', :foo => 'bar', :multipart => true
+  RestClient.post '/data', {:foo => 'bar', :multipart => true}
 
 == Usage: ActiveResource-Style
 
