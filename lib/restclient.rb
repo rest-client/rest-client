@@ -80,8 +80,8 @@ module RestClient
     Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
   end
 
-  def self.delete(url, headers={}, &block)
-    Request.execute(:method => :delete, :url => url, :headers => headers, &block)
+  def self.delete(url, payload, headers={}, &block)
+    Request.execute(:method => :delete, :url => url, :payload => payload, :headers => headers, &block)
   end
 
   def self.head(url, headers={}, &block)
