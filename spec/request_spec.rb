@@ -129,6 +129,13 @@ describe RestClient::Request do
       headers.should have_key('1')
       headers['1'].should == '3'
     end
+
+    it "converts user headers to string before calling CGI::unescape which fails on non string values" do
+      @request.should_receive(:default_headers).and_return({ '1' => '2' })
+      headers = @request.make_headers('1' => 3)
+      headers.should have_key('1')
+      headers['1'].should == '3'
+    end
   end
 
   describe "header symbols" do
