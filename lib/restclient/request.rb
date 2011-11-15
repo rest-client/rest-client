@@ -1,6 +1,7 @@
 require 'tempfile'
 require 'mime/types'
 require 'cgi'
+require 'netrc'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -116,6 +117,9 @@ module RestClient
       uri = parse_url(url)
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
+      if !@user && !@password
+        @user, @password = Netrc.read[uri.host]
+      end
       uri
     end
 
