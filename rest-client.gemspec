@@ -72,5 +72,6 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<webmock>, [">= 0.9.1"])
     s.add_dependency(%q<rspec>, [">= 0"])
   end
+  s.add_dependency(%q<netrc>, [">= 0"])
 end
 
