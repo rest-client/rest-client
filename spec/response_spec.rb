@@ -13,7 +13,7 @@ describe RestClient::Response do
   it "behaves like string" do
     @response.should.to_s == 'abc'
     @response.to_str.should == 'abc'
-    @response.to_i.should == 200
+    @response.to_i.should == 0
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
