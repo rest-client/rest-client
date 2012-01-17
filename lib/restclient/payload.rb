@@ -73,7 +73,7 @@ module RestClient
           if value.is_a? Hash
             result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
-            result += flatten_params_array(value, calculated_key)
+            result += flatten_params_array(value, "#{calculated_key}[]")
           else
             result << [calculated_key, value]
           end
@@ -89,7 +89,7 @@ module RestClient
           elsif elem.is_a? Array
             result += flatten_params_array(elem, calculated_key)
           else
-            result << ["#{calculated_key}[]", elem]
+            result << [calculated_key, elem]
           end
         end
         result
