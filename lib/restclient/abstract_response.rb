@@ -29,6 +29,15 @@ module RestClient
       end
     end
 
+    def is_using_kerberos?
+      # Possibility 1: We are sending a Kerberos token to the server.
+      args_header = args[:headers] || {}
+      args_auth = args_header[:authorization] || ''
+      # Possibility 2: The server offers negotiate HTTP authentication.
+      return ((args_auth.start_with? 'Negotiate') ||
+              (headers[:www_authenticate] == 'Negotiate'))
+    end
+
     # Return the default behavior corresponding to the response code:
     # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
     def return! request = nil, result = nil, & block
@@ -44,6 +53,8 @@ module RestClient
         args[:method] = :get
         args.delete :payload
         follow_redirection(request, result, & block)
+      elsif (code == 401) && is_using_kerberos?
+        authenticate_negotiate(request, result, & block)
       elsif Exceptions::EXCEPTIONS_MAP[code]
         raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
       else
@@ -80,6 +91,47 @@ module RestClient
         end
       end
       Request.execute args, &block
+    end
+
+    def authenticate_negotiate request = nil, result = nil, & block
+      begin
+        require 'base64'
+        require 'gssapi'
+      rescue LoadError
+        # If the 'gssapi' gem is not installed, we tell the user how to fix the
+        # problem and raise a 401 exception.
+        warn "[warning] Server requests Negotiate HTTP authentication, but the gssapi ruby gem could not be loaded. Use 'gem install gssapi'."
+        raise RequestFailed.new(self, 401)
+      end
+
+      uri = URI.parse(args[:url])
+      gsscli = GSSAPI::Simple.new(uri.hostname, 'HTTP')
+      token = gsscli.init_context
+      ext_head = "Negotiate #{Base64.strict_encode64(token)}"
+
+      # Request the same URL, but with the new Authorization header.
+      if request
+        # Make sure there is no basic authentication present.
+        args.delete(:user)
+        args[:headers] = request.headers
+        args[:headers][:authorization] = ext_head
+      end
+      reply = Request.execute args, &block
+      if !reply.headers[:www_authenticate]
+        # If no WWW-Authenticate header is set, the request cannot be
+        # successful (we need to verify that init_context with the header
+        # value returns true).
+        raise RequestFailed.new(self, 401)
+      end
+
+      itok = reply.headers[:www_authenticate].split(/\s+/).last
+      if !gsscli.init_context(Base64.strict_decode64(itok))
+        # According to RFC 4559, section 5, the reply cannot be used if the
+        # final init_context with the WWW-Authenticate header value fails.
+        raise RequestFailed.new(self, 401)
+      end
+
+      return reply
     end
 
     def AbstractResponse.beautify_headers(headers)
