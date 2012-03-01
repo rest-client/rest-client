@@ -153,7 +153,10 @@ describe RestClient::Response do
     it "follows no more than 10 redirections before raising error" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
-      lambda { RestClient::Request.execute(:url => 'http://some/redirect-1', :method => :get) }.should raise_error(RestClient::MaxRedirectsReached)
+      lambda { RestClient::Request.execute(:url => 'http://some/redirect-1', :method => :get) }.should raise_error(RestClient::MaxRedirectsReached){ |e|
+        e.response.body.should == ''
+        e.code.should == 301
+      }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(10)
     end
     

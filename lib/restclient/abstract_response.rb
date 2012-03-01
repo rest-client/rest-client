@@ -68,7 +68,7 @@ module RestClient
       args[:url] = url
       if request
         if request.max_redirects == 0
-          raise MaxRedirectsReached
+          raise MaxRedirectsReached.new(self, code)
         end
         args[:password] = request.password
         args[:user] = request.user
