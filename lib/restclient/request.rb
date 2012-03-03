@@ -149,12 +149,14 @@ module RestClient
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       elsif @verify_ssl.is_a? Integer
         net.verify_mode = @verify_ssl
+	verification_error_message = nil
         net.verify_callback = lambda do |preverify_ok, ssl_context|
           if (!preverify_ok) || ssl_context.error != 0
-            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
-            raise SSLCertificateNotVerified.new(err_msg)
-          end
-          true
+            verification_error_message = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
+            false
+	  else
+	    true
+          end          
         end
       end
       net.cert = @ssl_client_cert if @ssl_client_cert
@@ -173,14 +175,19 @@ module RestClient
 
       log_request
 
-      net.start do |http|
-        if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
-        else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
-          log_response res
-          process_result res, & block
-        end
+      begin
+	net.start do |http|
+	  if @block_response
+	    http.request(req, payload ? payload.to_s : nil, & @block_response)
+	  else
+	    res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+	    log_response res
+	    process_result res, & block
+	  end
+	end
+      rescue
+	raise SSLCertificateNotVerified.new(verification_error_message) if verification_error_message
+	raise
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
