@@ -5,9 +5,9 @@ describe RestClient::Request do
     it "is successful with the correct ca_file" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
-        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "equifax.crt")
+        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "geotrust.crt")
       )
       expect { request.execute }.to_not raise_error
     end
@@ -15,7 +15,7 @@ describe RestClient::Request do
     it "is unsuccessful with an incorrect ca_file" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt")
       )
