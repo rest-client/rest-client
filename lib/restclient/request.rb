@@ -165,7 +165,7 @@ module RestClient
 
       # disable the timeout if the timeout value is -1
       net.read_timeout = nil if @timeout == -1
-      net.out_timeout = nil if @open_timeout == -1 && net.respond_to?(:out_timeout)
+      net.out_timeout = nil if @open_timeout == -1 && net.respond_to?(:out_timeout=)
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
