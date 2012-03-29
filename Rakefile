@@ -10,7 +10,7 @@ Jeweler::Tasks.new do |s|
   s.authors = ["Adam Wiggins", "Julien Kirch"]
   s.email = "rest.client@librelist.com"
   s.homepage = "http://github.com/archiloque/rest-client"
-  s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
+  s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"] - %w(Gemfile.lock)
   s.test_files = FileList["{spec}/**/*"]
   s.add_runtime_dependency("mime-types", ">= 1.16")
   s.add_runtime_dependency("netrc")
