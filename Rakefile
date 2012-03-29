@@ -1,5 +1,6 @@
+require 'rubygems'
+require 'bundler/setup'
 require 'rake'
-
 require 'jeweler'
 
 Jeweler::Tasks.new do |s|
@@ -12,8 +13,9 @@ Jeweler::Tasks.new do |s|
   s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
   s.test_files = FileList["{spec}/**/*"]
   s.add_runtime_dependency("mime-types", ">= 1.16")
-  s.add_development_dependency("webmock", ">= 0.9.1")
-  s.add_development_dependency("rspec")
+  s.add_runtime_dependency("netrc")
+  s.add_development_dependency("webmock", "~> 0.9")
+  s.add_development_dependency("rspec", "~> 1.0")
   s.extra_rdoc_files = [ 'README.rdoc', 'history.md']
 end
 

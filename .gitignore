@@ -4,3 +4,4 @@ rdoc
 pkg
 *.gem
 scratchpad.rb
+Gemfile.lock
