@@ -376,6 +376,18 @@ describe RestClient::Request do
   end
 
   describe "timeout" do
+    it "does not set timeouts if not specified" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @net.should_not_receive(:read_timeout=)
+      @net.should_not_receive(:open_timeout=)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
     it "set read_timeout" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
       @http.stub!(:request)
@@ -394,6 +406,18 @@ describe RestClient::Request do
       @request.stub!(:response_log)
 
       @net.should_receive(:open_timeout=).with(123)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+    it "disable timeout by setting it to nil" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil)
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @net.should_receive(:read_timeout=).with(nil)
+      @net.should_receive(:open_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end

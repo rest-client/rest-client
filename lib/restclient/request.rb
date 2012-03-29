@@ -159,12 +159,8 @@ module RestClient
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file
-      net.read_timeout = @timeout if @timeout
-      net.open_timeout = @open_timeout if @open_timeout
-
-      # disable the timeout if the timeout value is -1
-      net.read_timeout = nil if @timeout == -1
-      net.out_timeout = nil if @open_timeout == -1
+      net.read_timeout = @timeout if defined? @timeout
+      net.open_timeout = @open_timeout if defined? @open_timeout
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
