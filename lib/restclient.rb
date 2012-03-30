@@ -1,6 +1,7 @@
 require 'uri'
 require 'zlib'
 require 'stringio'
+require 'net/http/digest_auth'
 
 begin
   require 'net/https'
