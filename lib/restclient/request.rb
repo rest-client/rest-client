@@ -141,6 +141,7 @@ module RestClient
     end
 
     def transmit uri, req, payload, & block
+      setup_credentials uri, req
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
@@ -171,41 +172,38 @@ module RestClient
 
       log_request
         
-      r = true
-      begin
-        res = nil
-        net.start do |http|
-          if @block_response
-            http.request(req, payload ? payload.to_s : nil, & @block_response)
-          else
-            res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
-            log_response res
-            process_result res, & block
+      net.start do |http|
+        if @block_response
+          http.request(req, payload ? payload.to_s : nil, & @block_response)
+        else
+          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          log_response res
+          process_result res, & block
+        end
+      end
+    rescue EOFError
+      raise RestClient::ServerBrokeConnection
+    rescue Timeout::Error
+      raise RestClient::RequestTimeout
+    end
+
+    def setup_credentials(uri, req)
+      if user 
+        urii = uri.clone
+        urii.user = nil
+        urii.password = nil
+        RestClient.head(urii.to_s) { |response, request, result|
+          if result['www-authenticate'] =~ /Digest realm=/
+            digest_auth = Net::HTTP::DigestAuth.new
+            uri.user = user
+            uri.password = password
+            auth = digest_auth.auth_header uri, result['www-authenticate'], @method.upcase
+
+            req['Authorization'] = auth
+          elsif result['www-authenticate'] =~ /Basic realm=/
+            req.basic_auth(user, password)
           end
-        end
-      rescue EOFError
-        raise RestClient::ServerBrokeConnection
-      rescue Timeout::Error
-        raise RestClient::RequestTimeout
-      rescue RestClient::Unauthorized => e
-        raise e unless r
-        r = false
-
-        if res['www-authenticate'] =~ /Digest realm=/ and @user and @password
-          digest_auth = Net::HTTP::DigestAuth.new
-          uri.user = @user
-          uri.password = @password
-          auth = digest_auth.auth_header uri, res['www-authenticate'], @method.upcase
-
-          req['Authorization'] = auth
-
-          retry
-        elsif res['www-authenticate'] =~ /Basic realm=/ and @user and @password
-          req.basic_auth @user, @password
-
-          retry
-        end
-        raise e
+        }
       end
     end
 
