@@ -18,7 +18,7 @@ Jeweler::Tasks.new do |s|
 end
 
 ############################
-=begin
+
 require 'spec/rake/spectask'
 
 desc "Run all specs"
@@ -50,7 +50,7 @@ Spec::Rake::SpecTask.new('rcov') do |t|
 end
 
 task :default => :spec
-=end
+
 ############################
 
 require 'rake/rdoctask'
