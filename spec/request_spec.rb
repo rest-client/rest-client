@@ -383,6 +383,7 @@ describe RestClient::Request do
       @request.stub!(:response_log)
 
       @net.should_receive(:read_timeout=).with(123)
+      @net.should_not_receive(:read_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end
@@ -406,6 +407,7 @@ describe RestClient::Request do
       @request.stub!(:response_log)
 
       @net.should_receive(:open_timeout=).with(123)
+      @net.should_not_receive(:open_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end
