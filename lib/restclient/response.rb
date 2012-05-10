@@ -14,6 +14,11 @@ module RestClient
 
     def Response.create body, net_http_res, args
       result = body || ''
+      if result.respond_to?(:force_encoding)
+        if (charset = net_http_res.type_params['charset'])
+          result.force_encoding(charset)
+        end
+      end
       result.extend Response
       result.net_http_res = net_http_res
       result.args = args
