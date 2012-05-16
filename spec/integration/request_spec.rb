@@ -1,6 +1,11 @@
 require File.join( File.dirname(File.expand_path(__FILE__)), '../base')
+require 'webmock/rspec'
 
 describe RestClient::Request do
+  before(:all) do
+    WebMock.allow_net_connect!
+  end
+
   describe "ssl verification" do
     it "is successful with the correct ca_file" do
       request = RestClient::Request.new(

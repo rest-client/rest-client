@@ -1,3 +1,55 @@
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number: 903804111 (0x35def4cf)
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=US, O=Equifax, OU=Equifax Secure Certificate Authority
+        Validity
+            Not Before: Aug 22 16:41:51 1998 GMT
+            Not After : Aug 22 16:41:51 2018 GMT
+        Subject: C=US, O=Equifax, OU=Equifax Secure Certificate Authority
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (1024 bit)
+                Modulus:
+                    00:c1:5d:b1:58:67:08:62:ee:a0:9a:2d:1f:08:6d:
+                    91:14:68:98:0a:1e:fe:da:04:6f:13:84:62:21:c3:
+                    d1:7c:ce:9f:05:e0:b8:01:f0:4e:34:ec:e2:8a:95:
+                    04:64:ac:f1:6b:53:5f:05:b3:cb:67:80:bf:42:02:
+                    8e:fe:dd:01:09:ec:e1:00:14:4f:fc:fb:f0:0c:dd:
+                    43:ba:5b:2b:e1:1f:80:70:99:15:57:93:16:f1:0f:
+                    97:6a:b7:c2:68:23:1c:cc:4d:59:30:ac:51:1e:3b:
+                    af:2b:d6:ee:63:45:7b:c5:d9:5f:50:d2:e3:50:0f:
+                    3a:88:e7:bf:14:fd:e0:c7:b9
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 CRL Distribution Points: 
+
+                Full Name:
+                  DirName: C = US, O = Equifax, OU = Equifax Secure Certificate Authority, CN = CRL1
+
+            X509v3 Private Key Usage Period: 
+                Not After: Aug 22 16:41:51 2018 GMT
+            X509v3 Key Usage: 
+                Certificate Sign, CRL Sign
+            X509v3 Authority Key Identifier: 
+                keyid:48:E6:68:F9:2B:D2:B2:95:D7:47:D8:23:20:10:4F:33:98:90:9F:D4
+
+            X509v3 Subject Key Identifier: 
+                48:E6:68:F9:2B:D2:B2:95:D7:47:D8:23:20:10:4F:33:98:90:9F:D4
+            X509v3 Basic Constraints: 
+                CA:TRUE
+            1.2.840.113533.7.65.0: 
+                0...V3.0c....
+    Signature Algorithm: sha1WithRSAEncryption
+        58:ce:29:ea:fc:f7:de:b5:ce:02:b9:17:b5:85:d1:b9:e3:e0:
+        95:cc:25:31:0d:00:a6:92:6e:7f:b6:92:63:9e:50:95:d1:9a:
+        6f:e4:11:de:63:85:6e:98:ee:a8:ff:5a:c8:d3:55:b2:66:71:
+        57:de:c0:21:eb:3d:2a:a7:23:49:01:04:86:42:7b:fc:ee:7f:
+        a2:16:52:b5:67:67:d3:40:db:3b:26:58:b2:28:77:3d:ae:14:
+        77:61:d6:fa:2a:66:27:a0:0d:fa:a7:73:5c:ea:70:f1:94:21:
+        65:44:5f:fa:fc:ef:29:68:a9:a2:87:79:ef:79:ef:4f:ac:07:
+        77:38
 -----BEGIN CERTIFICATE-----
 MIIDIDCCAomgAwIBAgIENd70zzANBgkqhkiG9w0BAQUFADBOMQswCQYDVQQGEwJV
 UzEQMA4GA1UEChMHRXF1aWZheDEtMCsGA1UECxMkRXF1aWZheCBTZWN1cmUgQ2Vy
@@ -16,4 +68,82 @@ MAMBAf8wGgYJKoZIhvZ9B0EABA0wCxsFVjMuMGMDAgbAMA0GCSqGSIb3DQEBBQUA
 A4GBAFjOKer89961zgK5F7WF0bnj4JXMJTENAKaSbn+2kmOeUJXRmm/kEd5jhW6Y
 7qj/WsjTVbJmcVfewCHrPSqnI0kBBIZCe/zuf6IWUrVnZ9NA2zsmWLIodz2uFHdh
 1voqZiegDfqnc1zqcPGUIWVEX/r87yloqaKHee9570+sB3c4
+-----END CERTIFICATE-----
+Certificate:
+    Data:
+        Version: 3 (0x2)
+        Serial Number:
+            18:ac:b5:6a:fd:69:b6:15:3a:63:6c:af:da:fa:c4:a1
+        Signature Algorithm: sha1WithRSAEncryption
+        Issuer: C=US, O=GeoTrust Inc., CN=GeoTrust Primary Certification Authority
+        Validity
+            Not Before: Nov 27 00:00:00 2006 GMT
+            Not After : Jul 16 23:59:59 2036 GMT
+        Subject: C=US, O=GeoTrust Inc., CN=GeoTrust Primary Certification Authority
+        Subject Public Key Info:
+            Public Key Algorithm: rsaEncryption
+                Public-Key: (2048 bit)
+                Modulus:
+                    00:be:b8:15:7b:ff:d4:7c:7d:67:ad:83:64:7b:c8:
+                    42:53:2d:df:f6:84:08:20:61:d6:01:59:6a:9c:44:
+                    11:af:ef:76:fd:95:7e:ce:61:30:bb:7a:83:5f:02:
+                    bd:01:66:ca:ee:15:8d:6f:a1:30:9c:bd:a1:85:9e:
+                    94:3a:f3:56:88:00:31:cf:d8:ee:6a:96:02:d9:ed:
+                    03:8c:fb:75:6d:e7:ea:b8:55:16:05:16:9a:f4:e0:
+                    5e:b1:88:c0:64:85:5c:15:4d:88:c7:b7:ba:e0:75:
+                    e9:ad:05:3d:9d:c7:89:48:e0:bb:28:c8:03:e1:30:
+                    93:64:5e:52:c0:59:70:22:35:57:88:8a:f1:95:0a:
+                    83:d7:bc:31:73:01:34:ed:ef:46:71:e0:6b:02:a8:
+                    35:72:6b:97:9b:66:e0:cb:1c:79:5f:d8:1a:04:68:
+                    1e:47:02:e6:9d:60:e2:36:97:01:df:ce:35:92:df:
+                    be:67:c7:6d:77:59:3b:8f:9d:d6:90:15:94:bc:42:
+                    34:10:c1:39:f9:b1:27:3e:7e:d6:8a:75:c5:b2:af:
+                    96:d3:a2:de:9b:e4:98:be:7d:e1:e9:81:ad:b6:6f:
+                    fc:d7:0e:da:e0:34:b0:0d:1a:77:e7:e3:08:98:ef:
+                    58:fa:9c:84:b7:36:af:c2:df:ac:d2:f4:10:06:70:
+                    71:35
+                Exponent: 65537 (0x10001)
+        X509v3 extensions:
+            X509v3 Basic Constraints: critical
+                CA:TRUE
+            X509v3 Key Usage: critical
+                Certificate Sign, CRL Sign
+            X509v3 Subject Key Identifier: 
+                2C:D5:50:41:97:15:8B:F0:8F:36:61:5B:4A:FB:6B:D9:99:C9:33:92
+    Signature Algorithm: sha1WithRSAEncryption
+        5a:70:7f:2c:dd:b7:34:4f:f5:86:51:a9:26:be:4b:b8:aa:f1:
+        71:0d:dc:61:c7:a0:ea:34:1e:7a:77:0f:04:35:e8:27:8f:6c:
+        90:bf:91:16:24:46:3e:4a:4e:ce:2b:16:d5:0b:52:1d:fc:1f:
+        67:a2:02:45:31:4f:ce:f3:fa:03:a7:79:9d:53:6a:d9:da:63:
+        3a:f8:80:d7:d3:99:e1:a5:e1:be:d4:55:71:98:35:3a:be:93:
+        ea:ae:ad:42:b2:90:6f:e0:fc:21:4d:35:63:33:89:49:d6:9b:
+        4e:ca:c7:e7:4e:09:00:f7:da:c7:ef:99:62:99:77:b6:95:22:
+        5e:8a:a0:ab:f4:b8:78:98:ca:38:19:99:c9:72:9e:78:cd:4b:
+        ac:af:19:a0:73:12:2d:fc:c2:41:ba:81:91:da:16:5a:31:b7:
+        f9:b4:71:80:12:48:99:72:73:5a:59:53:c1:63:52:33:ed:a7:
+        c9:d2:39:02:70:fa:e0:b1:42:66:29:aa:9b:51:ed:30:54:22:
+        14:5f:d9:ab:1d:c1:e4:94:f0:f8:f5:2b:f7:ea:ca:78:46:d6:
+        b8:91:fd:a6:0d:2b:1a:14:01:3e:80:f0:42:a0:95:07:5e:6d:
+        cd:cc:4b:a4:45:8d:ab:12:e8:b3:de:5a:e5:a0:7c:e8:0f:22:
+        1d:5a:e9:59
+-----BEGIN CERTIFICATE-----
+MIIDfDCCAmSgAwIBAgIQGKy1av1pthU6Y2yv2vrEoTANBgkqhkiG9w0BAQUFADBY
+MQswCQYDVQQGEwJVUzEWMBQGA1UEChMNR2VvVHJ1c3QgSW5jLjExMC8GA1UEAxMo
+R2VvVHJ1c3QgUHJpbWFyeSBDZXJ0aWZpY2F0aW9uIEF1dGhvcml0eTAeFw0wNjEx
+MjcwMDAwMDBaFw0zNjA3MTYyMzU5NTlaMFgxCzAJBgNVBAYTAlVTMRYwFAYDVQQK
+Ew1HZW9UcnVzdCBJbmMuMTEwLwYDVQQDEyhHZW9UcnVzdCBQcmltYXJ5IENlcnRp
+ZmljYXRpb24gQXV0aG9yaXR5MIIBIjANBgkqhkiG9w0BAQEFAAOCAQ8AMIIBCgKC
+AQEAvrgVe//UfH1nrYNke8hCUy3f9oQIIGHWAVlqnEQRr+92/ZV+zmEwu3qDXwK9
+AWbK7hWNb6EwnL2hhZ6UOvNWiAAxz9juapYC2e0DjPt1befquFUWBRaa9OBesYjA
+ZIVcFU2Ix7e64HXprQU9nceJSOC7KMgD4TCTZF5SwFlwIjVXiIrxlQqD17wxcwE0
+7e9GceBrAqg1cmuXm2bgyxx5X9gaBGgeRwLmnWDiNpcB3841kt++Z8dtd1k7j53W
+kBWUvEI0EME5+bEnPn7WinXFsq+W06Lem+SYvn3h6YGttm/81w7a4DSwDRp35+MI
+mO9Y+pyEtzavwt+s0vQQBnBxNQIDAQABo0IwQDAPBgNVHRMBAf8EBTADAQH/MA4G
+A1UdDwEB/wQEAwIBBjAdBgNVHQ4EFgQULNVQQZcVi/CPNmFbSvtr2ZnJM5IwDQYJ
+KoZIhvcNAQEFBQADggEBAFpwfyzdtzRP9YZRqSa+S7iq8XEN3GHHoOo0Hnp3DwQ1
+6CePbJC/kRYkRj5KTs4rFtULUh38H2eiAkUxT87z+gOneZ1TatnaYzr4gNfTmeGl
+4b7UVXGYNTq+k+qurUKykG/g/CFNNWMziUnWm07Kx+dOCQD32sfvmWKZd7aVIl6K
+oKv0uHiYyjgZmclynnjNS6yvGaBzEi38wkG6gZHaFloxt/m0cYASSJlyc1pZU8Fj
+UjPtp8nSOQJw+uCxQmYpqptR7TBUIhRf2asdweSU8Pj1K/fqynhG1riR/aYNKxoU
+AT6A8EKglQdebc3MS6RFjasS6LPeWuWgfOgPIh1a6Vk=
 -----END CERTIFICATE-----
