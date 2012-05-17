@@ -102,26 +102,28 @@ baz\r
 
     it "should form properly separated multipart data" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      file_contents = file_content_helper(f.path)
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{file_contents}\r
 --#{m.boundary}--\r
       EOS
     end
 
     it "should ignore the name attribute when it's not set" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      file_contents = file_content_helper(f.path)
       m = RestClient::Payload::Multipart.new({nil => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{file_contents}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -130,13 +132,14 @@ Content-Type: image/jpeg\r
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
+      file_contents = file_content_helper(f.path)
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{file_contents}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -154,13 +157,14 @@ foo\r
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
+      file_contents = file_content_helper(f.path)
       m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo[bar]"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{file_contents}\r
 --#{m.boundary}--\r
       EOS
     end
