@@ -64,7 +64,7 @@ describe RestClient::AbstractResponse do
   it "can access the net http result directly" do
     @response.net_http_res.should == @net_http_res
   end
-  
+
   describe "#return!" do
     it "should return the response itself on 200-codes" do
       @net_http_res.should_receive(:code).and_return('200')
@@ -75,7 +75,7 @@ describe RestClient::AbstractResponse do
       @net_http_res.should_receive(:code).and_return('1000')
       lambda { @response.return! }.should raise_error RestClient::RequestFailed
     end
-    
+
     it "should raise an error on a redirection after non-GET/HEAD requests" do
       @net_http_res.should_receive(:code).and_return('301')
       @response.args.merge(:method => :put)

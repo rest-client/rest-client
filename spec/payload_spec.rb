@@ -1,7 +1,12 @@
 require File.join(File.dirname(File.expand_path(__FILE__)), 'base')
 
 describe RestClient::Payload do
+  let(:sample_jpg_file) do
+    File.new(File.join(File.dirname(File.expand_path(__FILE__)), 'fixtures', 'master_shake.jpg'))
+  end
+
   context "A regular Payload" do
+
     it "should use standard enctype as default content-type" do
       RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
           should == 'application/x-www-form-urlencoded'
@@ -54,7 +59,7 @@ describe RestClient::Payload do
       RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
           should == "foo[]=bar&foo[]=baz"
     end
-    
+
     it 'should not close if stream already closed' do
       p = RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'})
       3.times {p.close}
@@ -68,9 +73,9 @@ describe RestClient::Payload do
       m.stub!(:boundary).and_return(123)
       m.headers['Content-Type'].should == 'multipart/form-data; boundary=123'
     end
-    
+
     it 'should not error on close if stream already closed' do
-      m = RestClient::Payload::Multipart.new(:file => File.new(File.join(File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg')))
+      m = RestClient::Payload::Multipart.new(:file => sample_jpg_file)
       3.times {m.close}
     end
 
@@ -101,7 +106,7 @@ baz\r
     end
 
     it "should form properly separated multipart data" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       m = RestClient::Payload::Multipart.new({:foo => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
@@ -114,7 +119,7 @@ Content-Type: image/jpeg\r
     end
 
     it "should ignore the name attribute when it's not set" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       m = RestClient::Payload::Multipart.new({nil => f})
       m.to_s.should == <<-EOS
 --#{m.boundary}\r
@@ -127,7 +132,7 @@ Content-Type: image/jpeg\r
     end
 
     it "should detect optional (original) content type and filename" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
       m = RestClient::Payload::Multipart.new({:foo => f})
@@ -151,7 +156,7 @@ foo\r
 --#{m.boundary}--\r
       EOS
 
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
       m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
@@ -169,7 +174,7 @@ Content-Type: text/plain\r
 
   context "streamed payloads" do
     it "should properly determine the size of file payloads" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       payload = RestClient::Payload.generate(f)
       payload.size.should == 22_545
       payload.length.should == 22_545
@@ -200,7 +205,7 @@ Content-Type: text/plain\r
     end
 
     it "should recognize multipart params" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       RestClient::Payload.generate({"foo" => f}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
@@ -213,17 +218,17 @@ Content-Type: text/plain\r
     end
 
     it "should recognize nested multipart payloads in hashes" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize nested multipart payloads in arrays" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       RestClient::Payload.generate({"foo" => [f]}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize file payloads that can be streamed" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = sample_jpg_file
       RestClient::Payload.generate(f).should be_kind_of(RestClient::Payload::Streamed)
     end
 

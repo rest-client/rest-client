@@ -1,7 +1,7 @@
 require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
 
 require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Request do
   before do
@@ -569,14 +569,14 @@ describe RestClient::Request do
 
       @request = subject.new(:url => 'https://some/resource', :method => :get, :headers => {
         :params => {:param => 'value', :hash => {
-          'array' => [1,2,3], 
+          'array' => [1,2,3],
           'child' => {'one' => 1, 'two' => 2}
         }}
       }).url.should == "https://some/resource?param=value&hash[array][]=1&hash[array][]=2&hash[array][]=3&hash[child][one]=1&hash[child][two]=2"
 
       @request = subject.new(:url => 'https://some/resource?already_defined=1', :method => :get, :headers => {
         :params => {:param => 'value', :hash => {
-          'array' => [1,2,3], 
+          'array' => [1,2,3],
           'child' => {'one' => 1, 'two' => 2}
         }}
       }).url.should == "https://some/resource?already_defined=1&param=value&hash[array][]=1&hash[array][]=2&hash[array][]=3&hash[child][one]=1&hash[child][two]=2"
