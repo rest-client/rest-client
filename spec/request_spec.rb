@@ -421,6 +421,21 @@ describe RestClient::Request do
 
       @request.transmit(@uri, 'req', nil)
     end
+
+    it "deprecated: disable timeout by setting it to -1" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1)
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @request.should_receive(:warn)
+      @net.should_receive(:read_timeout=).with(nil)
+
+      @request.should_receive(:warn)
+      @net.should_receive(:open_timeout=).with(nil)
+
+      @request.transmit(@uri, 'req', nil)
+    end
   end
 
   describe "ssl" do
