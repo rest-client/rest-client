@@ -21,13 +21,14 @@ module RestClient
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
+  # * :ssl_version set ssl version to use, you can get a list of valid versions with OpenSSL::SSL::SSLContext::METHODS
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
-                :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
+                :open_timeout, :raw_response, :verify_ssl, :ssl_version, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args
 
     def self.execute(args, & block)
@@ -51,6 +52,7 @@ module RestClient
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
       @verify_ssl = args[:verify_ssl] || false
+      @ssl_version = args[:ssl_version] || nil
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
@@ -153,6 +155,7 @@ module RestClient
           true
         end
       end
+      net.ssl_version = @ssl_version if @ssl_version
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file
