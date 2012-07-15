@@ -1,3 +1,10 @@
+# 1.6.8
+
+- allow specifying ssl version (archiloque/rest-client/#123)
+- disable timeouts by setting nil param instead of -1 (archiloque/rest-client/#128)
+- handle nested arrays and hashes through url params (archiloque/rest-client/#106)
+- remove AbstractResponse#to_i due unexpected behaviour (archiloque/rest-client/#103)
+
 # 1.6.7
 
 - rebuild with 1.8.7 to avoid https://github.com/rubygems/rubygems/pull/57

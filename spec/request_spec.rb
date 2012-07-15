@@ -1,7 +1,7 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
 require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Request do
   before do
@@ -376,6 +376,18 @@ describe RestClient::Request do
   end
 
   describe "timeout" do
+    it "does not set timeouts if not specified" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @net.should_not_receive(:read_timeout=)
+      @net.should_not_receive(:open_timeout=)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
     it "set read_timeout" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
       @http.stub!(:request)
@@ -394,6 +406,33 @@ describe RestClient::Request do
       @request.stub!(:response_log)
 
       @net.should_receive(:open_timeout=).with(123)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+    it "disable timeout by setting it to nil" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil)
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @net.should_receive(:read_timeout=).with(nil)
+      @net.should_receive(:open_timeout=).with(nil)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+    it "deprecated: disable timeout by setting it to -1" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1)
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+
+      @request.should_receive(:warn)
+      @net.should_receive(:read_timeout=).with(nil)
+
+      @request.should_receive(:warn)
+      @net.should_receive(:open_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end
@@ -550,5 +589,36 @@ describe RestClient::Request do
     response = @request.transmit(@uri, 'req', 'payload')
     response.should_not be_nil
     response.code.should == 204
+  end
+
+  describe "query string building" do
+    subject { RestClient::Request }
+    it "should build query strings" do
+      @request = subject.new(:url => 'https://some/resource', :method => :get, :headers => {
+        :params => {:param => 'value'}
+      }).url.should == "https://some/resource?param=value"
+
+      @request = subject.new(:url => 'https://some/resource', :method => :get, :headers => {
+        :params => {:param => 'value', :array => [1,2,3]}
+      }).url.should == "https://some/resource?param=value&array[]=1&array[]=2&array[]=3"
+
+      @request = subject.new(:url => 'https://some/resource', :method => :get, :headers => {
+        :params => {:param => 'value', :hash => {'one' => 1, 'two' => 2}}
+      }).url.should == "https://some/resource?param=value&hash[one]=1&hash[two]=2"
+
+      @request = subject.new(:url => 'https://some/resource', :method => :get, :headers => {
+        :params => {:param => 'value', :hash => {
+          'array' => [1,2,3],
+          'child' => {'one' => 1, 'two' => 2}
+        }}
+      }).url.should == "https://some/resource?param=value&hash[array][]=1&hash[array][]=2&hash[array][]=3&hash[child][one]=1&hash[child][two]=2"
+
+      @request = subject.new(:url => 'https://some/resource?already_defined=1', :method => :get, :headers => {
+        :params => {:param => 'value', :hash => {
+          'array' => [1,2,3],
+          'child' => {'one' => 1, 'two' => 2}
+        }}
+      }).url.should == "https://some/resource?already_defined=1&param=value&hash[array][]=1&hash[array][]=2&hash[array][]=3&hash[child][one]=1&hash[child][two]=2"
+    end
   end
 end

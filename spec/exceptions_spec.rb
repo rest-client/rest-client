@@ -1,21 +1,20 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
-require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Exception do
   it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
     e = RestClient::Exception.new
     e.message.should == "RestClient::Exception"
   end
-  
+
   it "returns the 'message' that was set" do
     e = RestClient::Exception.new
     message = "An explicitly set message"
     e.message = message
     e.message.should == message
   end
-  
+
   it "sets the exception message to ErrorMessage" do
     RestClient::ResourceNotFound.new.message.should == 'Resource Not Found'
   end

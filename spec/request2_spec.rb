@@ -1,7 +1,7 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
 require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Request do
 
@@ -24,7 +24,7 @@ describe RestClient::Request do
   end
 
   it 'closes payload if not nil' do
-    test_file = File.new(File.join( File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg'))
+    test_file = File.new(File.join( File.dirname(File.expand_path(__FILE__)), 'fixtures', 'master_shake.jpg'))
     initial_count = tmp_count
 
     stub_request(:post, 'http://some/resource').with(:headers => {'Accept'=>'*/*; q=0.5, application/xml', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
