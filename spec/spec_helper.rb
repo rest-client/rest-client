@@ -2,6 +2,12 @@ $: << 'lib'
 
 require 'bundler/setup'
 
+# Code coverage for Ruby 1.9+
+if ENV['COVERAGE']
+  require 'simplecov'
+  SimpleCov.start
+end
+
 require 'rspec'
 require 'webmock'
 require 'webmock/rspec'
