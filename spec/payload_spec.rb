@@ -1,8 +1,11 @@
-require File.join(File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
 describe RestClient::Payload do
   let(:sample_jpg_file) do
     File.new(File.join(File.dirname(File.expand_path(__FILE__)), 'fixtures', 'master_shake.jpg'))
+  end
+  let(:sample_jpg_contents) do
+    IO.respond_to?(:binread) ? IO.binread(sample_jpg_file.path) : IO.read(sample_jpg_file.path)
   end
 
   context "A regular Payload" do
@@ -113,7 +116,7 @@ baz\r
 Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{sample_jpg_contents}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -126,7 +129,7 @@ Content-Type: image/jpeg\r
 Content-Disposition: form-data; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{sample_jpg_contents.to_s}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -141,7 +144,7 @@ Content-Type: image/jpeg\r
 Content-Disposition: form-data; name="foo"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{sample_jpg_contents}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -165,7 +168,7 @@ foo\r
 Content-Disposition: form-data; name="foo[bar]"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{sample_jpg_contents}\r
 --#{m.boundary}--\r
       EOS
     end

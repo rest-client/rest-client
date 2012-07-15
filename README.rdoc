@@ -3,8 +3,13 @@
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
-* Main page: http://github.com/archiloque/rest-client
-* Mailing list: rest.client@librelist.com (send a mail to subscribe).
+This fork is a initiative for the health of the project, since it seems to be ignored by the mantainer.
+
+== Build Status {<img src="https://secure.travis-ci.org/endel/rest-client.png"/>}[http://travis-ci.org/endel/rest-client]
+
+Some tests isn't passing in Ruby 1.9 and Ruby 1.8. Pull requests are welcome.
+
+== Dependency Status {<img src="https://gemnasium.com/endel/rest-client.png?travis"/>}[https://gemnasium.com/endel/rest-client]
 
 == Usage: Raw URL
 
@@ -220,7 +225,7 @@ use whatever proxy the system is configured to use:
 == Query parameters
 
 Request objects know about query parameters and will automatically add them to
-the url for GET, HEAD and DELETE requests and escape the keys and values as 
+the url for GET, HEAD and DELETE requests and escape the keys and values as
 needed:
 
   RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
@@ -282,4 +287,6 @@ Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Ju
 
 Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
 
-Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+== License
+
+Released under the MIT License: http://opensource.org/licenses/MIT

@@ -1,4 +1,4 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
 require 'webmock/rspec'
 include WebMock::API

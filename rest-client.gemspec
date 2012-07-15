@@ -55,37 +55,35 @@ Gem::Specification.new do |s|
   s.summary = "Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions."
   s.test_files = ["spec/abstract_response_spec.rb", "spec/base.rb", "spec/exceptions_spec.rb", "spec/integration", "spec/integration/certs", "spec/integration/certs/equifax.crt", "spec/integration/certs/verisign.crt", "spec/integration/request_spec.rb", "spec/integration_spec.rb", "spec/master_shake.jpg", "spec/payload_spec.rb", "spec/raw_response_spec.rb", "spec/request2_spec.rb", "spec/request_spec.rb", "spec/resource_spec.rb", "spec/response_spec.rb", "spec/restclient_spec.rb"]
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 3
+  #if s.respond_to? :specification_version then
+    #s.specification_version = 3
 
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<rest-client>, [">= 0"])
-      s.add_runtime_dependency(%q<jeweler>, [">= 0"])
-      s.add_development_dependency(%q<webmock>, ["~> 0.9"])
-      s.add_development_dependency(%q<rspec>, ["~> 1.0"])
-      s.add_runtime_dependency(%q<mime-types>, [">= 1.16"])
-      s.add_runtime_dependency(%q<netrc>, [">= 0"])
-      s.add_development_dependency(%q<webmock>, ["~> 0.9"])
-      s.add_development_dependency(%q<rspec>, ["~> 1.0"])
-    else
-      s.add_dependency(%q<rest-client>, [">= 0"])
-      s.add_dependency(%q<jeweler>, [">= 0"])
-      s.add_dependency(%q<webmock>, ["~> 0.9"])
-      s.add_dependency(%q<rspec>, ["~> 1.0"])
-      s.add_dependency(%q<mime-types>, [">= 1.16"])
-      s.add_dependency(%q<netrc>, [">= 0"])
-      s.add_dependency(%q<webmock>, ["~> 0.9"])
-      s.add_dependency(%q<rspec>, ["~> 1.0"])
-    end
-  else
-    s.add_dependency(%q<rest-client>, [">= 0"])
-    s.add_dependency(%q<jeweler>, [">= 0"])
-    s.add_dependency(%q<webmock>, ["~> 0.9"])
-    s.add_dependency(%q<rspec>, ["~> 1.0"])
-    s.add_dependency(%q<mime-types>, [">= 1.16"])
-    s.add_dependency(%q<netrc>, [">= 0"])
-    s.add_dependency(%q<webmock>, ["~> 0.9"])
-    s.add_dependency(%q<rspec>, ["~> 1.0"])
-  end
+    #if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
+      s.add_runtime_dependency("rest-client", ">= 0")
+      s.add_runtime_dependency("jeweler", ">= 0")
+      s.add_runtime_dependency("mime-types", ">= 1.16")
+      s.add_runtime_dependency("netrc", ">= 0")
+      s.add_development_dependency("webmock", ">= 1.0")
+      s.add_development_dependency("rspec", ">= 2.0")
+    #else
+      #s.add_dependency(%q<rest-client>, [">= 0"])
+      #s.add_dependency(%q<jeweler>, [">= 0"])
+      #s.add_dependency(%q<webmock>, ["~> 0.9"])
+      #s.add_dependency(%q<rspec>, ["~> 1.0"])
+      #s.add_dependency(%q<mime-types>, [">= 1.16"])
+      #s.add_dependency(%q<netrc>, [">= 0"])
+      #s.add_dependency(%q<webmock>, ["~> 0.9"])
+      #s.add_dependency(%q<rspec>, ["~> 1.0"])
+    #end
+  #else
+    #s.add_dependency(%q<rest-client>, [">= 0"])
+    #s.add_dependency(%q<jeweler>, [">= 0"])
+    #s.add_dependency(%q<webmock>, ["~> 0.9"])
+    #s.add_dependency(%q<rspec>, ["~> 1.0"])
+    #s.add_dependency(%q<mime-types>, [">= 1.16"])
+    #s.add_dependency(%q<netrc>, [">= 0"])
+    #s.add_dependency(%q<webmock>, ["~> 0.9"])
+    #s.add_dependency(%q<rspec>, ["~> 1.0"])
+  #end
 end
 
