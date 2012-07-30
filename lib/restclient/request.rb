@@ -172,20 +172,41 @@ module RestClient
       end
 
       log_request
+        
+      r = true
+      begin
+          res = nil
+          net.start do |http|
+              if @block_response
+                  http.request(req, payload ? payload.to_s : nil, & @block_response)
+              else
+                  res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+                  log_response res
+                  process_result res, & block
+              end
+          end
+      rescue EOFError
+          raise RestClient::ServerBrokeConnection
+      rescue Timeout::Error
+          raise RestClient::RequestTimeout
+      rescue RestClient::Unauthorized => e
+          if res['www-authenticate'] =~ /Digest realm=/ and @user and @password
+              digest_auth = Net::HTTP::DigestAuth.new
+              uri.user = @user
+              uri.password = @password
+              puts @method
+              auth = digest_auth.auth_header uri, res['www-authenticate'], @method.upcase
 
-      net.start do |http|
-        if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
-        else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
-          log_response res
-          process_result res, & block
-        end
+              puts req['Authorization']
+              req['Authorization'] = auth
+              puts req['Authorization']
+
+              raise e unless r
+              r = false
+              retry
+          end
+          raise e
       end
-    rescue EOFError
-      raise RestClient::ServerBrokeConnection
-    rescue Timeout::Error
-      raise RestClient::RequestTimeout
     end
 
     def setup_credentials(req)
