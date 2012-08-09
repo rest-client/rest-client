@@ -165,7 +165,7 @@ module RestClient
 
       # disable the timeout if the timeout value is -1
       net.read_timeout = nil if @timeout == -1
-      net.out_timeout = nil if @open_timeout == -1
+      net.open_timeout = nil if @open_timeout == -1
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
@@ -175,9 +175,11 @@ module RestClient
 
       net.start do |http|
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          req.body_stream = payload
+          http.request(req, nil, & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          req.body_stream = payload
+          res = http.request(req, nil) { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
         end
@@ -198,6 +200,7 @@ module RestClient
         # Stolen from http://www.ruby-forum.com/topic/166423
         # Kudos to _why!
         @tf = Tempfile.new("rest-client")
+        @tf.binmode
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|
           @tf.write chunk
