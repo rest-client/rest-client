@@ -34,7 +34,7 @@ module RestClient
   #   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
   #
   class Resource
-    attr_reader :url, :options, :block
+    attr_reader :url, :options, :block, :before_execution_procs
 
     def initialize(url, options={}, backwards_compatibility=nil, &block)
       @url = url
@@ -44,57 +44,72 @@ module RestClient
       else # compatibility with previous versions
         @options = { :user => options, :password => backwards_compatibility }
       end
+      @before_execution_procs = []
+    end
+
+    def add_before_execution_proc( & block )
+      @before_execution_procs << block
+    end
+
+    def reset_before_execution_procs
+      @before_execution_procs = []
     end
 
     def get(additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :get,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def head(additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :head,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def post(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :post,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def put(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :put,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def patch(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :patch,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def delete(additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
+      args = options.merge(
               :method => :delete,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers)
+      make_request(args, &(block || @block))
     end
 
     def to_s
@@ -165,5 +180,16 @@ module RestClient
         "#{url}/#{suburl}"
       end
     end
+
+    private
+
+    def make_request(args, &block)
+      request = Request.new(args)
+      @before_execution_procs.each do |before_proc|
+         request.add_before_execution_proc &before_proc
+      end
+      request.execute( &block )
+    end
+
   end
 end

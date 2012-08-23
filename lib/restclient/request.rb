@@ -28,7 +28,7 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args, :before_execution_procs
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -58,6 +58,7 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+      @before_execution_procs = [] 
     end
 
     def execute & block
@@ -65,6 +66,14 @@ module RestClient
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
     ensure
       payload.close if payload
+    end
+
+    def add_before_execution_proc( & block )
+      @before_execution_procs << block
+    end
+
+    def reset_before_execution_procs
+      @before_execution_procs = []
     end
 
     # Extract the query parameters and append them to the url
@@ -168,6 +177,10 @@ module RestClient
       net.out_timeout = nil if @open_timeout == -1
 
       RestClient.before_execution_procs.each do |before_proc|
+        before_proc.call(req, args)
+      end
+
+      @before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
       end
 
