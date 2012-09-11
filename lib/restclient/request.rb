@@ -23,12 +23,14 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
+                :ssl_version
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -54,6 +56,7 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
+      @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -145,6 +148,7 @@ module RestClient
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
+      net.ssl_version = @ssl_version
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       elsif @verify_ssl.is_a? Integer
