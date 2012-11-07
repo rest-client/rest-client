@@ -49,7 +49,7 @@ Gem::Specification.new do |s|
     "spec/response_spec.rb",
     "spec/restclient_spec.rb"
   ]
-  s.homepage = %q{http://github.com/archiloque/rest-client}
+  s.homepage = %q{http://github.com/rest-client/rest-client}
   s.require_paths = [%q{lib}]
   s.rubygems_version = %q{1.8.5}
   s.summary = %q{Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.}
