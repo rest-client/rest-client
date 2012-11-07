@@ -52,7 +52,7 @@ Gem::Specification.new do |s|
     "spec/response_spec.rb",
     "spec/restclient_spec.rb"
   ]
-  s.homepage = %q{http://github.com/archiloque/rest-client}
+  s.homepage = %q{http://github.com/rest-client/rest-client}
   s.require_paths = [%q{lib}]
   s.summary = %q{Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.}
   s.test_files = [%q{spec/abstract_response_spec.rb}, %q{spec/base.rb}, %q{spec/exceptions_spec.rb}, %q{spec/integration}, %q{spec/integration/certs}, %q{spec/integration/certs/equifax.crt}, %q{spec/integration/certs/verisign.crt}, %q{spec/integration/request_spec.rb}, %q{spec/integration_spec.rb}, %q{spec/master_shake.jpg}, %q{spec/payload_spec.rb}, %q{spec/raw_response_spec.rb}, %q{spec/request2_spec.rb}, %q{spec/request_spec.rb}, %q{spec/resource_spec.rb}, %q{spec/response_spec.rb}, %q{spec/restclient_spec.rb}]
