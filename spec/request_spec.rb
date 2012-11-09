@@ -112,7 +112,7 @@ describe RestClient::Request do
   it "uses netrc credentials" do
     URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil, :host => 'example.com'))
     File.stub!(:stat).and_return(mock('stat', :mode => 0600))
-    IO.stub!(:readlines).and_return(["machine example.com login a password b"])
+    IO.stub!(:read).and_return("machine example.com login a password b")
     @request.parse_url_with_auth('http://example.com/resource')
     @request.user.should == 'a'
     @request.password.should == 'b'
@@ -121,7 +121,7 @@ describe RestClient::Request do
   it "uses credentials in the url in preference to netrc" do
     URI.stub!(:parse).and_return(mock('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
     File.stub!(:stat).and_return(mock('stat', :mode => 0600))
-    IO.stub!(:readlines).and_return(["machine example.com login a password b"])
+    IO.stub!(:read).and_return("machine example.com login a password b")
     @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
     @request.user.should == 'joe '
     @request.password.should == 'pass1'
