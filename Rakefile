@@ -19,32 +19,32 @@ end
 
 ############################
 
-require 'spec/rake/spectask'
+require 'rspec/core/rake_task'
 
 desc "Run all specs"
 task :spec => ["spec:unit", "spec:integration"]
 
 desc "Run unit specs"
-Spec::Rake::SpecTask.new('spec:unit') do |t|
-  t.spec_opts = ['--colour --format progress --loadby mtime --reverse']
-  t.spec_files = FileList['spec/*_spec.rb']
+RSpec::Core::RakeTask.new('spec:unit') do |t|
+  t.rspec_opts = ['--colour --format progress']
+  t.pattern = 'spec/*_spec.rb'
 end
 
 desc "Run integration specs"
-Spec::Rake::SpecTask.new('spec:integration') do |t|
-  t.spec_opts = ['--colour --format progress --loadby mtime --reverse']
-  t.spec_files = FileList['spec/integration/*_spec.rb']
+RSpec::Core::RakeTask.new('spec:integration') do |t|
+  t.rspec_opts = ['--colour --format progress']
+  t.pattern = 'spec/integration/*_spec.rb'
 end
 
 desc "Print specdocs"
-Spec::Rake::SpecTask.new(:doc) do |t|
-  t.spec_opts = ["--format", "specdoc", "--dry-run"]
-  t.spec_files = FileList['spec/*_spec.rb']
+RSpec::Core::RakeTask.new(:doc) do |t|
+  t.rspec_opts = ["--format", "specdoc", "--dry-run"]
+  t.pattern = 'spec/*_spec.rb'
 end
 
 desc "Run all examples with RCov"
-Spec::Rake::SpecTask.new('rcov') do |t|
-  t.spec_files = FileList['spec/*_spec.rb']
+RSpec::Core::RakeTask.new('rcov') do |t|
+  t.pattern = 'spec/*_spec.rb'
   t.rcov = true
   t.rcov_opts = ['--exclude', 'examples']
 end
@@ -53,7 +53,7 @@ task :default => :spec
 
 ############################
 
-require 'rake/rdoctask'
+require 'rdoc/task'
 
 Rake::RDocTask.new do |t|
   t.rdoc_dir = 'rdoc'
