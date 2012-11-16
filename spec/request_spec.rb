@@ -435,7 +435,6 @@ describe RestClient::Request do
                                           :payload => 'payload',
                                           :verify_ssl => mode )
       @net.should_receive(:verify_mode=).with(mode)
-      @net.should_receive(:verify_callback=)
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
