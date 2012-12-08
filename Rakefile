@@ -19,7 +19,7 @@ end
 
 ############################
 
-require 'spec/rake/spectask'
+require "rspec/core/rake_task"
 
 desc "Run all specs"
 task :spec => ["spec:unit", "spec:integration"]
