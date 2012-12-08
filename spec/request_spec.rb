@@ -205,6 +205,7 @@ describe RestClient::Request do
 
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
+    @net.should_receive(:ssl_version=).with('SSLv3')
     @request.should_receive(:process_result)
     @request.transmit(@uri, 'req', 'payload')
   end
@@ -212,6 +213,7 @@ describe RestClient::Request do
   describe "payload" do
     it "sends nil payloads" do
       @http.should_receive(:request).with('req', nil)
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @request.should_receive(:process_result)
       @request.stub!(:response_log)
       @request.transmit(@uri, 'req', nil)
@@ -241,6 +243,8 @@ describe RestClient::Request do
   describe "credentials" do
     it "sets up the credentials prior to the request" do
       @http.stub!(:request)
+      @net.should_receive(:ssl_version=).with('SSLv3')
+
       @request.stub!(:process_result)
       @request.stub!(:response_log)
 
@@ -269,6 +273,7 @@ describe RestClient::Request do
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
     @http.stub!(:request).and_raise(EOFError)
+    @net.should_receive(:ssl_version=).with('SSLv3')
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
@@ -375,23 +380,25 @@ describe RestClient::Request do
 
   describe "timeout" do
     it "set read_timeout" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :ssl_version => 'SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
 
       @net.should_receive(:read_timeout=).with(123)
+      @net.should_receive(:ssl_version=).with('SSLv3')
 
       @request.transmit(@uri, 'req', nil)
     end
 
     it "set open_timeout" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123, :ssl_version => 'SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
 
       @net.should_receive(:open_timeout=).with(123)
+      @net.should_receive(:ssl_version=).with('SSLv3')
 
       @request.transmit(@uri, 'req', nil)
     end
@@ -401,6 +408,7 @@ describe RestClient::Request do
     it "uses SSL when the URI refers to a https address" do
       @uri.stub!(:is_a?).with(URI::HTTPS).and_return(true)
       @net.should_receive(:use_ssl=).with(true)
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -413,6 +421,7 @@ describe RestClient::Request do
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -420,8 +429,9 @@ describe RestClient::Request do
     end
 
     it "should not set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is true" do
-      @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
+      @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true, :ssl_version => 'SSLv3')
       @net.should_not_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -433,8 +443,11 @@ describe RestClient::Request do
       @request = RestClient::Request.new( :method => :put,
                                           :url => 'https://some/resource',
                                           :payload => 'payload',
+                                          :ssl_version => 'SSLv3',
                                           :verify_ssl => mode )
       @net.should_receive(:verify_mode=).with(mode)
+      @net.should_receive(:verify_callback=)
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -450,9 +463,11 @@ describe RestClient::Request do
               :method => :put,
               :url => 'https://some/resource',
               :payload => 'payload',
+              :ssl_version => 'SSLv3',
               :ssl_client_cert => "whatsupdoc!"
       )
       @net.should_receive(:cert=).with("whatsupdoc!")
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -463,9 +478,11 @@ describe RestClient::Request do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
+              :ssl_version => 'SSLv3',
               :payload => 'payload'
       )
       @net.should_not_receive(:cert=).with("whatsupdoc!")
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -481,9 +498,11 @@ describe RestClient::Request do
               :method => :put,
               :url => 'https://some/resource',
               :payload => 'payload',
+              :ssl_version => 'SSLv3',
               :ssl_client_key => "whatsupdoc!"
       )
       @net.should_receive(:key=).with("whatsupdoc!")
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -494,9 +513,11 @@ describe RestClient::Request do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
+              :ssl_version => 'SSLv3',
               :payload => 'payload'
       )
       @net.should_not_receive(:key=).with("whatsupdoc!")
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -512,9 +533,11 @@ describe RestClient::Request do
               :method => :put,
               :url => 'https://some/resource',
               :payload => 'payload',
+              :ssl_version => 'SSLv3',
               :ssl_ca_file => "Certificate Authority File"
       )
       @net.should_receive(:ca_file=).with("Certificate Authority File")
+      @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -525,9 +548,11 @@ describe RestClient::Request do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
+              :ssl_version => 'TSLv1',
               :payload => 'payload'
       )
       @net.should_not_receive(:ca_file=).with("Certificate Authority File")
+      @net.should_receive(:ssl_version=).with('TSLv1')
       @http.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -539,11 +564,13 @@ describe RestClient::Request do
     @request = RestClient::Request.new(
             :method => :put,
             :url => 'https://some/resource',
+            :ssl_version => 'SSLv3',
             :payload => 'payload'
     )
     net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
     net_http_res.stub!(:read_body).and_return(nil)
     @http.should_receive(:request).and_return(@request.fetch_body(net_http_res))
+    @net.should_receive(:ssl_version=).with('SSLv3')
     response = @request.transmit(@uri, 'req', 'payload')
     response.should_not be_nil
     response.code.should == 204
