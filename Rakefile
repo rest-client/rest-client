@@ -1,23 +1,8 @@
-require 'rake'
-
-require 'jeweler'
-
-Jeweler::Tasks.new do |s|
-  s.name = "rest-client"
-  s.description = "A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete."
-  s.summary = "Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions."
-  s.authors = ["Adam Wiggins", "Julien Kirch"]
-  s.email = "rest.client@librelist.com"
-  s.homepage = "http://github.com/archiloque/rest-client"
-  s.files = FileList["[A-Z]*", "{bin,lib,spec}/**/*"]
-  s.test_files = FileList["{spec}/**/*"]
-  s.add_runtime_dependency("mime-types", ">= 1.16")
-  s.add_development_dependency("webmock", ">= 0.9.1")
-  s.add_development_dependency("rspec")
-  s.extra_rdoc_files = [ 'README.rdoc', 'history.md']
+begin
+  # optionally load `rake build/install/release tasks'
+  require 'bundler/gem_tasks'
+rescue LoadError
 end
-
-############################
 
 require "rspec/core/rake_task"
 
