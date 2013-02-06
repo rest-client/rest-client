@@ -11,6 +11,7 @@ Gem::Specification.new do |s|
   s.authors = [%q{Adam Wiggins}, %q{Julien Kirch}]
   s.date = %q{2011-08-24}
   s.description = %q{A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.}
+  s.license = %q{MIT}
   s.email = %q{rest.client@librelist.com}
   s.executables = [%q{restclient}]
   s.extra_rdoc_files = [
