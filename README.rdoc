@@ -1,4 +1,8 @@
+
 = REST Client -- simple DSL for accessing HTTP and REST resources
+
+Build status: {<img src="https://travis-ci.org/jcoyne/rest-client.png" />}[https://travis-ci.org/jcoyne/rest-client]
+
 
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
