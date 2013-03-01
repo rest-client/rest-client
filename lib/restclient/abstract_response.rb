@@ -61,7 +61,9 @@ module RestClient
 
     # Follow a redirection
     def follow_redirection request = nil, result = nil, & block
-      url = headers[:location]
+      # Unencode anything currently encoded, then reencode with any added params
+      url = URI.encode(URI.decode(headers[:location]))
+
       if url !~ /^http/
         url = URI.parse(args[:url]).merge(url).to_s
       end
