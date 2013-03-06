@@ -311,11 +311,11 @@ describe RestClient::Request do
   describe "proxy" do
     it "creates a proxy class if a proxy url is given" do
       RestClient.stub!(:proxy).and_return("http://example.com/")
-      @request.net_http_class.should include(Net::HTTP::ProxyDelta)
+      @request.net_http_class.proxy_class?.should be_true
     end
 
     it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.should_not include(Net::HTTP::ProxyDelta)
+      @request.net_http_class.proxy_class?.should be_false
     end
   end
 
