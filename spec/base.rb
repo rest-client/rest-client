@@ -5,7 +5,7 @@ end
 Encoding.default_internal = Encoding.default_external = "ASCII-8BIT" if is_ruby_19?
 
 require 'rubygems'
-require 'spec'
+require 'rspec'
 
 begin
   require "ruby-debug"
