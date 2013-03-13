@@ -9,14 +9,14 @@ module RestClient
     def generate(params)
       if params.is_a?(String)
         Base.new(params)
-      elsif params.respond_to?(:read)
-        Streamed.new(params)
-      elsif params
+      elsif params and params.is_a?(Hash)
         if params.delete(:multipart) == true || has_file?(params)
           Multipart.new(params)
         else
           UrlEncoded.new(params)
         end
+      elsif params.respond_to?(:read)
+        Streamed.new(params)
       else
         nil
       end

@@ -12,6 +12,9 @@ describe RestClient::Request do
       expect { request.execute }.to_not raise_error
     end
 
+
+    # This no longer works (under 1.9.3 at the very least). Exceptions in verify_callback are ignored.
+    # see https://github.com/ruby/ruby/blob/trunk/ext/openssl/ossl.c#L237
     it "is unsuccessful with an incorrect ca_file" do
       request = RestClient::Request.new(
         :method => :get,
