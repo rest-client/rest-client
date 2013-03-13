@@ -9,7 +9,7 @@ module RestClient
     def generate(params)
       if params.is_a?(String)
         Base.new(params)
-      elsif params.respond_to?(:read)
+      elsif params.respond_to?(:read) && !params.is_a?(Hash)
         Streamed.new(params)
       elsif params
         if params.delete(:multipart) == true || has_file?(params)
