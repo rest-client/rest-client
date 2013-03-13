@@ -5,6 +5,7 @@ Gem::Specification.new do |s|
   s.version = '1.6.7'
   s.authors = ['Adam Wiggins', 'Julien Kirch']
   s.description = 'A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.'
+  s.license = 'MIT'
   s.email = 'rest.client@librelist.com'
   s.executables = ['restclient']
   s.extra_rdoc_files = ["README.rdoc", "history.md"]
