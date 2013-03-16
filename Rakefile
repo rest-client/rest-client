@@ -11,13 +11,11 @@ task :spec => ["spec:unit", "spec:integration"]
 
 desc "Run unit specs"
 Spec::Rake::SpecTask.new('spec:unit') do |t|
-  t.spec_opts = ['--colour --format progress --loadby mtime --reverse']
   t.spec_files = FileList['spec/*_spec.rb']
 end
 
 desc "Run integration specs"
 Spec::Rake::SpecTask.new('spec:integration') do |t|
-  t.spec_opts = ['--colour --format progress --loadby mtime --reverse']
   t.spec_files = FileList['spec/integration/*_spec.rb']
 end
 
