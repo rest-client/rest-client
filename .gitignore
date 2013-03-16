@@ -1,4 +1,5 @@
 .idea
+.rvmrc
 doc
 rdoc
 pkg

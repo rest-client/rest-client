@@ -1,7 +1,7 @@
 require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
 
 require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Exception do
   it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
