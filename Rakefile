@@ -11,13 +11,11 @@ task :spec => ["spec:unit", "spec:integration"]
 
 desc "Run unit specs"
 RSpec::Core::RakeTask.new('spec:unit') do |t|
-  t.rspec_opts = ['--colour --format progress']
   t.pattern = 'spec/*_spec.rb'
 end
 
 desc "Run integration specs"
 RSpec::Core::RakeTask.new('spec:integration') do |t|
-  t.rspec_opts = ['--colour --format progress']
   t.pattern = 'spec/integration/*_spec.rb'
 end
 
