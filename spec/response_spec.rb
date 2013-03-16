@@ -1,7 +1,7 @@
 require File.join( File.dirname(File.expand_path(__FILE__)), 'base')
 
 require 'webmock/rspec'
-include WebMock
+include WebMock::API
 
 describe RestClient::Response do
   before do
@@ -91,7 +91,7 @@ describe RestClient::Response do
     end
 
     it "follows a redirection and keep the cookies" do
-      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => CGI::Cookie.new('Foo', 'Bar'), 'Location' => 'http://new/resource', })
+      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://new/resource', })
       stub_request(:get, 'http://new/resource').with(:headers => {'Cookie' => 'Foo=Bar'}).to_return(:body => 'Qux')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should == 'Qux'
     end

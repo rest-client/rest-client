@@ -1,3 +1,4 @@
+# encoding: binary
 require File.join(File.dirname(File.expand_path(__FILE__)), 'base')
 
 describe RestClient::Payload do
@@ -108,7 +109,7 @@ baz\r
 Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{File.open(f.path, 'rb'){|bin| bin.read}}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -121,7 +122,7 @@ Content-Type: image/jpeg\r
 Content-Disposition: form-data; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
 \r
-#{IO.read(f.path)}\r
+#{File.open(f.path, 'rb'){|bin| bin.read}}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -136,7 +137,7 @@ Content-Type: image/jpeg\r
 Content-Disposition: form-data; name="foo"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{File.open(f.path, 'rb'){|bin| bin.read}}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -160,7 +161,7 @@ foo\r
 Content-Disposition: form-data; name="foo[bar]"; filename="foo.txt"\r
 Content-Type: text/plain\r
 \r
-#{IO.read(f.path)}\r
+#{File.open(f.path, 'rb'){|bin| bin.read}}\r
 --#{m.boundary}--\r
       EOS
     end
@@ -230,5 +231,14 @@ Content-Type: text/plain\r
     it "should recognize other payloads that can be streamed" do
       RestClient::Payload.generate(StringIO.new('foo')).should be_kind_of(RestClient::Payload::Streamed)
     end
+
+    # hashery gem introduces Hash#read convenience method. Existence of #read method used to determine of content is streameable :/
+    it "shouldn't treat hashes as streameable" do
+      RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
+    end
+  end
+
+  class HashMapForTesting < Hash
+    alias :read :[]
   end
 end

@@ -23,12 +23,14 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
+                :ssl_version
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -54,6 +56,7 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
+      @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -145,6 +148,8 @@ module RestClient
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
+      net.ssl_version = @ssl_version
+      err_msg = nil
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       elsif @verify_ssl.is_a? Integer
@@ -152,7 +157,7 @@ module RestClient
         net.verify_callback = lambda do |preverify_ok, ssl_context|
           if (!preverify_ok) || ssl_context.error != 0
             err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
-            raise SSLCertificateNotVerified.new(err_msg)
+            return false
           end
           true
         end
@@ -181,6 +186,12 @@ module RestClient
           log_response res
           process_result res, & block
         end
+      end
+    rescue OpenSSL::SSL::SSLError => e
+      if err_msg
+        raise SSLCertificateNotVerified.new(err_msg)
+      else
+        raise e
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
