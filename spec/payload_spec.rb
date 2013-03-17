@@ -172,8 +172,8 @@ Content-Type: text/plain\r
     it "should properly determine the size of file payloads" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       payload = RestClient::Payload.generate(f)
-      payload.size.should == 22_545
-      payload.length.should == 22_545
+      payload.size.should == 76_988
+      payload.length.should == 76_988
     end
 
     it "should properly determine the size of other kinds of streaming payloads" do
