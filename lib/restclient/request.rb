@@ -23,7 +23,7 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
-  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to Ruby's settings 'SSLv23')
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
@@ -56,7 +56,7 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
-      @ssl_version = args[:ssl_version] || 'SSLv3'
+      @ssl_version = args[:ssl_version] || OpenSSL::SSL::SSLContext::DEFAULT_PARAMS[:ssl_version]
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
