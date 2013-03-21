@@ -279,11 +279,19 @@ Need caching, more advanced logging or any ability provided by a rack middleware
 
 Have a look at rest-client-components http://github.com/crohr/rest-client-components
 
-== Meta
+== Credits
 
-Written by Adam Wiggins, major modifications by Blake Mizerany, maintained by Julien Kirch
+REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert
+
+Creator:: Adam Wiggins
+
+Maintainer Emeritus:: Julien Kirch
+
+Major contributions:: Blake Mizerany, Julien Kirch
 
 Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
+
+== Legal
 
 Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
 
