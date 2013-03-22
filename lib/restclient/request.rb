@@ -30,7 +30,7 @@ module RestClient
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version
+                :ssl_version, :cert_store, :persistent
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -57,6 +57,8 @@ module RestClient
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @ssl_version = args[:ssl_version] || 'SSLv3'
+      @cert_store = args[:cert_store]
+      @persistent = args.has_key?(:persistent) ? args[:persistent] : RestClient.persistent
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -98,15 +100,6 @@ module RestClient
       headers
     end
 
-    def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-      else
-        Net::HTTP
-      end
-    end
-
     def net_http_request_class(method)
       Net::HTTP.const_get(method.to_s.capitalize)
     end
@@ -146,8 +139,11 @@ module RestClient
     def transmit uri, req, payload, & block
       setup_credentials req
 
-      net = net_http_class.new(uri.host, uri.port)
-      net.use_ssl = uri.is_a?(URI::HTTPS)
+      proxy = URI.parse(RestClient.proxy) if RestClient.proxy
+      app_name = 'rest-client'
+      app_name += '-persistent' if @persistent
+      net = Net::HTTP::Persistent.new(app_name, proxy)
+
       net.ssl_version = @ssl_version
       err_msg = nil
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
@@ -163,6 +159,7 @@ module RestClient
         end
       end
       net.cert = @ssl_client_cert if @ssl_client_cert
+      net.cert_store = @cert_store if @cert_store
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file
       net.read_timeout = @timeout if @timeout
@@ -178,14 +175,13 @@ module RestClient
 
       log_request
 
-      net.start do |http|
-        if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
-        else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
-          log_response res
-          process_result res, & block
-        end
+      req.body = payload.to_s if payload
+      if @block_response
+        net.request(uri, req, & @block_response)
+      else
+        res = net.request(uri, req) { |http_response| fetch_body(http_response) }
+        log_response res
+        process_result res, & block
       end
     rescue OpenSSL::SSL::SSLError => e
       if err_msg
@@ -197,6 +193,8 @@ module RestClient
       raise RestClient::ServerBrokeConnection
     rescue Timeout::Error
       raise RestClient::RequestTimeout
+    ensure
+      net.shutdown unless @persistent
     end
 
     def setup_credentials(req)
