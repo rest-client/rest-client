@@ -153,18 +153,21 @@ module RestClient
 
   # A redirect was encountered; caught by execute to retry with the new url.
   class Redirect < Exception
-
-    message = 'Redirect'
-
     attr_accessor :url
 
     def initialize(url)
       @url = url
     end
+
+    def message
+      @message ||= 'Redirect'
+    end
   end
 
   class MaxRedirectsReached < Exception	
-    message = 'Maximum number of redirect reached'	
+    def message
+      @message ||= 'Maximum number of redirect reached'
+    end
   end
 
   # The server broke the connection prior to the request completing.  Usually
