@@ -6,7 +6,9 @@ module RestClient
 
     include AbstractResponse
 
-    attr_accessor :args, :body, :net_http_res
+    attr_accessor :args, :net_http_res
+
+    attr_writer :body
 
     def body
       self
