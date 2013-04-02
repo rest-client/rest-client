@@ -85,6 +85,7 @@ module RestClient
 
     def initialize response = nil, initial_response_code = nil
       @response = response
+      @message = nil
       @initial_response_code = initial_response_code
 
       # compatibility: this make the exception behave like a Net::HTTPResponse
