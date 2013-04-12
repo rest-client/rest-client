@@ -44,7 +44,7 @@ module RestClient
             has_file_array?(v)
           else
             v.respond_to?(:path) && v.respond_to?(:read)
-          end
+        end
       end
     end
 
