@@ -8,8 +8,6 @@ module RestClient
 
     attr_accessor :args, :net_http_res
 
-    attr_writer :body
-
     def body
       self
     end
