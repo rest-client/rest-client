@@ -47,10 +47,12 @@ module RestClient
     end
 
     def get(additional_headers={}, &block)
+      payload = additional_headers.delete(:payload)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :get,
               :url => url,
+              :payload => payload,
               :headers => headers), &(block || @block))
     end
 
