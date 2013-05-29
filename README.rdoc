@@ -146,6 +146,7 @@ You can:
 * specify ssl parameters
 * override cookies
 * manually handle the response (so you can operate on the response stream than reading it fully in memory)
+* bypass or use another proxy than the one configured globally (see the Proxy section below for more information)
 
 see the class' rdoc for more information.
 

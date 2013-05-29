@@ -24,12 +24,13 @@ module RestClient
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
+  # * :proxy proxy URL specific for this request, use :none to bypass the global proxy configuration
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :proxy, :args,
                 :ssl_version
 
     def self.execute(args, & block)
@@ -60,6 +61,7 @@ module RestClient
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
+      @proxy = args[:proxy]
       @args = args
     end
 
@@ -99,8 +101,9 @@ module RestClient
     end
 
     def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
+      proxy = @proxy != :none ? (@proxy || RestClient.proxy) : nil
+      if proxy
+        proxy_uri = URI.parse(proxy)
         Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
       else
         Net::HTTP

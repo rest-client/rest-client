@@ -308,14 +308,47 @@ describe RestClient::Request do
     end
   end
 
-  describe "proxy" do
-    it "creates a proxy class if a proxy url is given" do
-      RestClient.stub!(:proxy).and_return("http://example.com/")
-      @request.net_http_class.proxy_class?.should be_true
+  shared_examples_for "request-specific proxy" do
+    before do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://another.proxy.com/')
     end
 
-    it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.proxy_class?.should be_false
+    it "uses a different proxy for this request only" do
+      @request.net_http_class.proxy_class?.should be_true
+      @request.net_http_class.proxy_address.should == 'another.proxy.com'
+    end
+  end
+
+  describe "proxy" do
+    context "with global proxy configuration" do
+      before do
+        RestClient.stub!(:proxy).and_return('http://example.com/')
+      end
+
+      it "creates a proxy class if a proxy url is given" do
+        @request.net_http_class.proxy_class?.should be_true
+        @request.net_http_class.proxy_address.should == 'example.com'
+      end
+
+      describe "bypass global proxy configuration for a specific request" do
+        before do
+          @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => :none)
+        end
+
+        it "creates a non-proxy class" do
+          @request.net_http_class.proxy_class?.should be_false
+        end
+      end
+
+      it_should_behave_like "request-specific proxy"
+    end
+
+    context "without global proxy configuration" do
+      it "creates a non-proxy class if a proxy url is not given" do
+        @request.net_http_class.proxy_class?.should be_false
+      end
+
+      it_should_behave_like "request-specific proxy"
     end
   end
 
