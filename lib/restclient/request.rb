@@ -175,12 +175,6 @@ module RestClient
           process_result res, & block
         end
       end
-    rescue OpenSSL::SSL::SSLError => e
-      if err_msg
-        raise SSLCertificateNotVerified.new(err_msg)
-      else
-        raise e
-      end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
     rescue Timeout::Error
