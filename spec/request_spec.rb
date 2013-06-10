@@ -4,8 +4,10 @@ require 'webmock/rspec'
 include WebMock::API
 
 describe RestClient::Request do
+  let(:request_options) do {} end
+
   before do
-    @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
+    @request = RestClient::Request.new({:method => :put, :url => 'http://some/resource', :payload => 'payload'}.merge(request_options))
 
     @uri = mock("uri")
     @uri.stub!(:request_uri).and_return('/resource')
@@ -309,13 +311,29 @@ describe RestClient::Request do
   end
 
   describe "proxy" do
-    it "creates a proxy class if a proxy url is given" do
-      RestClient.stub!(:proxy).and_return("http://example.com/")
-      @request.net_http_class.proxy_class?.should be_true
+    context "proxy provided" do
+      context "proxy set on global state" do
+        before { RestClient.stub!(:proxy).and_return("http://example.com/") }
+
+        it "creates a proxy class if a proxy url is given" do
+          @request.net_http_class.proxy_class?.should be_true
+        end
+      end
+
+      context "proxy option passed in during initialization" do
+        let(:request_options) do { proxy: "http://example.com" } end
+
+        it "creates a proxy class" do
+          @request.net_http_class.proxy_class?.should be_true
+        end
+      end
+
     end
 
-    it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.proxy_class?.should be_false
+    context "no proxy provided" do
+      it "creates a non-proxy class if a proxy url is not given" do
+        @request.net_http_class.proxy_class?.should be_false
+      end
     end
   end
 
