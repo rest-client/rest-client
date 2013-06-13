@@ -8,14 +8,14 @@ describe RestClient::Exception do
     e = RestClient::Exception.new
     e.message.should == "RestClient::Exception"
   end
-  
+
   it "returns the 'message' that was set" do
     e = RestClient::Exception.new
     message = "An explicitly set message"
     e.message = message
     e.message.should == message
   end
-  
+
   it "sets the exception message to ErrorMessage" do
     RestClient::ResourceNotFound.new.message.should == 'Resource Not Found'
   end
@@ -27,9 +27,23 @@ describe RestClient::Exception do
 end
 
 describe RestClient::ServerBrokeConnection do
-  it "should have a default message of 'Server broke connection'" do
+  it "has a default message of 'Server broke connection'" do
     e = RestClient::ServerBrokeConnection.new
     e.message.should == 'Server broke connection'
+  end
+end
+
+describe RestClient::Redirect do
+  it "has a default message of 'Redirect'" do
+    e = RestClient::Redirect.new('target')
+    e.message.should == 'Redirect'
+  end
+end
+
+describe RestClient::MaxRedirectsReached do
+  it "has a default message of 'Maximum number of redirects reached'" do
+    e = RestClient::MaxRedirectsReached.new
+    e.message.should == 'Maximum number of redirects reached'
   end
 end
 
