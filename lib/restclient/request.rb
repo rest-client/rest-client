@@ -30,7 +30,7 @@ module RestClient
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version
+                :ssl_version, :raw_headers
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -59,6 +59,7 @@ module RestClient
       @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
+      @raw_headers = args[:raw_headers]
       @processed_headers = make_headers headers
       @args = args
     end
@@ -288,10 +289,10 @@ module RestClient
         if key.is_a? Symbol
           key = key.to_s.split(/_/).map { |w| w.capitalize }.join('-')
         end
-        if 'CONTENT-TYPE' == key.upcase
+        if not @raw_headers and 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s
           result[key] = MIME::Types.type_for_extension target_value
-        elsif 'ACCEPT' == key.upcase
+        elsif not @raw_headers and 'ACCEPT' == key.upcase
           # Accept can be composed of several comma-separated values
           if value.is_a? Array
             target_values = value
