@@ -9,6 +9,8 @@ rescue LoadError => e
   raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
 end
 
+require 'net/http/persistent'
+
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
 require File.dirname(__FILE__) + '/restclient/abstract_response'
@@ -93,8 +95,10 @@ module RestClient
   end
 
   class << self
-    attr_accessor :proxy
+    attr_accessor :proxy, :persistent
   end
+
+  @persistent = true
 
   # Setup the log for RestClient calls.
   # Value should be a logger but can can be stdout, stderr, or a filename.
