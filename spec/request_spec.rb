@@ -345,12 +345,12 @@ describe RestClient::Request do
       log[0].should == %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
-    it "logs a response including the status code, content type, and result body size in bytes" do
+    it "logs a response including the status code, content type, result body size in bytes and the body itself" do
       log = RestClient.log = []
       res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub!(:[]).with('Content-type').and_return('text/html')
       @request.log_response res
-      log[0].should == "# => 200 OK | text/html 4 bytes\n"
+      log[0].should == "# => 200 OK | text/html 4 bytes\n# => abcd\n"
     end
 
     it "logs a response with a nil Content-type" do
@@ -358,7 +358,7 @@ describe RestClient::Request do
       res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub!(:[]).with('Content-type').and_return(nil)
       @request.log_response res
-      log[0].should == "# => 200 OK |  4 bytes\n"
+      log[0].should == "# => 200 OK |  4 bytes\n# => abcd\n"
     end
 
     it "logs a response with a nil body" do
@@ -375,7 +375,7 @@ describe RestClient::Request do
     res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
     @request.log_response res
-    log[0].should == "# => 200 OK | text/html 4 bytes\n"
+    log[0].should == "# => 200 OK | text/html 4 bytes\n# => abcd\n"
   end
 
   describe "timeout" do
