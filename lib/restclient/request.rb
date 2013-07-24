@@ -206,7 +206,7 @@ module RestClient
             elsif total == 0
               RestClient.log << "#{@method} #{@url} (zero content length)\n"
             else
-              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)\n" % [(size * 100) / total, size, total]
+              RestClient.log << "#{@method} #{@url.gsub(/%/,'%%')} %d%% done (%d of %d)\n" % [(size * 100) / total, size, total]
             end
           end
         end
