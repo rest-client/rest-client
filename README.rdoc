@@ -264,7 +264,7 @@ It's handy if you need direct access to the HTTP request.
 
 Example:
 
-  # Add oath support using the oauth gem
+  # Add oauth support using the oauth gem
   require 'oauth'
   access_token = ...
 
