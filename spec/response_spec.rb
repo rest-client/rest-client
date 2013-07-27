@@ -5,8 +5,8 @@ include WebMock::API
 
 describe RestClient::Response do
   before do
-    @net_http_res = mock('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
-    @request = mock('http request', :user => nil, :password => nil)
+    @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
+    @request = double('http request', :user => nil, :password => nil)
     @response = RestClient::Response.create('abc', @net_http_res, {})
   end
 
@@ -27,14 +27,14 @@ describe RestClient::Response do
 
   describe "cookie processing" do
     it "should correctly deal with one Set-Cookie header with one cookie inside" do
-      net_http_res = mock('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]})
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, {})
       response.headers[:set_cookie].should == ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]
       response.cookies.should == { "main_page" => "main_page_no_rewrite" }
     end
 
     it "should correctly deal with multiple cookies [multiple Set-Cookie headers]" do
-      net_http_res = mock('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, {})
       response.headers[:set_cookie].should == ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]
       response.cookies.should == {
@@ -45,7 +45,7 @@ describe RestClient::Response do
     end
 
     it "should correctly deal with multiple cookies [one Set-Cookie header with multiple cookies]" do
-      net_http_res = mock('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT, remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT, user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT, remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT, user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, {})
       response.cookies.should == {
               "main_page" => "main_page_no_rewrite",
@@ -58,7 +58,7 @@ describe RestClient::Response do
   describe "exceptions processing" do
     it "should return itself for normal codes" do
       (200..206).each do |code|
-        net_http_res = mock('net http response', :code => '200')
+        net_http_res = double('net http response', :code => '200')
         response = RestClient::Response.create('abc', net_http_res, {})
         response.return! @request
       end
@@ -67,7 +67,7 @@ describe RestClient::Response do
     it "should throw an exception for other codes" do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
         unless (200..207).include? code
-          net_http_res = mock('net http response', :code => code.to_i)
+          net_http_res = double('net http response', :code => code.to_i)
           response = RestClient::Response.create('abc', net_http_res, {})
           lambda { response.return!}.should raise_error
         end
@@ -97,25 +97,25 @@ describe RestClient::Response do
     end
 
     it "doesn't follow a 301 when the request is a post" do
-      net_http_res = mock('net http response', :code => 301)
+      net_http_res = double('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
-      net_http_res = mock('net http response', :code => 302)
+      net_http_res = double('net http response', :code => 302)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
-      net_http_res = mock('net http response', :code => 307)
+      net_http_res = double('net http response', :code => 307)
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do
-      net_http_res = mock('net http response', :code => 301)
+      net_http_res = double('net http response', :code => 301)
       response = RestClient::Response.create('abc', net_http_res, {:method => :put})
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end

@@ -63,7 +63,7 @@ describe RestClient do
 
     it "append the log to the requested filename" do
       RestClient.log = '/tmp/restclient.log'
-      f = mock('file handle')
+      f = double('file handle')
       File.should_receive(:open).with('/tmp/restclient.log', 'a').and_yield(f)
       f.should_receive(:puts).with('xyz')
       RestClient.log << 'xyz'
