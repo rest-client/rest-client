@@ -7,13 +7,13 @@ describe RestClient::Request do
   before do
     @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
 
-    @uri = mock("uri")
+    @uri = double("uri")
     @uri.stub!(:request_uri).and_return('/resource')
     @uri.stub!(:host).and_return('some')
     @uri.stub!(:port).and_return(80)
 
-    @net = mock("net::http base")
-    @http = mock("net::http connection")
+    @net = double("net::http base")
+    @http = double("net::http connection")
     Net::HTTP.stub!(:new).and_return(@net)
     @net.stub!(:start).and_yield(@http)
     @net.stub!(:use_ssl=)
@@ -50,7 +50,7 @@ describe RestClient::Request do
   end
 
   it "processes a successful result" do
-    res = mock("result")
+    res = double("result")
     res.stub!(:code).and_return("200")
     res.stub!(:body).and_return('body')
     res.stub!(:[]).with('content-encoding').and_return(nil)
@@ -60,7 +60,7 @@ describe RestClient::Request do
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = mock("result")
+      res = double("result")
       res.stub!(:code).and_return(code.to_s)
       res.stub!(:body).and_return("")
       res.stub!(:[]).with('content-encoding').and_return(nil)
@@ -80,21 +80,21 @@ describe RestClient::Request do
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
-      URI.stub!(:parse).and_return(mock('uri', :user => 'joe', :password => 'pass1'))
+      URI.stub!(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))
       @request.parse_url_with_auth('http://joe:pass1@example.com/resource')
       @request.user.should == 'joe'
       @request.password.should == 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
-      URI.stub!(:parse).and_return(mock('uri', :user => 'joe%20', :password => 'pass1'))
+      URI.stub!(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1'))
       @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
       @request.user.should == 'joe '
       @request.password.should == 'pass1'
     end
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
-      URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
+      URI.stub!(:parse).and_return(double('uri', :user => nil, :password => nil))
       @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
       @request.parse_url_with_auth('http://example.com/resource')
       @request.user.should == 'beth'
@@ -103,14 +103,14 @@ describe RestClient::Request do
   end
 
   it "correctly formats cookies provided to the constructor" do
-    URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil))
+    URI.stub!(:parse).and_return(double('uri', :user => nil, :password => nil))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
     @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'}
   end
 
   it "uses netrc credentials" do
-    URI.stub!(:parse).and_return(mock('uri', :user => nil, :password => nil, :host => 'example.com'))
+    URI.stub!(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
     Netrc.stub!(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://example.com/resource')
     @request.user.should == 'a'
@@ -118,7 +118,7 @@ describe RestClient::Request do
   end
 
   it "uses credentials in the url in preference to netrc" do
-    URI.stub!(:parse).and_return(mock('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
+    URI.stub!(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
     Netrc.stub!(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
     @request.user.should == 'joe '
@@ -196,7 +196,7 @@ describe RestClient::Request do
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
     @request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
-    klass = mock("net:http class")
+    klass = double("net:http class")
     @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
     klass.should_receive(:new).and_return('result')
     @request.should_receive(:transmit).with(@uri, 'result', kind_of(RestClient::Payload::Base))
@@ -257,7 +257,7 @@ describe RestClient::Request do
 
     it "does not attempt to send any credentials if user is nil" do
       @request.stub!(:user).and_return(nil)
-      req = mock("request")
+      req = double("request")
       req.should_not_receive(:basic_auth)
       @request.setup_credentials(req)
     end
@@ -265,7 +265,7 @@ describe RestClient::Request do
     it "setup credentials when there's a user" do
       @request.stub!(:user).and_return('joe')
       @request.stub!(:password).and_return('mypass')
-      req = mock("request")
+      req = double("request")
       req.should_receive(:basic_auth).with('joe', 'mypass')
       @request.setup_credentials(req)
     end
@@ -278,7 +278,7 @@ describe RestClient::Request do
   end
 
   it "class method execute wraps constructor" do
-    req = mock("rest request")
+    req = double("rest request")
     RestClient::Request.should_receive(:new).with(1 => 2).and_return(req)
     req.should_receive(:execute)
     RestClient::Request.execute(1 => 2)
@@ -286,24 +286,24 @@ describe RestClient::Request do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = mock('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = mock('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = mock('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = mock('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
       @request.process_result(res){|response, request| "foo"}.should == "foo"
     end
   end
@@ -347,7 +347,7 @@ describe RestClient::Request do
 
     it "logs a response including the status code, content type, and result body size in bytes" do
       log = RestClient.log = []
-      res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub!(:[]).with('Content-type').and_return('text/html')
       @request.log_response res
       log[0].should == "# => 200 OK | text/html 4 bytes\n"
@@ -355,7 +355,7 @@ describe RestClient::Request do
 
     it "logs a response with a nil Content-type" do
       log = RestClient.log = []
-      res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub!(:[]).with('Content-type').and_return(nil)
       @request.log_response res
       log[0].should == "# => 200 OK |  4 bytes\n"
@@ -363,7 +363,7 @@ describe RestClient::Request do
 
     it "logs a response with a nil body" do
       log = RestClient.log = []
-      res = mock('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+      res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
       res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
       @request.log_response res
       log[0].should == "# => 200 OK | text/html 0 bytes\n"
@@ -372,7 +372,7 @@ describe RestClient::Request do
 
   it "strips the charset from the response content type" do
     log = RestClient.log = []
-    res = mock('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+    res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub!(:[]).with('Content-type').and_return('text/html; charset=utf-8')
     @request.log_response res
     log[0].should == "# => 200 OK | text/html 4 bytes\n"

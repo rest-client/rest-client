@@ -35,7 +35,7 @@ end
 
 describe RestClient::RequestFailed do
   before do
-    @response = mock('HTTP Response', :code => '502')
+    @response = double('HTTP Response', :code => '502')
   end
 
   it "stores the http response on the exception" do
