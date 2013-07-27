@@ -263,7 +263,7 @@ RestClient.add_before_execution_proc add a Proc to be called before each executi
 
 Example:
 
-  # Add oath support using the oauth gem
+  # Add oauth support using the oauth gem
   require 'oauth'
   access_token = ...
 
