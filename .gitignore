@@ -1,5 +1,6 @@
 .idea
 .rvmrc
+coverage
 doc
 rdoc
 pkg

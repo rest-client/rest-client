@@ -25,13 +25,6 @@ RSpec::Core::RakeTask.new(:doc) do |t|
   t.pattern = 'spec/*_spec.rb'
 end
 
-desc "Run all examples with RCov"
-RSpec::Core::RakeTask.new('rcov') do |t|
-  t.pattern = 'spec/*_spec.rb'
-  t.rcov = true
-  t.rcov_opts = ['--exclude', 'examples']
-end
-
 task :default => :spec
 
 ############################
