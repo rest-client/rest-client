@@ -1,5 +1,5 @@
 # encoding: binary
-require File.join(File.dirname(File.expand_path(__FILE__)), 'base')
+require File.join(File.dirname(File.expand_path(__FILE__)), 'spec_helper')
 
 describe RestClient::Payload do
   context "A regular Payload" do
