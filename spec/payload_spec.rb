@@ -66,7 +66,7 @@ describe RestClient::Payload do
   context "A multipart Payload" do
     it "should use standard enctype as default content-type" do
       m = RestClient::Payload::Multipart.new({})
-      m.stub!(:boundary).and_return(123)
+      m.stub(:boundary).and_return(123)
       m.headers['Content-Type'].should == 'multipart/form-data; boundary=123'
     end
     

@@ -16,7 +16,7 @@ describe RestClient::AbstractResponse do
   end
 
   before do
-    @net_http_res = mock('net http response')
+    @net_http_res = double('net http response')
     @response = MyAbstractResponse.new(@net_http_res, {})
   end
 
