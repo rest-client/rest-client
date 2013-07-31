@@ -38,12 +38,12 @@ module RestClient
     def has_file_array?(params)
       params.any? do |v|
         case v
-          when Hash
-            has_file?(v)
-          when Array
-            has_file_array?(v)
-          else
-            v.respond_to?(:path) && v.respond_to?(:read)
+        when Hash
+          has_file?(v)
+        when Array
+          has_file_array?(v)
+        else
+          v.respond_to?(:path) && v.respond_to?(:read)
         end
       end
     end
