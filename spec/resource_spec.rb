@@ -104,6 +104,8 @@ describe RestClient::Resource do
     }
     if is_ruby_19?
       eval(r19_syntax)
+    else
+      parent.should_not be_nil
     end
   end
 
