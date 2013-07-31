@@ -558,6 +558,41 @@ describe RestClient::Request do
       @request.stub!(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
+
+    it "should default to not having an ssl_ca_path" do
+      @request.ssl_ca_path.should be(nil)
+    end
+
+    it "should set the ssl_ca_path if provided" do
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload',
+              :ssl_version => 'SSLv3',
+              :ssl_ca_path => "Certificate Authority Path"
+      )
+      @net.should_receive(:ca_path=).with("Certificate Authority Path")
+      @net.should_receive(:ssl_version=).with('SSLv3')
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should not set the ssl_sa_path if it is not provided" do
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :ssl_version => 'TSLv1',
+              :payload => 'payload'
+      )
+      @net.should_not_receive(:sa_path=).with("Certificate Authority File")
+      @net.should_receive(:ssl_version=).with('TSLv1')
+      @http.stub!(:request)
+      @request.stub!(:process_result)
+      @request.stub!(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
   end
 
   it "should still return a response object for 204 No Content responses" do
