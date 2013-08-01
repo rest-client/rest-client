@@ -77,7 +77,7 @@ describe RestClient::Response do
   end
 
   describe "redirection" do
-    
+
     it "follows a redirection when the request is a get" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
@@ -149,14 +149,14 @@ describe RestClient::Response do
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
     end
-    
+
     it "follows no more than 10 redirections before raising error" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       lambda { RestClient::Request.execute(:url => 'http://some/redirect-1', :method => :get) }.should raise_error(RestClient::MaxRedirectsReached)
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(10)
     end
-    
+
     it "follows no more than max_redirects redirections, if specified" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
