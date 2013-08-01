@@ -1,6 +1,6 @@
 module Net
-  class HTTP    
-    
+  class HTTP
+
   # Adding the patch method if it doesn't exist (rest-client issue: https://github.com/archiloque/rest-client/issues/79)
   if !defined?(Net::HTTP::Patch)
     # Code taken from this commit: https://github.com/ruby/ruby/commit/ab70e53ac3b5102d4ecbe8f38d4f76afad29d37d#lib/net/http.rb
@@ -10,7 +10,7 @@ module Net
       def patch(path, data, initheader = nil, dest = nil, &block) # :yield: +body_segment+
         send_entity(path, data, initheader, dest, Patch, &block)
       end
-      
+
       # Executes a request which uses a representation
       # and returns its body.
       def send_entity(path, data, initheader, dest, type, &block)
@@ -26,7 +26,7 @@ module Net
         res
       end
     end
-    
+
     class Patch < HTTPRequest
       METHOD = 'PATCH'
       REQUEST_HAS_BODY = true
@@ -38,7 +38,7 @@ module Net
     # Replace the request method in Net::HTTP to sniff the body type
     # and set the stream if appropriate
     #
-    # Taken from:	
+    # Taken from:
     # http://www.missiondata.com/blog/ruby/29/streaming-data-to-s3-with-ruby/
 
     alias __request__ request
