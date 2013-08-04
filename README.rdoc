@@ -81,10 +81,10 @@ See RestClient::Resource docs for details.
 
 == Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
-* for results code between 200 and 207 a RestClient::Response will be returned
-* for results code 301, 302 or 307 the redirection will be followed if the request is a get or a head
-* for result code 303 the redirection will be followed and the request transformed into a get
-* for other cases a RestClient::Exception holding the Response will be raised, a specific exception class will be thrown for known error codes
+* for result codes between 200 and 207, a RestClient::Response will be returned
+* for result codes 301, 302 or 307, the redirection will be followed if the request is a GET or a HEAD
+* for result code 303, the redirection will be followed and the request transformed into a GET
+* for other cases, a RestClient::Exception holding the Response will be raised; a specific exception class will be thrown for known error codes
 
    RestClient.get 'http://example.com/resource'
    ➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
@@ -98,7 +98,7 @@ See RestClient::Resource docs for details.
 
 == Result handling
 
-A block can be passed to the RestClient method, this block will then be called with the Response.
+A block can be passed to the RestClient method. This block will then be called with the Response.
 Response.return! can be called to invoke the default response's behavior.
 
   # Don't raise exceptions but return the response
@@ -130,24 +130,25 @@ Response.return! can be called to invoke the default response's behavior.
     end
   }
 
-== Non-normalized URIs.
+== Non-normalized URIs
 
-If you want to use non-normalized URIs, you can normalize them with the addressable gem (http://addressable.rubyforge.org/api/).
+If you need to normalize URIs, e.g. to work with International Resource Identifiers (IRIs),
+use the addressable gem (http://addressable.rubyforge.org/api/) in your code:
 
   require 'addressable/uri'
   RestClient.get(Addressable::URI.parse("http://www.詹姆斯.com/").normalize.to_str)
 
 == Lower-level access
 
-For cases not covered by the general API, you can use the RestClient::Request class which provide a lower-level API.
+For cases not covered by the general API, you can use the RestClient::Request class, which provides a lower-level API.
 
 You can:
 
 * specify ssl parameters
 * override cookies
-* manually handle the response (so you can operate on the response stream than reading it fully in memory)
+* manually handle the response (e.g. to operate on it as a stream rather than reading it all into memory)
 
-see the class' rdoc for more information.
+See RestClient::Request's documentation for more information.
 
 == Shell
 
@@ -189,10 +190,10 @@ Use as a one-off, curl-style:
 
 == Logging
 
-To enable logging you can
+To enable logging you can:
 
-* set RestClient.log with a ruby Logger
-* or set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
+* set RestClient.log with a Ruby Logger, or
+* set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
 
    $ RESTCLIENT_LOG=stdout path/to/my/program
 
@@ -215,7 +216,7 @@ RestClient.proxy:
   RestClient.get "http://some/resource"
   # => response from some/resource as proxied through proxy.example.com
 
-Often the proxy url is set in an environment variable, so you can do this to
+Often the proxy URL is set in an environment variable, so you can do this to
 use whatever proxy the system is configured to use:
 
   RestClient.proxy = ENV['http_proxy']
@@ -223,8 +224,7 @@ use whatever proxy the system is configured to use:
 == Query parameters
 
 Request objects know about query parameters and will automatically add them to
-the url for GET, HEAD and DELETE requests and escape the keys and values as 
-needed:
+the URL for GET, HEAD and DELETE requests, escaping the keys and values as needed:
 
   RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
   # will GET http://example.com/resource?foo=bar&baz=qux
@@ -259,7 +259,8 @@ Self-signed certificates can be generated with the openssl command-line tool.
 
 == Hook
 
-RestClient.add_before_execution_proc add a Proc to be called before each execution, it's handy if you need a direct access to the http request.
+RestClient.add_before_execution_proc add a Proc to be called before each execution.
+It's handy if you need direct access to the HTTP request.
 
 Example:
 
@@ -275,9 +276,9 @@ Example:
 
 == More
 
-Need caching, more advanced logging or any ability provided by a rack middleware ?
+Need caching, more advanced logging or any ability provided by Rack middleware?
 
-Have a look at rest-client-components http://github.com/crohr/rest-client-components
+Have a look at rest-client-components: http://github.com/crohr/rest-client-components
 
 == Credits
 
