@@ -573,9 +573,9 @@ describe RestClient::Request do
       )
       @net.should_receive(:ca_path=).with("Certificate Authority Path")
       @net.should_receive(:ssl_version=).with('SSLv3')
-      @http.stub!(:request)
-      @request.stub!(:process_result)
-      @request.stub!(:response_log)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
 
@@ -588,9 +588,9 @@ describe RestClient::Request do
       )
       @net.should_not_receive(:sa_path=).with("Certificate Authority File")
       @net.should_receive(:ssl_version=).with('TSLv1')
-      @http.stub!(:request)
-      @request.stub!(:process_result)
-      @request.stub!(:response_log)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
   end
