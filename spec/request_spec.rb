@@ -579,14 +579,14 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', 'payload')
     end
 
-    it "should not set the ssl_sa_path if it is not provided" do
+    it "should not set the ssl_ca_path if it is not provided" do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
               :ssl_version => 'TSLv1',
               :payload => 'payload'
       )
-      @net.should_not_receive(:sa_path=).with("Certificate Authority File")
+      @net.should_not_receive(:ca_path=).with("Certificate Authority File")
       @net.should_receive(:ssl_version=).with('TSLv1')
       @http.stub(:request)
       @request.stub(:process_result)
