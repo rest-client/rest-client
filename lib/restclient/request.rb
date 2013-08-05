@@ -22,7 +22,7 @@ module RestClient
   # * :max_redirects maximum number of redirections (default to 10)
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
-  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
+  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
   class Request
 
@@ -30,7 +30,7 @@ module RestClient
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version
+                :ssl_version, :ssl_ca_path
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -56,6 +56,7 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
+      @ssl_ca_path = args[:ssl_ca_path] || nil
       @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
@@ -165,6 +166,7 @@ module RestClient
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file
+      net.ca_path = @ssl_ca_path if @ssl_ca_path
       net.read_timeout = @timeout if @timeout
       net.open_timeout = @open_timeout if @open_timeout
 
