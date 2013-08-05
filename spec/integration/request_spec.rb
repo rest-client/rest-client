@@ -12,6 +12,16 @@ describe RestClient::Request do
       expect { request.execute }.to_not raise_error
     end
 
+    it "is successful with the correct ca_path" do
+      request = RestClient::Request.new(
+        :method => :get,
+        :url => 'https://www.mozilla.com',
+        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
+        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_equifax")
+      )
+      expect { request.execute }.to_not raise_error
+    end
+
     # I don' think this feature is useful anymore (under 1.9.3 at the very least).
     #
     # Exceptions in verify_callback are ignored; RestClient has to catch OpenSSL::SSL::SSLError
@@ -28,6 +38,16 @@ describe RestClient::Request do
         :url => 'https://www.mozilla.com',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt")
+      )
+      expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
+    end
+
+    it "is unsuccessful with an incorrect ca_path" do
+      request = RestClient::Request.new(
+        :method => :get,
+        :url => 'https://www.mozilla.com',
+        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
+        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_verisign")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
     end
