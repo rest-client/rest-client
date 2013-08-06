@@ -1,7 +1,4 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), 'spec_helper')
-
-require 'webmock/rspec'
-include WebMock::API
+require 'spec_helper'
 
 describe RestClient::Request do
   before do
