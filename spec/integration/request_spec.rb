@@ -1,6 +1,14 @@
-require File.join( File.dirname(File.expand_path(__FILE__)), '../spec_helper')
+require 'spec_helper'
 
 describe RestClient::Request do
+  before(:all) do
+    WebMock.disable!
+  end
+
+  after(:all) do
+    WebMock.enable!
+  end
+
   describe "ssl verification" do
     it "is successful with the correct ca_file" do
       request = RestClient::Request.new(

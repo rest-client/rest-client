@@ -7,11 +7,11 @@ end
 require "rspec/core/rake_task"
 
 desc "Run all specs"
-task :spec => ["spec:unit", "spec:integration"]
+RSpec::Core::RakeTask.new('spec')
 
 desc "Run unit specs"
 RSpec::Core::RakeTask.new('spec:unit') do |t|
-  t.pattern = 'spec/*_spec.rb'
+  t.pattern = 'spec/unit/*_spec.rb'
 end
 
 desc "Run integration specs"
@@ -22,7 +22,7 @@ end
 desc "Print specdocs"
 RSpec::Core::RakeTask.new(:doc) do |t|
   t.rspec_opts = ["--format", "specdoc", "--dry-run"]
-  t.pattern = 'spec/*_spec.rb'
+  t.pattern = 'spec/**/*_spec.rb'
 end
 
 desc "Run all examples with RCov"
