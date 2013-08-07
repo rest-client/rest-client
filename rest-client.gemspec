@@ -1,8 +1,10 @@
 # -*- encoding: utf-8 -*-
 
+require File.expand_path("../lib/restclient/version", __FILE__)
+
 Gem::Specification.new do |s|
   s.name = 'rest-client'
-  s.version = '1.7.0.alpha'
+  s.version = RestClient::VERSION
   s.authors = ['REST Client Team']
   s.description = 'A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.'
   s.license = 'MIT'

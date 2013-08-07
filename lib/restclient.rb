@@ -9,6 +9,7 @@ rescue LoadError => e
   raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
 end
 
+require File.dirname(__FILE__) + '/restclient/version'
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
 require File.dirname(__FILE__) + '/restclient/abstract_response'
@@ -101,12 +102,6 @@ module RestClient
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
   def self.log= log
     @@log = create_log log
-  end
-
-  def self.version
-    version_path = File.dirname(__FILE__) + "/../VERSION"
-    return File.read(version_path).chomp if File.file?(version_path)
-    "0.0.0"
   end
 
   # Create a log that respond to << like a logger
