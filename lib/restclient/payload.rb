@@ -15,7 +15,11 @@ module RestClient
         else
           UrlEncoded.new(params)
         end
-      elsif params.respond_to?(:read)
+      #Quick fix for "NoMethodError: undefined method `closed?` for Hash"
+      #related to '[]' valid json return. 
+      #For example, fetchall groups if we do not have any group
+      #https://github.com/rest-client/rest-client/pull/148
+      elsif params.respond_to?(:read) && params.respond_to?(:close)
         Streamed.new(params)
       else
         nil
