@@ -215,11 +215,11 @@ module RestClient
           size += chunk.size
           if RestClient.log
             if size == 0
-              RestClient.log << "#{@method} #{@url} done (0 length file\n)"
+              RestClient.log << "%s %s done (0 length file\n)" % [@method, @url]
             elsif total == 0
-              RestClient.log << "#{@method} #{@url} (zero content length)\n"
+              RestClient.log << "%s %s (zero content length)\n" % [@method, @url]
             else
-              RestClient.log << "#{@method} #{@url} %d%% done (%d of %d)\n" % [(size * 100) / total, size, total]
+              RestClient.log << "%s %s %d%% done (%d of %d)\n" % [@method, @url, (size * 100) / total, size, total]
             end
           end
         end
