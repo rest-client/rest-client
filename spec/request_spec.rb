@@ -78,6 +78,11 @@ describe RestClient::Request do
     @request.parse_url('example.com/resource')
   end
 
+  it "encode URL with spaces" do
+    URI.should_receive(:parse).with('http://example.com/resource?test=test%20with%20spaces')
+    @request.parse_url('http://example.com/resource?test=test with spaces')
+  end
+
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
       URI.stub(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))

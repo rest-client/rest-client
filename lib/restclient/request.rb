@@ -114,7 +114,7 @@ module RestClient
 
     def parse_url(url)
       url = "http://#{url}" unless url.match(/^http/)
-      URI.parse(url)
+      URI.parse(URI.encode(url))
     end
 
     def parse_url_with_auth(url)
