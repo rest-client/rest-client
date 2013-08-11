@@ -22,13 +22,13 @@ describe RestClient::Request do
   end
 
   it "accept */* mimetype, preferring xml" do
-    @request.default_headers[:accept].should == '*/*; q=0.5, application/xml'
+    @request.default_headers[:accept].should eq '*/*; q=0.5, application/xml'
   end
 
   describe "compression" do
 
     it "decodes an uncompressed result body by passing it straight through" do
-      RestClient::Request.decode(nil, 'xyz').should == 'xyz'
+      RestClient::Request.decode(nil, 'xyz').should eq 'xyz'
     end
 
     it "doesn't fail for nil bodies" do
@@ -37,7 +37,7 @@ describe RestClient::Request do
 
 
     it "decodes a gzip body" do
-      RestClient::Request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should == "i'm gziped\n"
+      RestClient::Request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000").should eq "i'm gziped\n"
     end
 
     it "ingores gzip for empty bodies" do
@@ -45,7 +45,7 @@ describe RestClient::Request do
     end
 
     it "decodes a deflated body" do
-      RestClient::Request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should == "some deflated text"
+      RestClient::Request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363").should eq "some deflated text"
     end
   end
 
@@ -54,8 +54,8 @@ describe RestClient::Request do
     res.stub(:code).and_return("200")
     res.stub(:body).and_return('body')
     res.stub(:[]).with('content-encoding').and_return(nil)
-    @request.process_result(res).body.should == 'body'
-    @request.process_result(res).to_s.should == 'body'
+    @request.process_result(res).body.should eq 'body'
+    @request.process_result(res).to_s.should eq 'body'
   end
 
   it "doesn't classify successful requests as failed" do
@@ -82,23 +82,23 @@ describe RestClient::Request do
     it "extracts the username and password when parsing http://user:password@example.com/" do
       URI.stub(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))
       @request.parse_url_with_auth('http://joe:pass1@example.com/resource')
-      @request.user.should == 'joe'
-      @request.password.should == 'pass1'
+      @request.user.should eq 'joe'
+      @request.password.should eq 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
       URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1'))
       @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
-      @request.user.should == 'joe '
-      @request.password.should == 'pass1'
+      @request.user.should eq 'joe '
+      @request.password.should eq 'pass1'
     end
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
       URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
       @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
       @request.parse_url_with_auth('http://example.com/resource')
-      @request.user.should == 'beth'
-      @request.password.should == 'pass2'
+      @request.user.should eq 'beth'
+      @request.password.should eq 'pass2'
     end
   end
 
@@ -106,27 +106,27 @@ describe RestClient::Request do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
-    @request.make_headers({}).should == { 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'}
+    @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
   end
 
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://example.com/resource')
-    @request.user.should == 'a'
-    @request.password.should == 'b'
+    @request.user.should eq 'a'
+    @request.password.should eq 'b'
   end
 
   it "uses credentials in the url in preference to netrc" do
     URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
-    @request.user.should == 'joe '
-    @request.password.should == 'pass1'
+    @request.user.should eq 'joe '
+    @request.password.should eq 'pass1'
   end
 
   it "determines the Net::HTTP class to instantiate by the method name" do
-    @request.net_http_request_class(:put).should == Net::HTTP::Put
+    @request.net_http_request_class(:put).should eq Net::HTTP::Put
   end
 
   describe "user headers" do
@@ -134,23 +134,23 @@ describe RestClient::Request do
       @request.should_receive(:default_headers).and_return({ :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' })
       headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
       headers.should have_key "Accept-Encoding"
-      headers["Accept-Encoding"].should == "gzip"
+      headers["Accept-Encoding"].should eq "gzip"
       headers.should have_key "Accept"
-      headers["Accept"].should == "application/json"
+      headers["Accept"].should eq "application/json"
     end
 
     it "prefers the user header when the same header exists in the defaults" do
       @request.should_receive(:default_headers).and_return({ '1' => '2' })
       headers = @request.make_headers('1' => '3')
       headers.should have_key('1')
-      headers['1'].should == '3'
+      headers['1'].should eq '3'
     end
 
     it "converts user headers to string before calling CGI::unescape which fails on non string values" do
       @request.should_receive(:default_headers).and_return({ '1' => '2' })
       headers = @request.make_headers('1' => 3)
       headers.should have_key('1')
-      headers['1'].should == '3'
+      headers['1'].should eq '3'
     end
   end
 
@@ -160,37 +160,37 @@ describe RestClient::Request do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:content_type => 'abc')
       headers.should have_key('Content-Type')
-      headers['Content-Type'].should == 'abc'
+      headers['Content-Type'].should eq 'abc'
     end
 
     it "converts content-type from extension to real content-type" do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:content_type => 'json')
       headers.should have_key('Content-Type')
-      headers['Content-Type'].should == 'application/json'
+      headers['Content-Type'].should eq 'application/json'
     end
 
     it "converts accept from extension(s) to real content-type(s)" do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:accept => 'json, mp3')
       headers.should have_key('Accept')
-      headers['Accept'].should == 'application/json, audio/mpeg'
+      headers['Accept'].should eq 'application/json, audio/mpeg'
 
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers(:accept => :json)
       headers.should have_key('Accept')
-      headers['Accept'].should == 'application/json'
+      headers['Accept'].should eq 'application/json'
     end
 
     it "only convert symbols in header" do
       @request.should_receive(:default_headers).and_return({})
       headers = @request.make_headers({:foo_bar => 'value', "bar_bar" => 'value'})
-      headers['Foo-Bar'].should == 'value'
-      headers['bar_bar'].should == 'value'
+      headers['Foo-Bar'].should eq 'value'
+      headers['bar_bar'].should eq 'value'
     end
 
     it "converts header values to strings" do
-      @request.make_headers('A' => 1)['A'].should == '1'
+      @request.make_headers('A' => 1)['A'].should eq '1'
     end
   end
 
@@ -220,11 +220,11 @@ describe RestClient::Request do
     end
 
     it "passes non-hash payloads straight through" do
-      @request.process_payload("x").should == "x"
+      @request.process_payload("x").should eq "x"
     end
 
     it "converts a hash payload to urlencoded data" do
-      @request.process_payload(:a => 'b c+d').should == "a=b%20c%2Bd"
+      @request.process_payload(:a => 'b c+d').should eq "a=b%20c%2Bd"
     end
 
     it "accepts nested hashes in payload" do
@@ -237,7 +237,7 @@ describe RestClient::Request do
 
   it "set urlencoded content_type header on hash payloads" do
     @request.process_payload(:a => 1)
-    @request.headers[:content_type].should == 'application/x-www-form-urlencoded'
+    @request.headers[:content_type].should eq 'application/x-www-form-urlencoded'
   end
 
   describe "credentials" do
@@ -304,7 +304,7 @@ describe RestClient::Request do
   describe "block usage" do
     it "returns what asked to" do
       res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      @request.process_result(res){|response, request| "foo"}.should == "foo"
+      @request.process_result(res){|response, request| "foo"}.should eq "foo"
     end
   end
 
@@ -324,25 +324,25 @@ describe RestClient::Request do
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url').log_request
-      log[0].should == %Q{RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate"\n}
+      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log_request
-      log[0].should == %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
+      log[0].should eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      log[0].should == %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
+      log[0].should eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
     end
 
     it "logs input headers as a hash" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).log_request
-      log[0].should == %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate"\n}
+      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
     it "logs a response including the status code, content type, and result body size in bytes" do
@@ -350,7 +350,7 @@ describe RestClient::Request do
       res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub(:[]).with('Content-type').and_return('text/html')
       @request.log_response res
-      log[0].should == "# => 200 OK | text/html 4 bytes\n"
+      log[0].should eq "# => 200 OK | text/html 4 bytes\n"
     end
 
     it "logs a response with a nil Content-type" do
@@ -358,7 +358,7 @@ describe RestClient::Request do
       res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
       res.stub(:[]).with('Content-type').and_return(nil)
       @request.log_response res
-      log[0].should == "# => 200 OK |  4 bytes\n"
+      log[0].should eq "# => 200 OK |  4 bytes\n"
     end
 
     it "logs a response with a nil body" do
@@ -366,7 +366,7 @@ describe RestClient::Request do
       res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
       res.stub(:[]).with('Content-type').and_return('text/html; charset=utf-8')
       @request.log_response res
-      log[0].should == "# => 200 OK | text/html 0 bytes\n"
+      log[0].should eq "# => 200 OK | text/html 0 bytes\n"
     end
   end
 
@@ -375,7 +375,7 @@ describe RestClient::Request do
     res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
     res.stub(:[]).with('Content-type').and_return('text/html; charset=utf-8')
     @request.log_response res
-    log[0].should == "# => 200 OK | text/html 4 bytes\n"
+    log[0].should eq "# => 200 OK | text/html 4 bytes\n"
   end
 
   describe "timeout" do
@@ -416,7 +416,7 @@ describe RestClient::Request do
     end
 
     it "should default to not verifying ssl certificates" do
-      @request.verify_ssl.should == false
+      @request.verify_ssl.should eq false
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
@@ -608,6 +608,6 @@ describe RestClient::Request do
     @net.should_receive(:ssl_version=).with('SSLv3')
     response = @request.transmit(@uri, 'req', 'payload')
     response.should_not be_nil
-    response.code.should == 204
+    response.code.should eq 204
   end
 end
