@@ -137,7 +137,7 @@ module RestClient
           if p[k].is_a? Hash
             process_payload(p[k], key)
           else
-            value = URI.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+            value = parser.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
             "#{key}=#{value}"
           end
         end.join("&")
@@ -311,6 +311,11 @@ module RestClient
     def default_headers
       {:accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate'}
     end
+
+    private
+      def parser
+        URI.const_defined?(:Parser) ? URI::Parser.new : URI
+      end
 
   end
 end

@@ -21,7 +21,7 @@ module RestClient
               305 => 'Use Proxy', # http/1.1
               306 => 'Switch Proxy', # no longer used
               307 => 'Temporary Redirect', # http/1.1
-              
+
               400 => 'Bad Request',
               401 => 'Unauthorized',
               402 => 'Payment Required',
@@ -46,7 +46,7 @@ module RestClient
               423 => 'Locked', #WebDAV
               424 => 'Failed Dependency', #WebDAV
               425 => 'Unordered Collection', #WebDAV
-              426 => 'Upgrade Required', 
+              426 => 'Upgrade Required',
               449 => 'Retry With', #Microsoft
               450 => 'Blocked By Windows Parental Controls', #Microsoft
 
@@ -112,7 +112,7 @@ module RestClient
     def to_s
       inspect
     end
-    
+
     def message
       @message || self.class.name
     end
@@ -155,7 +155,9 @@ module RestClient
   # A redirect was encountered; caught by execute to retry with the new url.
   class Redirect < Exception
 
-    message = 'Redirect'
+    def message
+      'Redirect'
+    end
 
     attr_accessor :url
 
@@ -164,8 +166,10 @@ module RestClient
     end
   end
 
-  class MaxRedirectsReached < Exception	
-    message = 'Maximum number of redirect reached'	
+  class MaxRedirectsReached < Exception
+    def message
+      'Maximum number of redirect reached'
+    end
   end
 
   # The server broke the connection prior to the request completing.  Usually

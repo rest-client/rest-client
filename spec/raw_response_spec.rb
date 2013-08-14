@@ -8,10 +8,10 @@ describe RestClient::RawResponse do
   end
 
   it "behaves like string" do
-    @response.to_s.should == 'the answer is 42'
+    @response.to_s.should eq 'the answer is 42'
   end
 
   it "exposes a Tempfile" do
-    @response.file.should == @tf
+    @response.file.should eq @tf
   end
 end
