@@ -167,10 +167,11 @@ module RestClient
       log_request
 
       net.start do |http|
+        req.body_stream = payload.stream if payload
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          http.request(req, & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          res = http.request(req) { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
         end

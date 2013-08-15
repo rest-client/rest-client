@@ -49,6 +49,8 @@ module RestClient
     end
 
     class Base
+      attr_reader :stream
+
       def initialize(params)
         build_stream(params)
       end
