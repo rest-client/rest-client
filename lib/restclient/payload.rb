@@ -164,6 +164,7 @@ module RestClient
       EOL = "\r\n"
 
       def build_stream(params)
+        type = params.delete(:content_type)
         b = "--#{boundary}"
 
         @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
@@ -192,8 +193,9 @@ module RestClient
         @stream.seek(0)
       end
 
-      def create_regular_field(s, k, v)
+      def create_regular_field(s, k, v, type = nil)
         s.write("Content-Disposition: form-data; name=\"#{k}\"")
+	s.write("Content-Type: #{type};") if type
         s.write(EOL)
         s.write(EOL)
         s.write(v)
