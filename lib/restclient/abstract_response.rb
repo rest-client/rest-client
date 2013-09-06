@@ -67,6 +67,9 @@ module RestClient
       end
       args[:url] = url
       if request
+        unless request.follow_redirects 
+          return result 
+        end
         if request.max_redirects == 0
           raise MaxRedirectsReached
         end
