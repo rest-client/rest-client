@@ -173,8 +173,10 @@ module RestClient
     def merge_headers(additional_headers = {})
       additional_headers = additional_headers.dup
       additional_params  = additional_headers.delete(:params)
+
       result = (options[:headers] || {}).merge(additional_headers)
-      (result[:params] ||= {}).merge!(additional_params) if additional_params
+      result[:params] = (result[:params] || {}).merge(additional_params) if additional_params
+
       result
     end
   end
