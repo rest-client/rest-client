@@ -306,13 +306,16 @@ describe RestClient::Request do
   end
 
   describe "proxy" do
-    it "creates a proxy class if a proxy url is given" do
+    it "creates a proxy if a proxy url is given" do
       RestClient.stub(:proxy).and_return("http://example.com/")
-      @request.net_http_class.proxy_class?.should be_true
+      Net::HTTP.should_receive(:new).with("http://amazon.com", 80, "example.com", 80, nil, nil)
+      @request.net_http_object("http://amazon.com", 80)
     end
 
-    it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.proxy_class?.should be_false
+    it "creates a non-proxy if a proxy url is not given" do
+      RestClient.stub(:proxy).and_return(nil)
+      Net::HTTP.should_receive(:new).with("http://amazon.com", 80, nil, nil, nil, nil)
+      @request.net_http_object("http://amazon.com", 80)
     end
   end
 

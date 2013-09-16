@@ -99,12 +99,12 @@ module RestClient
       headers
     end
 
-    def net_http_class
+    def net_http_object(address, port)
       if RestClient.proxy
         proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+        Net::HTTP::new(address, port, proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
       else
-        Net::HTTP
+        Net::HTTP::new(address, port, nil, nil, nil, nil)
       end
     end
 
@@ -147,7 +147,7 @@ module RestClient
     def transmit uri, req, payload, & block
       setup_credentials req
 
-      net = net_http_class.new(uri.host, uri.port)
+      net = net_http_object(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = @ssl_version
       err_msg = nil
