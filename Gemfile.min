@@ -1,0 +1,20 @@
+# This gemfile is used to help verify that the minimum versions of gems
+# specified in the requirements really do work.  So avoid using '>=', '~>', etc.
+
+source 'https://rubygems.org'
+
+gem 'mime-types', '1.16'
+gem 'netrc', '0.7.7'
+gem 'rdoc', '2.4.2'
+
+group :test, :development do
+  gem 'rake', '0.9.2.2'
+
+  # WebMock 1.7.0 is the earliest version that:
+  # * supports the class methods 'enable!' and 'disable!'
+  # * doesn't have trouble loading rspec-expectations
+  gem 'webmock', '1.7.0'
+
+  # RSpec 2.8.0 is the earliest version that supports random ordering
+  gem 'rspec', '2.8.0'
+end
