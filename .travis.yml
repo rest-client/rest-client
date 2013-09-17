@@ -9,3 +9,10 @@ gemfile:
 branches:
   except:
     - "readme-edits"
+
+# For expediency, let us assume that anyone running the latest Ruby is not
+# running anything but the latest gems. :-)
+matrix:
+  exclude:
+    - rvm: "2.0.0"
+      gemfile: "gemfiles/Gemfile.min"
