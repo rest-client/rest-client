@@ -106,6 +106,13 @@ describe RestClient::Request do
     @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
   end
 
+  it "correctly formats cookies that contains characters need escaping" do
+    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
+    @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:need_escaping => "hello\nworld" })
+    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'need_escaping=hello%0Aworld'})
+ end
+
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
