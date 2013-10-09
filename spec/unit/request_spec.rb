@@ -189,6 +189,11 @@ describe RestClient::Request do
     it "converts header values to strings" do
       @request.make_headers('A' => 1)['A'].should eq '1'
     end
+
+    it "converts array values to strings" do
+        params = {:params => {'foo' => ['bar', 'baz']}}
+        @request.process_url_params("http://some/resource", params).should eq 'http://some/resource?foo[]=bar&foo[]=baz'
+    end
   end
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
