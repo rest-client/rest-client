@@ -83,6 +83,7 @@ module RestClient
 
       def flatten_params_array value, calculated_key
         result = []
+        result << ["#{calculated_key}[]", ""] if value == []
         value.each do |elem|
           if elem.is_a? Hash
             result += flatten_params(elem, calculated_key)

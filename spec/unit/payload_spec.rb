@@ -21,6 +21,11 @@ describe RestClient::Payload do
           should eq "foo%20=bar"
     end
 
+    it "should properly handle empty strings" do
+      RestClient::Payload::UrlEncoded.new({'foo' => '', 'bar' => 'baz'}).to_s.
+          should eq "foo=&bar=baz"
+    end
+
     it "should properly handle hashes as parameter" do
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz'}}).to_s.
           should eq "foo[bar]=baz"
@@ -55,6 +60,16 @@ describe RestClient::Payload do
           should eq "foo[]=bar"
       RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
           should eq "foo[]=bar&foo[]=baz"
+    end
+
+    it "should properly handle empty arrays" do
+      RestClient::Payload::UrlEncoded.new({'foo' => [], 'bar' => 'baz'}).to_s.
+          should eq "foo[]=&bar=baz"
+    end
+
+    it "should properly handle empty arrays inside an array" do
+      RestClient::Payload::UrlEncoded.new({'foo' => ['qux' => [] ], 'bar' => 'baz'}).to_s.
+          should eq "foo[qux][]=&bar=baz"
     end
 
     it 'should not close if stream already closed' do
