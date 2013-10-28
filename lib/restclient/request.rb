@@ -249,8 +249,8 @@ module RestClient
       ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
-    def net_http_class
-      if RestClient.proxy
+    def net_http_class(need_proxy=true)
+      if RestClient.proxy and need_proxy
         proxy_uri = URI.parse(RestClient.proxy)
         Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
       else
@@ -346,10 +346,20 @@ module RestClient
       warned
     end
 
+    def need_proxy?(uri)
+      http_proxy = ENV['http_proxy']
+      https_proxy = ENV['https_proxy']
+      ENV['http_proxy'] = ENV['https_proxy'] = ''
+      need = !uri.find_proxy.nil?
+      ENV['http_proxy'] = http_proxy
+      ENV['https_proxy'] = https_proxy
+      need
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
-      net = net_http_class.new(uri.host, uri.port)
+      net = net_http_class(need_proxy?(uri)).new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
