@@ -4,6 +4,9 @@
 # -*- encoding: utf-8 -*-
 
 Gem::Specification.new do |s|
+  s.rubygems_version = %q{1.8.5}
+  s.specification_version = 3
+
   s.name = %q{rest-client}
   s.version = "1.6.8.alpha"
 
@@ -51,26 +54,11 @@ Gem::Specification.new do |s|
   ]
   s.homepage = %q{http://github.com/archiloque/rest-client}
   s.require_paths = [%q{lib}]
-  s.rubygems_version = %q{1.8.5}
   s.summary = %q{Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.}
   s.test_files = [%q{spec/abstract_response_spec.rb}, %q{spec/base.rb}, %q{spec/exceptions_spec.rb}, %q{spec/integration}, %q{spec/integration/certs}, %q{spec/integration/certs/equifax.crt}, %q{spec/integration/certs/verisign.crt}, %q{spec/integration/request_spec.rb}, %q{spec/integration_spec.rb}, %q{spec/master_shake.jpg}, %q{spec/payload_spec.rb}, %q{spec/raw_response_spec.rb}, %q{spec/request2_spec.rb}, %q{spec/request_spec.rb}, %q{spec/resource_spec.rb}, %q{spec/response_spec.rb}, %q{spec/restclient_spec.rb}]
 
-  if s.respond_to? :specification_version then
-    s.specification_version = 3
-
-    if Gem::Version.new(Gem::VERSION) >= Gem::Version.new('1.2.0') then
-      s.add_runtime_dependency(%q<mime-types>, [">= 1.16"])
-      s.add_development_dependency(%q<webmock>, [">= 0.9.1"])
-      s.add_development_dependency(%q<rspec>, [">= 0"])
-    else
-      s.add_dependency(%q<mime-types>, [">= 1.16"])
-      s.add_dependency(%q<webmock>, [">= 0.9.1"])
-      s.add_dependency(%q<rspec>, [">= 0"])
-    end
-  else
-    s.add_dependency(%q<mime-types>, [">= 1.16"])
-    s.add_dependency(%q<webmock>, [">= 0.9.1"])
-    s.add_dependency(%q<rspec>, [">= 0"])
-  end
+  s.add_runtime_dependency(%q<mime-types>, [">= 1.16"])
+  s.add_development_dependency(%q<webmock>, [">= 0.9.1"])
+  s.add_development_dependency(%q<rspec>, [">= 0"])
 end
 
