@@ -57,7 +57,7 @@ Gem::Specification.new do |s|
   s.summary = %q{Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.}
   s.test_files = [%q{spec/abstract_response_spec.rb}, %q{spec/base.rb}, %q{spec/exceptions_spec.rb}, %q{spec/integration}, %q{spec/integration/certs}, %q{spec/integration/certs/equifax.crt}, %q{spec/integration/certs/verisign.crt}, %q{spec/integration/request_spec.rb}, %q{spec/integration_spec.rb}, %q{spec/master_shake.jpg}, %q{spec/payload_spec.rb}, %q{spec/raw_response_spec.rb}, %q{spec/request2_spec.rb}, %q{spec/request_spec.rb}, %q{spec/resource_spec.rb}, %q{spec/response_spec.rb}, %q{spec/restclient_spec.rb}]
 
-  s.add_runtime_dependency(%q<mime-types>, [">= 1.16"])
+  s.add_runtime_dependency(%q<mime-types>, ["~> 1.16"])
   s.add_development_dependency(%q<webmock>, [">= 0.9.1"])
   s.add_development_dependency(%q<rspec>, [">= 0"])
 end
