@@ -83,7 +83,9 @@ module RestClient
         end
       end
       unless url_params.empty?
-        query_string = Payload::UrlEncoded.flatten_params(url_params).map {|pair| pair.join('=')}.join('&')
+        query_string = Payload::UrlEncoded.flatten_params(url_params).
+          map { |key, value| [key, CGI::escape(value.to_s)]}.
+          map { |pair| pair.join('=') }.join('&')
         url + "?#{query_string}"
       else
         url

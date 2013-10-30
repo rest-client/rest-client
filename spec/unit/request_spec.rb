@@ -194,6 +194,11 @@ describe RestClient::Request do
         params = {:params => {'foo' => ['bar', 'baz']}}
         @request.process_url_params("http://some/resource", params).should eq 'http://some/resource?foo[]=bar&foo[]=baz'
     end
+
+    it "handles spaces in keys and values" do
+        params = {:params => {'the foo' => "the bar"}}
+        @request.process_url_params("http://some/resource", params).should eq 'http://some/resource?the%20foo=the+bar'
+    end
   end
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
