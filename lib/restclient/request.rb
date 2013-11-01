@@ -349,7 +349,7 @@ module RestClient
     def need_proxy?(uri)
       http_proxy = ENV['http_proxy']
       https_proxy = ENV['https_proxy']
-      ENV['http_proxy'] = ENV['https_proxy'] = ''
+      ENV['http_proxy'] = ENV['https_proxy'] = RestClient.proxy
       need = !uri.find_proxy.nil?
       ENV['http_proxy'] = http_proxy
       ENV['https_proxy'] = https_proxy
