@@ -102,7 +102,11 @@ module RestClient
     def net_http_class
       if RestClient.proxy
         proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, CGI.unescape(proxy_uri.user), CGI.unescape(proxy_uri.password))
+        if proxy_uri.user && proxy_uri.password
+          Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, CGI.unescape(proxy_uri.user), CGI.unescape(proxy_uri.password))
+        else
+          Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port)
+        end
       else
         Net::HTTP
       end
