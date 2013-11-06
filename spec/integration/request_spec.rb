@@ -61,3 +61,13 @@ describe RestClient::Request do
     end
   end
 end
+
+describe MIME::Types do
+  describe "#type_for_extension" do
+    subject(:type_for_extension) { described_class.type_for_extension('csv') }
+
+    it "does not return an obsolete mime type" do
+      expect(type_for_extension).to eq('text/csv')
+    end
+  end
+end

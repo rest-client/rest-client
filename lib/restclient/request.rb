@@ -326,7 +326,7 @@ module MIME
     # Return the first found content-type for a value considered as an extension or the value itself
     def type_for_extension ext
       candidates = @extension_index[ext]
-      candidates.empty? ? ext : candidates[0].content_type
+      candidates.empty? ? ext : candidates.last.content_type
     end
 
     class << self
