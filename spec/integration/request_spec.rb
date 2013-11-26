@@ -13,7 +13,7 @@ describe RestClient::Request do
     it "is successful with the correct ca_file" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "equifax.crt")
       )
@@ -23,7 +23,7 @@ describe RestClient::Request do
     it "is successful with the correct ca_path" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_equifax")
       )
