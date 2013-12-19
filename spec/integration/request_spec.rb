@@ -14,7 +14,6 @@ describe RestClient::Request do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
-        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "equifax.crt")
       )
       expect { request.execute }.to_not raise_error
@@ -24,7 +23,6 @@ describe RestClient::Request do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
-        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_equifax")
       )
       expect { request.execute }.to_not raise_error
@@ -44,7 +42,6 @@ describe RestClient::Request do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
-        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
@@ -54,7 +51,6 @@ describe RestClient::Request do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
-        :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
         :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_verisign")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)

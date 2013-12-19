@@ -52,7 +52,8 @@ module RestClient
       @open_timeout = args[:open_timeout]
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
-      @verify_ssl = args[:verify_ssl] || false
+      @verify_ssl = OpenSSL::SSL::VERIFY_PEER # ssl by default
+      @verify_ssl = args[:verify_ssl] unless args[:verify_ssl].nil?
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
