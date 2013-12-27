@@ -66,10 +66,12 @@ module RestClient
 
       # Flatten parameters by converting hashes of hashes to flat hashes
       # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
+      # {parent_key => {keys1[] => [{keys1 => value1}]}} will be transformed into [["parent_key[keys1][][keys1]", value1]]
       def flatten_params(params, parent_key = nil)
         result = []
         params.each do |key, value|
-          calculated_key = parent_key ? "#{parent_key}[#{handle_key(key)}]" : handle_key(key)
+          key.match(/^(.*)(\[\])$/)
+          calculated_key = parent_key ? "#{parent_key}[#{handle_key($1 || key)}]#{$2}" : "#{handle_key($1 || key)}#{$2}"
           if value.is_a? Hash
             result += flatten_params(value, calculated_key)
           elsif value.is_a? Array
