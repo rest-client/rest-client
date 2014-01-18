@@ -1,5 +1,4 @@
 require 'tempfile'
-require 'mime/types'
 require 'cgi'
 require 'netrc'
 
@@ -292,7 +291,7 @@ module RestClient
         end
         if 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s
-          result[key] = MIME::Types.type_for_extension target_value
+          result[key] = Mimes.mime_for_or_not target_value
         elsif 'ACCEPT' == key.upcase
           # Accept can be composed of several comma-separated values
           if value.is_a? Array
@@ -300,7 +299,7 @@ module RestClient
           else
             target_values = value.to_s.split ','
           end
-          result[key] = target_values.map { |ext| MIME::Types.type_for_extension(ext.to_s.strip) }.join(', ')
+          result[key] = target_values.map { |ext| puts "ext #{ext}"; Mimes.mime_for_or_not(ext.to_s.strip) }.join(', ')
         else
           result[key] = value.to_s
         end
@@ -317,22 +316,5 @@ module RestClient
         URI.const_defined?(:Parser) ? URI::Parser.new : URI
       end
 
-  end
-end
-
-module MIME
-  class Types
-
-    # Return the first found content-type for a value considered as an extension or the value itself
-    def type_for_extension ext
-      candidates = @extension_index[ext]
-      candidates.empty? ? ext : candidates[0].content_type
-    end
-
-    class << self
-      def type_for_extension ext
-        @__types__.type_for_extension ext
-      end
-    end
   end
 end
