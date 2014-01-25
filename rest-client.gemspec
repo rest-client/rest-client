@@ -14,6 +14,7 @@ Gem::Specification.new do |s|
   s.summary = 'Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.'
 
   s.add_runtime_dependency(%q<mime-types>, ["~> 1.16"])
+  s.add_development_dependency(%q<rake>, ["~> 10.0"])
   s.add_development_dependency(%q<webmock>, [">= 0.9.1"])
   s.add_development_dependency(%q<rspec>, [">= 2.0"])
 end
