@@ -1,4 +1,13 @@
+require 'resolv'
 module RestClient
+
+  NETWORKError = [
+    Errno::ECONNREFUSED, 
+    Errno::ECONNRESET, 
+    Errno::ECONNABORTED,
+    Resolv::ResolvTimeout,
+    Resolv::ResolvError
+  ]
 
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',

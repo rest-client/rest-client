@@ -16,5 +16,9 @@ module RestClient
       Net::HTTP.const_get(method.to_s.capitalize)
     end
 
+    def parse_url(url)
+      url = "http://#{url}" unless url.match(/^http/)
+      URI.parse(URI::escape(url))
+    end
   end
 end

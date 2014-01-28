@@ -1,8 +1,9 @@
 module RestClient
   class Connection
 
+    include RestClient::Util
     PARAMS = %w{
-host port timeout open_timeout verify_ssl ssl_client_cert
+url host port timeout open_timeout verify_ssl ssl_client_cert
 ssl_client_key ssl_ca_file ssl_ca_path ssl_version 
     }
 
@@ -15,9 +16,10 @@ ssl_client_key ssl_ca_file ssl_ca_path ssl_version
 
     def parse_args args
       PARAMS.each do |attr|
-        instance_variable_set("@#{attr}", args[attr.to_sym])
+        instance_variable_set("@#{attr}", args[attr.to_sym]) if args[attr.to_sym]
       end
 
+      @uri = parse_url(@url) if @url
       @port ||= 80
       @verify_ssl ||= false
       @ssl_version ||= 'SSLv3'
@@ -28,7 +30,11 @@ ssl_client_key ssl_ca_file ssl_ca_path ssl_version
     end
 
     def make_connection
-      net = RestClient::Util.net_http_class.new(host, port)
+      if @uri
+        net = RestClient::Util.net_http_class.new(@uri.host, @uri.port)
+      else
+        net = RestClient::Util.net_http_class.new(host, port)
+      end
       net.use_ssl = port == 443
       net.ssl_version = @ssl_version
       @err_msg = nil
@@ -38,7 +44,9 @@ ssl_client_key ssl_ca_file ssl_ca_path ssl_version
         net.verify_mode = @verify_ssl
         net.verify_callback = lambda do |preverify_ok, ssl_context|
           if (!preverify_ok) || ssl_context.error != 0
-            @err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
+            @err_msg = 
+              "SSL Verification failed -- Preverify: #{preverify_ok}, \
+              Error: #{ssl_context.error_string} (#{ssl_context.error})"
             return false
           end
           true

@@ -56,10 +56,15 @@ module RestClient
       @processed_headers = make_headers headers
       @args = args
 
-      @connection = Connection.new(args)
+      if args[:connection]
+        @connection = args[:connection]
+        @share_connection = true
+      else
+        @connection = Connection.new(args)
+      end
     end
 
-    def execute conn = nil, & block
+    def execute & block
       uri = parse_url_with_auth(url)
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
     ensure
@@ -94,11 +99,6 @@ module RestClient
       headers
     end
 
-    def parse_url(url)
-      url = "http://#{url}" unless url.match(/^http/)
-      URI.parse(URI::escape(url))
-    end
-
     def parse_url_with_auth(url)
       uri = parse_url(url)
       @user = CGI.unescape(uri.user) if uri.user
@@ -126,11 +126,17 @@ module RestClient
       end
     end
 
+    def share_connection?
+      @share_connection
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
-      @connection.host = uri.host
-      @connection.port = uri.port
+      unless share_connection?
+        @connection.host = uri.host
+        @connection.port = uri.port
+      end
       net = @connection.net
 
       RestClient.before_execution_procs.each do |before_proc|
@@ -139,13 +145,23 @@ module RestClient
 
       log_request
 
-      net.start do |http|
+      if share_connection?
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          net.request(req, payload ? payload.to_s : nil, & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          res = net.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
+        end
+      else
+        net.start do |http|
+          if @block_response
+            http.request(req, payload ? payload.to_s : nil, & @block_response)
+          else
+            res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+            log_response res
+            process_result res, & block
+          end
         end
       end
     rescue OpenSSL::SSL::SSLError => e
