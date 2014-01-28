@@ -409,6 +409,7 @@ describe RestClient::Request do
   describe "ssl" do
     it "uses SSL when the URI refers to a https address" do
       @uri.stub(:is_a?).with(URI::HTTPS).and_return(true)
+      @uri.stub(:port).and_return(443)
       @net.should_receive(:use_ssl=).with(true)
       @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub(:request)
@@ -418,7 +419,7 @@ describe RestClient::Request do
     end
 
     it "should default to not verifying ssl certificates" do
-      @request.verify_ssl.should eq false
+      @request.connection.verify_ssl.should eq false
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do

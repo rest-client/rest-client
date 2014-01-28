@@ -9,6 +9,8 @@ rescue LoadError => e
   raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
 end
 
+require File.dirname(__FILE__) + '/restclient/util'
+require File.dirname(__FILE__) + '/restclient/connection'
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
 require File.dirname(__FILE__) + '/restclient/abstract_response'
