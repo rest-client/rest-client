@@ -26,11 +26,12 @@ module RestClient
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
   class Request
 
+    include RestClient::Util
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version, :ssl_ca_path
+                :ssl_version, :ssl_ca_path, :connection
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -48,20 +49,19 @@ module RestClient
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
-      @timeout = args[:timeout]
-      @open_timeout = args[:open_timeout]
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
-      @verify_ssl = args[:verify_ssl] || false
-      @ssl_client_cert = args[:ssl_client_cert] || nil
-      @ssl_client_key = args[:ssl_client_key] || nil
-      @ssl_ca_file = args[:ssl_ca_file] || nil
-      @ssl_ca_path = args[:ssl_ca_path] || nil
-      @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+
+      if args[:connection]
+        @connection = args[:connection]
+        @share_connection = true
+      else
+        @connection = Connection.new(args)
+      end
     end
 
     def execute & block
@@ -99,24 +99,6 @@ module RestClient
       headers
     end
 
-    def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
-      else
-        Net::HTTP
-      end
-    end
-
-    def net_http_request_class(method)
-      Net::HTTP.const_get(method.to_s.capitalize)
-    end
-
-    def parse_url(url)
-      url = "http://#{url}" unless url.match(/^http/)
-      URI.parse(url)
-    end
-
     def parse_url_with_auth(url)
       uri = parse_url(url)
       @user = CGI.unescape(uri.user) if uri.user
@@ -144,35 +126,18 @@ module RestClient
       end
     end
 
+    def share_connection?
+      @share_connection
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
-      net = net_http_class.new(uri.host, uri.port)
-      net.use_ssl = uri.is_a?(URI::HTTPS)
-      net.ssl_version = @ssl_version
-      err_msg = nil
-      if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
-        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      elsif @verify_ssl.is_a? Integer
-        net.verify_mode = @verify_ssl
-        net.verify_callback = lambda do |preverify_ok, ssl_context|
-          if (!preverify_ok) || ssl_context.error != 0
-            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
-            return false
-          end
-          true
-        end
+      unless share_connection?
+        @connection.host = uri.host
+        @connection.port = uri.port
       end
-      net.cert = @ssl_client_cert if @ssl_client_cert
-      net.key = @ssl_client_key if @ssl_client_key
-      net.ca_file = @ssl_ca_file if @ssl_ca_file
-      net.ca_path = @ssl_ca_path if @ssl_ca_path
-      net.read_timeout = @timeout if @timeout
-      net.open_timeout = @open_timeout if @open_timeout
-
-      # disable the timeout if the timeout value is -1
-      net.read_timeout = nil if @timeout == -1
-      net.open_timeout = nil if @open_timeout == -1
+      net = @connection.net
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
@@ -180,18 +145,28 @@ module RestClient
 
       log_request
 
-      net.start do |http|
+      if share_connection?
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          net.request(req, payload ? payload.to_s : nil, & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          res = net.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
         end
+      else
+        net.start do |http|
+          if @block_response
+            http.request(req, payload ? payload.to_s : nil, & @block_response)
+          else
+            res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+            log_response res
+            process_result res, & block
+          end
+        end
       end
     rescue OpenSSL::SSL::SSLError => e
-      if err_msg
-        raise SSLCertificateNotVerified.new(err_msg)
+      if @connection.err_msg
+        raise SSLCertificateNotVerified.new(@connection.err_msg)
       else
         raise e
       end

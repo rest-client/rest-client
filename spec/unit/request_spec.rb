@@ -70,6 +70,11 @@ describe RestClient::Request do
     @request.parse_url('http://example.com/resource')
   end
 
+  it "escape a url when parsing" do
+    url = "http://www.google-analytics.com/__utm.gif?utmwv=5.4.6&utms=4&utmn=1750792550&utmhn=www.memobee.com&utmcs=UTF-8&utmsr=1280x1024&utmvp=1263x889&utmsc=24-bit&utmul=en-us&utmje=1&utmfl=11.9%20r900&utmdt=Google%20mengumumkan%20rencananya%20membeli%20perusahaan%20Nest%2"
+    @request.parse_url(url)
+  end
+
   it "adds http:// to the front of resources specified in the syntax example.com/resource" do
     URI.should_receive(:parse).with('http://example.com/resource')
     @request.parse_url('example.com/resource')
@@ -404,6 +409,7 @@ describe RestClient::Request do
   describe "ssl" do
     it "uses SSL when the URI refers to a https address" do
       @uri.stub(:is_a?).with(URI::HTTPS).and_return(true)
+      @uri.stub(:port).and_return(443)
       @net.should_receive(:use_ssl=).with(true)
       @net.should_receive(:ssl_version=).with('SSLv3')
       @http.stub(:request)
@@ -413,7 +419,7 @@ describe RestClient::Request do
     end
 
     it "should default to not verifying ssl certificates" do
-      @request.verify_ssl.should eq false
+      @request.connection.verify_ssl.should eq false
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
@@ -607,4 +613,5 @@ describe RestClient::Request do
     response.should_not be_nil
     response.code.should eq 204
   end
+
 end
