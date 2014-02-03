@@ -1,6 +1,6 @@
 = REST Client -- simple DSL for accessing HTTP and REST resources
 
-Build status: {<img src="https://travis-ci.org/rest-client/rest-client.png" />}[https://travis-ci.org/rest-client/rest-client]
+Build status: {<img src="https://travis-ci.org/rest-client/rest-client.png?branch=1.6-legacy" alt="Build Status" />}[https://travis-ci.org/rest-client/rest-client]
 
 
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
