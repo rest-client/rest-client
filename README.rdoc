@@ -22,7 +22,6 @@ blog.}[http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/])
 
 The rest-client gem depends on these other gems for installation and usage:
 
-* {mime-types}[http://rubygems.org/gems/mime-types]
 * {netrc}[http://rubygems.org/gems/netrc]
 * {rdoc}[http://rubygems.org/gems/rdoc]
 

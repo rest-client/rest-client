@@ -299,7 +299,7 @@ module RestClient
           else
             target_values = value.to_s.split ','
           end
-          result[key] = target_values.map { |ext| puts "ext #{ext}"; Mimes.mime_for_or_not(ext.to_s.strip) }.join(', ')
+          result[key] = target_values.map { |ext| Mimes.mime_for_or_not(ext.to_s.strip) }.join(', ')
         else
           result[key] = value.to_s
         end
