@@ -35,6 +35,11 @@ describe RestClient::Resource do
       RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :payload => 'abc', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
       @resource.delete 'abc'
     end
+    
+    it "DELETE" do
+      RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :payload => nil, :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      @resource.delete
+    end
 
     it "overrides resource headers" do
       RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '2'}, :user => 'jane', :password => 'mypass')
