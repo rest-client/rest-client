@@ -47,6 +47,7 @@ module RestClient
               424 => 'Failed Dependency', #WebDAV
               425 => 'Unordered Collection', #WebDAV
               426 => 'Upgrade Required',
+              429 => 'Too Many Requests', #RFC6585
               449 => 'Retry With', #Microsoft
               450 => 'Blocked By Windows Parental Controls', #Microsoft
 
