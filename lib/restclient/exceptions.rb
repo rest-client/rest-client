@@ -40,7 +40,7 @@ module RestClient
               415 => 'Unsupported Media Type',
               416 => 'Requested Range Not Satisfiable',
               417 => 'Expectation Failed',
-              418 => 'I\'m A Teapot',
+              418 => 'I\'m A Teapot', #RFC2324
               421 => 'Too Many Connections From This IP',
               422 => 'Unprocessable Entity', #WebDAV
               423 => 'Locked', #WebDAV
