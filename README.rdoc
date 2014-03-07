@@ -46,7 +46,7 @@ dependencies for you.
 
   RestClient.delete 'http://example.com/resource'
 
-  RestClient.delete 'http://example.com/resource'. :param1 => 'one'
+  RestClient.delete 'http://example.com/resource', :param1 => 'one'
 
   response = RestClient.get 'http://example.com/resource'
   response.code

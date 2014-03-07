@@ -81,7 +81,7 @@ module RestClient
     Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
   end
 
-  def self.delete(url, payload, headers={}, &block)
+  def self.delete(url, payload=nil, headers={}, &block)
     Request.execute(:method => :delete, :url => url, :payload => payload, :headers => headers, &block)
   end
 
