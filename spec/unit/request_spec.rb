@@ -106,6 +106,17 @@ describe RestClient::Request do
     @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
   end
 
+  it "does not escape or unescape cookies" do
+    cookie = 'Foo%20:Bar%0A~'
+    @request = RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                       :cookies => {:test => cookie})
+    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    @request.make_headers({}).should eq({
+      'Foo' => 'bar',
+      'Cookie' => "test=#{cookie}"
+    })
+  end
+
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
