@@ -309,6 +309,24 @@ describe RestClient::Request do
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
+  it "catches OpenSSL::SSL::SSLError and raise it back without more informative message" do
+    @http.stub(:request).and_raise(OpenSSL::SSL::SSLError)
+    @net.should_receive(:ssl_version=).with('SSLv3')
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(OpenSSL::SSL::SSLError)
+  end
+
+  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+    @http.stub(:request).and_raise(Timeout::Error)
+    @net.should_receive(:ssl_version=).with('SSLv3')
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+  end
+
+  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+    @http.stub(:request).and_raise(Errno::ETIMEDOUT)
+    @net.should_receive(:ssl_version=).with('SSLv3')
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+  end
+
   it "class method execute wraps constructor" do
     req = double("rest request")
     RestClient::Request.should_receive(:new).with(1 => 2).and_return(req)

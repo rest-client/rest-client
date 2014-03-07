@@ -230,7 +230,7 @@ module RestClient
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
-    rescue Timeout::Error
+    rescue Timeout::Error, Errno::ETIMEDOUT
       raise RestClient::RequestTimeout
     end
 
