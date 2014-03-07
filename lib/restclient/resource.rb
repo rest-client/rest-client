@@ -89,11 +89,12 @@ module RestClient
               :headers => headers), &(block || @block))
     end
 
-    def delete(additional_headers={}, &block)
+    def delete(payload, additional_headers={}, &block)
       headers = (options[:headers] || {}).merge(additional_headers)
       Request.execute(options.merge(
               :method => :delete,
               :url => url,
+              :payload => payload,
               :headers => headers), &(block || @block))
     end
 
