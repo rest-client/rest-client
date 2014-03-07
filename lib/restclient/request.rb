@@ -92,11 +92,44 @@ module RestClient
 
     def make_headers user_headers
       unless @cookies.empty?
+
+        # Validate that the cookie names and values look sane. If you really
+        # want to pass scary characters, just set the Cookie header directly.
+        # RFC6265 is actually much more restrictive than we are.
+        @cookies.each do |key, val|
+          unless valid_cookie_key?(key)
+            raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
+          end
+          unless valid_cookie_value?(val)
+            raise ArgumentError.new("Invalid cookie value: #{val.inspect}")
+          end
+        end
+
         user_headers[:cookie] = @cookies.map { |key, val| "#{key}=#{val}" }.sort.join('; ')
       end
       headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
       headers.merge!(@payload.headers) if @payload
       headers
+    end
+
+    # Do some sanity checks on cookie keys.
+    #
+    # Properly it should be a valid TOKEN per RFC 2616, but lots of servers are
+    # more liberal.
+    #
+    # Disallow the empty string as well as keys containing control characters,
+    # equals sign, semicolon, comma, or space.
+    #
+    def valid_cookie_key?(string)
+      return false if string.empty?
+
+      ! Regexp.new('[\x0-\x1f\x7f=;, ]').match(string)
+    end
+
+    # Validate cookie values. Rather than following RFC 6265, allow anything
+    # but control characters, comma, and semicolon.
+    def valid_cookie_value?(value)
+      ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
     def net_http_class

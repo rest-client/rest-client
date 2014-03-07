@@ -117,6 +117,30 @@ describe RestClient::Request do
     })
   end
 
+  it "rejects cookie names containing invalid characters" do
+    # Cookie validity is something of a mess, but we should reject the worst of
+    # the RFC 6265 (4.1.1) prohibited characters such as control characters.
+
+    ['', 'foo=bar', 'foo;bar', "foo\nbar"].each do |cookie_name|
+      lambda {
+        RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                :cookies => {cookie_name => 'value'})
+      }.should raise_error(ArgumentError, /\AInvalid cookie name/)
+    end
+  end
+
+  it "rejects cookie values containing invalid characters" do
+    # Cookie validity is something of a mess, but we should reject the worst of
+    # the RFC 6265 (4.1.1) prohibited characters such as control characters.
+
+    ['foo,bar', 'foo;bar', "foo\nbar"].each do |cookie_value|
+      lambda {
+        RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                :cookies => {'test' => cookie_value})
+      }.should raise_error(ArgumentError, /\AInvalid cookie value/)
+    end
+  end
+
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
