@@ -15,6 +15,7 @@ describe RestClient::Request do
     @net.stub(:start).and_yield(@http)
     @net.stub(:use_ssl=)
     @net.stub(:verify_mode=)
+    @net.stub(:ssl_version=)
     RestClient.log = nil
   end
 
@@ -643,6 +644,39 @@ describe RestClient::Request do
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
+  end
+
+  it "should default to not having a ssl_ca_store" do
+    expect(@request.ssl_ca_store).to be_nil
+  end
+
+  it "should set the ssl_ca_store when provided" do
+    store = double("X509 Store")
+
+    @request = RestClient::Request.new(
+      :method => 'put',
+      :url => 'https://some/resource',
+      :ssl_ca_store => store
+    )
+
+    @net.should_receive(:cert_store=).with(store)
+    @http.stub(:request)
+    @request.stub(:process_result)
+    @request.stub(:response_log)
+    @request.transmit(@uri, 'req', 'payload')
+  end
+
+  it "should not set the ssl_ca_store when it is not provided" do
+    @request = RestClient::Request.new(
+      :method => 'put',
+      :url => 'https://some/resource'
+    )
+
+    @net.should_not_receive(:cert_store=)
+    @http.stub(:request)
+    @request.stub(:process_result)
+    @request.stub(:response_log)
+    @request.transmit(@uri, 'req', 'payload')
   end
 
   it "should still return a response object for 204 No Content responses" do
