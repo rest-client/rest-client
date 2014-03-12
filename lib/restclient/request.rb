@@ -215,9 +215,11 @@ module RestClient
 
       net.start do |http|
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          req.body_stream = payload
+          http.request(req, nil, & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          req.body_stream = payload
+          res = http.request(req, nil) { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
         end
@@ -244,6 +246,7 @@ module RestClient
         # Stolen from http://www.ruby-forum.com/topic/166423
         # Kudos to _why!
         @tf = Tempfile.new("rest-client")
+        @tf.binmode
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|
           @tf.write chunk
