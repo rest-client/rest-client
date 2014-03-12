@@ -431,12 +431,13 @@ describe RestClient::Request do
   describe "timeout" do
     it "does not set timeouts if not specified" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
-      @http.stub!(:request)
-      @request.stub!(:process_result)
-      @request.stub!(:response_log)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
 
       @net.should_not_receive(:read_timeout=)
       @net.should_not_receive(:open_timeout=)
+      @net.should_receive(:ssl_version=).with('SSLv3')
 
       @request.transmit(@uri, 'req', nil)
     end
@@ -467,27 +468,29 @@ describe RestClient::Request do
 
     it "disable timeout by setting it to nil" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil)
-      @http.stub!(:request)
-      @request.stub!(:process_result)
-      @request.stub!(:response_log)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
 
       @net.should_receive(:read_timeout=).with(nil)
       @net.should_receive(:open_timeout=).with(nil)
+      @net.should_receive(:ssl_version=).with('SSLv3')
 
       @request.transmit(@uri, 'req', nil)
     end
 
     it "deprecated: disable timeout by setting it to -1" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1)
-      @http.stub!(:request)
-      @request.stub!(:process_result)
-      @request.stub!(:response_log)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
 
       @request.should_receive(:warn)
       @net.should_receive(:read_timeout=).with(nil)
 
       @request.should_receive(:warn)
       @net.should_receive(:open_timeout=).with(nil)
+      @net.should_receive(:ssl_version=).with('SSLv3')
 
       @request.transmit(@uri, 'req', nil)
     end
