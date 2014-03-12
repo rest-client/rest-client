@@ -660,4 +660,20 @@ describe RestClient::Request do
     response.should_not be_nil
     response.code.should eq 204
   end
+
+  describe "raw response" do
+    it "should read the response into a binary-mode tempfile" do
+      @request = RestClient::Request.new(:method => "get", :url => "example.com", :raw_response => true)
+
+      tempfile = double("tempfile")
+      tempfile.should_receive(:binmode)
+      tempfile.stub(:open)
+      tempfile.stub(:close)
+      Tempfile.should_receive(:new).with("rest-client").and_return(tempfile)
+
+      net_http_res = Net::HTTPOK.new(nil, "200", "body")
+      net_http_res.stub(:read_body).and_return("body")
+      @request.fetch_body(net_http_res)
+    end
+  end
 end
