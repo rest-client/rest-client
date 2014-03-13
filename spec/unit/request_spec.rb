@@ -571,6 +571,34 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', 'payload')
     end
 
+    it "should set the ssl_ciphers if provided" do
+      ciphers = 'AESGCM:HIGH:!aNULL:!eNULL:RC4+RSA'
+      @request = RestClient::Request.new(
+        :method => :put,
+        :url => 'https://some/resource',
+        :payload => 'payload',
+        :ssl_ciphers => ciphers
+      )
+      @net.should_receive(:ciphers=).with(ciphers)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should not set the ssl_ciphers if not provided" do
+      @request = RestClient::Request.new(
+        :method => :put,
+        :url => 'https://some/resource',
+        :payload => 'payload'
+      )
+      @net.should_not_receive(:ciphers=)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
     it "should set the ssl_client_cert if provided" do
       @request = RestClient::Request.new(
               :method => :put,
