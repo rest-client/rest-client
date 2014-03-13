@@ -20,7 +20,8 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
-  # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
+  # * :verify_ssl enable ssl verification, possible values are constants from
+  #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
@@ -57,7 +58,7 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
-      @verify_ssl = args[:verify_ssl] || false
+      @verify_ssl = args.fetch(:verify_ssl, OpenSSL::SSL::VERIFY_PEER)
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
@@ -189,9 +190,10 @@ module RestClient
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = @ssl_version if @ssl_version
       err_msg = nil
-      if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
-        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      elsif @verify_ssl.is_a? Integer
+      if @verify_ssl
+        if @verify_ssl == true
+          @verify_ssl = OpenSSL::SSL::VERIFY_PEER
+        end
         net.verify_mode = @verify_ssl
         net.verify_callback = lambda do |preverify_ok, ssl_context|
           if (!preverify_ok) || ssl_context.error != 0
@@ -200,6 +202,8 @@ module RestClient
           end
           true
         end
+      else
+        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key

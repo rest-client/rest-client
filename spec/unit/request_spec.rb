@@ -15,6 +15,7 @@ describe RestClient::Request do
     @net.stub(:start).and_yield(@http)
     @net.stub(:use_ssl=)
     @net.stub(:verify_mode=)
+    @net.stub(:verify_callback=)
     RestClient.log = nil
   end
 
@@ -494,11 +495,12 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', 'payload')
     end
 
-    it "should default to not verifying ssl certificates" do
-      @request.verify_ssl.should eq false
+    it "should default to verifying ssl certificates" do
+      @request.verify_ssl.should eq OpenSSL::SSL::VERIFY_PEER
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
+      @request = RestClient::Request.new(:method => :put, :verify_ssl => false, :url => 'http://some/resource', :payload => 'payload')
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
       @http.stub(:request)
       @request.stub(:process_result)
@@ -509,6 +511,15 @@ describe RestClient::Request do
     it "should not set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is true" do
       @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
       @net.should_not_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should set net.verify_mode to OpenSSL::SSL::VERIFY_PEER if verify_ssl is true" do
+      @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload', :verify_ssl => true)
+      @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
