@@ -526,6 +526,15 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', 'payload')
     end
 
+    it "should set net.verify_mode to OpenSSL::SSL::VERIFY_PEER if verify_ssl is not given" do
+      @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload')
+      @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_PEER)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
     it "should set net.verify_mode to the passed value if verify_ssl is an OpenSSL constant" do
       mode = OpenSSL::SSL::VERIFY_PEER | OpenSSL::SSL::VERIFY_FAIL_IF_NO_PEER_CERT
       @request = RestClient::Request.new( :method => :put,
@@ -619,7 +628,7 @@ describe RestClient::Request do
               :url => 'https://some/resource',
               :payload => 'payload'
       )
-      @net.should_not_receive(:cert=).with("whatsupdoc!")
+      @net.should_not_receive(:cert=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -650,7 +659,7 @@ describe RestClient::Request do
               :url => 'https://some/resource',
               :payload => 'payload'
       )
-      @net.should_not_receive(:key=).with("whatsupdoc!")
+      @net.should_not_receive(:key=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -681,7 +690,7 @@ describe RestClient::Request do
               :url => 'https://some/resource',
               :payload => 'payload'
       )
-      @net.should_not_receive(:ca_file=).with("Certificate Authority File")
+      @net.should_not_receive(:ca_file=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -712,7 +721,7 @@ describe RestClient::Request do
               :url => 'https://some/resource',
               :payload => 'payload'
       )
-      @net.should_not_receive(:ca_path=).with("Certificate Authority File")
+      @net.should_not_receive(:ca_path=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
