@@ -24,7 +24,7 @@ module RestClient
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
-  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
@@ -62,7 +62,7 @@ module RestClient
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @ssl_ca_path = args[:ssl_ca_path] || nil
-      @ssl_version = args[:ssl_version] || 'SSLv3'
+      @ssl_version = args[:ssl_version]
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -187,7 +187,7 @@ module RestClient
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
-      net.ssl_version = @ssl_version
+      net.ssl_version = @ssl_version if @ssl_version
       err_msg = nil
       if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
