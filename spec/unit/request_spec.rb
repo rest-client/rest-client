@@ -16,6 +16,7 @@ describe RestClient::Request do
     @net.stub(:use_ssl=)
     @net.stub(:verify_mode=)
     @net.stub(:verify_callback=)
+    allow(@net).to receive(:ciphers=)
     RestClient.log = nil
   end
 
@@ -595,13 +596,64 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', 'payload')
     end
 
-    it "should not set the ssl_ciphers if not provided" do
+    it "should not set the ssl_ciphers if set to nil" do
       @request = RestClient::Request.new(
         :method => :put,
         :url => 'https://some/resource',
-        :payload => 'payload'
+        :payload => 'payload',
+        :ssl_ciphers => nil,
       )
       @net.should_not_receive(:ciphers=)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should override ssl_ciphers with better defaults with weak default ciphers" do
+      stub_const(
+        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
+        {
+          :ssl_version=>"SSLv23",
+          :verify_mode=>1,
+          :ciphers=>"ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
+          :options=>-2147480577,
+        }
+      )
+
+      @request = RestClient::Request.new(
+        :method => :put,
+        :url => 'https://some/resource',
+        :payload => 'payload',
+      )
+
+      @net.should_receive(:ciphers=).with(RestClient::Request::DefaultCiphers)
+
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should not override ssl_ciphers with better defaults with different default ciphers" do
+      stub_const(
+        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
+        {
+          :ssl_version=>"SSLv23",
+          :verify_mode=>1,
+          :ciphers=>"HIGH:!aNULL:!eNULL:!EXPORT:!LOW:!MEDIUM:!SSLv2",
+          :options=>-2147480577,
+        }
+      )
+
+      @request = RestClient::Request.new(
+        :method => :put,
+        :url => 'https://some/resource',
+        :payload => 'payload',
+      )
+
+      @net.should_not_receive(:ciphers=)
+
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
