@@ -784,6 +784,40 @@ describe RestClient::Request do
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
+
+    it "should set the ssl_cert_store if provided" do
+      store = OpenSSL::X509::Store.new
+      store.set_default_paths
+
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload',
+              :ssl_cert_store => store
+      )
+      @net.should_receive(:cert_store=).with(store)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should not set the ssl_cert_store if it is not provided" do
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload'
+      )
+      @net.should_not_receive(:cert_store=)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should default to not having an ssl_cert_store" do
+      @request.ssl_cert_store.should be(nil)
+    end
   end
 
   it "should still return a response object for 204 No Content responses" do

@@ -25,7 +25,8 @@ module RestClient
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
-  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
+  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
+  #     :ssl_cert_store
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
@@ -34,8 +35,8 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version, :ssl_ca_path, :ssl_ciphers
+                :ssl_client_key, :ssl_ca_file, :ssl_ca_path, :ssl_cert_store,
+                :processed_headers, :args, :ssl_version, :ssl_ciphers
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -124,6 +125,7 @@ module RestClient
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
       @ssl_ca_path = args[:ssl_ca_path] || nil
+      @ssl_cert_store = args[:ssl_cert_store] || nil
       @ssl_version = args[:ssl_version]
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
@@ -282,6 +284,7 @@ module RestClient
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file
       net.ca_path = @ssl_ca_path if @ssl_ca_path
+      net.cert_store = @ssl_cert_store if @ssl_cert_store
 
       if OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE
         warn('WARNING: OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE')
