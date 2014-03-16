@@ -500,6 +500,11 @@ describe RestClient::Request do
       @request.verify_ssl.should eq OpenSSL::SSL::VERIFY_PEER
     end
 
+    it "should have expected values for VERIFY_PEER and VERIFY_NONE" do
+      OpenSSL::SSL::VERIFY_NONE.should eq(0)
+      OpenSSL::SSL::VERIFY_PEER.should eq(1)
+    end
+
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
       @request = RestClient::Request.new(:method => :put, :verify_ssl => false, :url => 'http://some/resource', :payload => 'payload')
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
