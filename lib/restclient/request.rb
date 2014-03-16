@@ -283,6 +283,12 @@ module RestClient
       net.ca_file = @ssl_ca_file if @ssl_ca_file
       net.ca_path = @ssl_ca_path if @ssl_ca_path
 
+      if OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE
+        warn('WARNING: OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE')
+        warn('This dangerous monkey patch leaves you open to MITM attacks!')
+        warn('Try passing :verify_ssl => false instead.')
+      end
+
       if defined? @timeout
         if @timeout == -1
           warn 'To disable read timeouts, please set timeout to nil instead of -1'
