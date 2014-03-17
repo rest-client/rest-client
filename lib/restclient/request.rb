@@ -257,6 +257,12 @@ module RestClient
       end
     end
 
+    def self.default_ssl_cert_store
+      cert_store = OpenSSL::X509::Store.new
+      cert_store.set_default_paths
+      cert_store
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
@@ -280,6 +286,13 @@ module RestClient
       else
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
       end
+
+      # if no CA information of any kind was specified, supply our own default
+      # cert store using system default CA locations
+      if !@ssl_ca_file && !@ssl_ca_path && !@ssl_cert_store
+        @ssl_cert_store = self.class.default_ssl_cert_store
+      end
+
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key
       net.ca_file = @ssl_ca_file if @ssl_ca_file

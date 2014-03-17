@@ -17,6 +17,7 @@ describe RestClient::Request do
     @net.stub(:verify_mode=)
     @net.stub(:verify_callback=)
     allow(@net).to receive(:ciphers=)
+    allow(@net).to receive(:cert_store=)
     RestClient.log = nil
   end
 
