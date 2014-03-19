@@ -34,6 +34,8 @@ module RestClient
           ret = 'text/html'
         when 'mp3'
           ret = 'audio/mpeg'
+        when 'pdf'
+          ret = 'application/pdf'
       end
       return ret
     end
