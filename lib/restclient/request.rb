@@ -20,6 +20,7 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
+  # * :follow_redirects whether to follow redirections (default to true)
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
@@ -31,7 +32,7 @@ module RestClient
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
                 :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version, :ssl_ca_path
+                :ssl_version, :ssl_ca_path, :follow_redirects
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -65,6 +66,7 @@ module RestClient
       @ssl_version = args[:ssl_version] || 'SSLv3'
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
+      @follow_redirects = args[:follow_redirects] != false
       @processed_headers = make_headers headers
       @args = args
     end

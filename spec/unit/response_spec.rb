@@ -75,6 +75,12 @@ describe RestClient::Response do
 
   describe "redirection" do
 
+    it "doesn't follow a redirection when following is disabled" do
+      stub_request(:get, 'http://some/resource').to_return(:body => 'Foo', :status => 301, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://new/resource').to_return(:body => 'Bar')
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :follow_redirects => false).body.should eq 'Foo'
+    end
+
     it "follows a redirection when the request is a get" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
