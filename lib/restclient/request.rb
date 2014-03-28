@@ -361,9 +361,10 @@ module RestClient
     end
 
     private
-      def parser
-        URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      end
+
+    def parser
+      URI.const_defined?(:Parser) ? URI::Parser.new : URI
+    end
 
   end
 end
