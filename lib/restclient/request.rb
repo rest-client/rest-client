@@ -34,9 +34,8 @@ module RestClient
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
-                :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :ssl_ca_path, :ssl_cert_store,
-                :processed_headers, :args, :ssl_version, :ssl_ciphers
+                :open_timeout, :raw_response, :processed_headers, :args,
+                :ssl_opts
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -100,6 +99,9 @@ module RestClient
       "ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
     ])
 
+    SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
+                       version ciphers}
+
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @headers = args[:headers] || {}
@@ -120,28 +122,53 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
-      @verify_ssl = args.fetch(:verify_ssl, OpenSSL::SSL::VERIFY_PEER)
-      @ssl_client_cert = args[:ssl_client_cert] || nil
-      @ssl_client_key = args[:ssl_client_key] || nil
-      @ssl_ca_file = args[:ssl_ca_file] || nil
-      @ssl_ca_path = args[:ssl_ca_path] || nil
-      @ssl_cert_store = args[:ssl_cert_store] || nil
-      @ssl_version = args[:ssl_version]
-      @tf = nil # If you are a raw request, this is your tempfile
-      @max_redirects = args[:max_redirects] || 10
-      @processed_headers = make_headers headers
-      @args = args
 
-      if args.include?(:ssl_ciphers)
-        @ssl_ciphers = args.fetch(:ssl_ciphers)
+      @ssl_opts = {}
+
+      if args.include?(:verify_ssl)
+        v_ssl = args.fetch(:verify_ssl)
+        if v_ssl
+          if v_ssl == true
+            # interpret :verify_ssl => true as VERIFY_PEER
+            @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+          else
+            # otherwise pass through any truthy values
+            @ssl_opts[:verify_ssl] = v_ssl
+          end
+        else
+          # interpret all falsy :verify_ssl values as VERIFY_NONE
+          @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_NONE
+        end
       else
+        # if :verify_ssl was not passed, default to VERIFY_PEER
+        @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+      end
+
+      SSLOptionList.each do |key|
+        source_key = ('ssl_' + key).to_sym
+        if args.has_key?(source_key)
+          @ssl_opts[key.to_sym] = args.fetch(source_key)
+        end
+      end
+
+      # If there's no CA file, CA path, or cert store provided, use default
+      if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
+        @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
+      end
+
+      unless @ssl_opts.include?(:ciphers)
         # If we're on a Ruby version that has insecure default ciphers,
         # override it with our default list.
         if WeakDefaultCiphers.include?(
              OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
-          @ssl_ciphers = DefaultCiphers
+          @ssl_opts[:ciphers] = DefaultCiphers
         end
       end
+
+      @tf = nil # If you are a raw request, this is your tempfile
+      @max_redirects = args[:max_redirects] || 10
+      @processed_headers = make_headers headers
+      @args = args
     end
 
     def execute & block
@@ -149,6 +176,16 @@ module RestClient
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
     ensure
       payload.close if payload
+    end
+
+    # SSL-related options
+    def verify_ssl
+      @ssl_opts.fetch(:verify_ssl)
+    end
+    SSLOptionList.each do |key|
+      define_method('ssl_' + key) do
+        @ssl_opts[key.to_sym]
+      end
     end
 
     # Extract the query parameters and append them to the url
@@ -268,14 +305,11 @@ module RestClient
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
-      net.ssl_version = @ssl_version if @ssl_version
-      net.ciphers = @ssl_ciphers if @ssl_ciphers
+      net.ssl_version = ssl_version if ssl_version
+      net.ciphers = ssl_ciphers if ssl_ciphers
       err_msg = nil
-      if @verify_ssl
-        if @verify_ssl == true
-          @verify_ssl = OpenSSL::SSL::VERIFY_PEER
-        end
-        net.verify_mode = @verify_ssl
+      if verify_ssl
+        net.verify_mode = verify_ssl
         net.verify_callback = lambda do |preverify_ok, ssl_context|
           if (!preverify_ok) || ssl_context.error != 0
             err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
@@ -284,20 +318,14 @@ module RestClient
           true
         end
       else
-        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
+        net.verify_mode = verify_ssl
       end
 
-      # if no CA information of any kind was specified, supply our own default
-      # cert store using system default CA locations
-      if !@ssl_ca_file && !@ssl_ca_path && !@ssl_cert_store
-        @ssl_cert_store = self.class.default_ssl_cert_store
-      end
-
-      net.cert = @ssl_client_cert if @ssl_client_cert
-      net.key = @ssl_client_key if @ssl_client_key
-      net.ca_file = @ssl_ca_file if @ssl_ca_file
-      net.ca_path = @ssl_ca_path if @ssl_ca_path
-      net.cert_store = @ssl_cert_store if @ssl_cert_store
+      net.cert = ssl_client_cert if ssl_client_cert
+      net.key = ssl_client_key if ssl_client_key
+      net.ca_file = ssl_ca_file if ssl_ca_file
+      net.ca_path = ssl_ca_path if ssl_ca_path
+      net.cert_store = ssl_cert_store if ssl_cert_store
 
       if OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE
         warn('WARNING: OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE')

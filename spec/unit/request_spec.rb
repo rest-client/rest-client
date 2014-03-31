@@ -736,6 +736,7 @@ describe RestClient::Request do
               :ssl_ca_file => "Certificate Authority File"
       )
       @net.should_receive(:ca_file=).with("Certificate Authority File")
+      @net.should_not_receive(:cert_store=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -767,6 +768,7 @@ describe RestClient::Request do
               :ssl_ca_path => "Certificate Authority Path"
       )
       @net.should_receive(:ca_path=).with("Certificate Authority Path")
+      @net.should_not_receive(:cert_store=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -797,27 +799,41 @@ describe RestClient::Request do
               :ssl_cert_store => store
       )
       @net.should_receive(:cert_store=).with(store)
+      @net.should_not_receive(:ca_path=)
+      @net.should_not_receive(:ca_file=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
 
-    it "should not set the ssl_cert_store if it is not provided" do
+    it "should by default set the ssl_cert_store if no CA info is provided" do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
               :payload => 'payload'
+      )
+      @net.should_receive(:cert_store=)
+      @net.should_not_receive(:ca_path=)
+      @net.should_not_receive(:ca_file=)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should not set the ssl_cert_store if it is set falsy" do
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload',
+              :ssl_cert_store => nil,
       )
       @net.should_not_receive(:cert_store=)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
-    end
-
-    it "should default to not having an ssl_cert_store" do
-      @request.ssl_cert_store.should be(nil)
     end
   end
 
