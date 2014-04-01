@@ -114,9 +114,7 @@ module RestClient
       end
 
       def inspect
-        result = to_s.inspect
-        @stream.seek(0)
-        result
+        to_s.inspect
       end
 
       def short_inspect
