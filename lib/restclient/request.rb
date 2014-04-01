@@ -310,7 +310,7 @@ module RestClient
       # set_default_paths() doesn't do anything on Windows, so look up
       # certificates using the win32 API.
       if RestClient::Windows.windows?
-        RestClient::Windows::RootCerts.instance.each do |cert|
+        RestClient::Windows::RootCerts.instance.to_a.uniq.each do |cert|
           cert_store.add_cert(cert)
         end
       end
