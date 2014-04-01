@@ -32,7 +32,56 @@ RSpec::Core::RakeTask.new('rcov') do |t|
   t.rcov_opts = ['--exclude', 'examples']
 end
 
-task :default => :spec
+task :default do
+  sh 'rake -T'
+end
+
+def alias_task(alias_task, original)
+  desc "Alias for rake #{original}"
+  task alias_task, Rake.application[original].arg_names => original
+end
+alias_task(:test, :spec)
+
+############################
+
+WindowsPlatforms = %w{x86-mingw32 x64-mingw32 x86-mswin32}
+
+desc "build all platform gems at once"
+task :gems => [:rm_gems, 'ruby:gem'] + \
+               WindowsPlatforms.map {|p| "windows:#{p}:gem"}
+
+task :rm_gems => ['ruby:clobber_package']
+
+def built_gem_path
+  base = '.'
+  Dir[File.join(base, "#{name}-*.gem")].sort_by{|f| File.mtime(f)}.last
+end
+
+namespace :windows do
+  spec_path = File.join(File.dirname(__FILE__), 'rest-client.gemspec')
+
+  WindowsPlatforms.each do |platform|
+    namespace platform do
+      desc "build gem for #{platform}"
+      task 'build' do
+        orig_platform = ENV['BUILD_PLATFORM']
+        begin
+          ENV['BUILD_PLATFORM'] = platform
+
+          sh("gem build -V #{spec_path + '.windows'}") do |ok, res|
+            if !ok
+              puts "not OK: #{ok.inspect} #{res.inspect}"
+            end
+          end
+
+        ensure
+          ENV['BUILD_PLATFORM'] = orig_platform
+        end
+      end
+    end
+  end
+
+end
 
 ############################
 
