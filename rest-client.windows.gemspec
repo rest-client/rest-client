@@ -8,7 +8,7 @@
 
 s = eval(File.read(File.join(File.dirname(__FILE__), 'rest-client.gemspec')))
 
-platform = ENV['BUILD_PLATFORM']
+platform = ENV['BUILD_PLATFORM'] || RUBY_PLATFORM
 
 case platform
 when /(mingw32|mswin32)/
