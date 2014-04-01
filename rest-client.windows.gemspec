@@ -5,7 +5,6 @@
 # Set $BUILD_PLATFORM when calling gem build with this gemspec to build for
 # Windows platforms like x86-mingw32.
 #
-
 s = eval(File.read(File.join(File.dirname(__FILE__), 'rest-client.gemspec')))
 
 platform = ENV['BUILD_PLATFORM'] || RUBY_PLATFORM
@@ -15,8 +14,6 @@ when /(mingw32|mswin32)/
   # ffi is needed for RestClient::Windows::RootCerts
   s.add_dependency('ffi', '~> 1.9.3')
   s.platform = platform
-else
-  raise NotImplementedError.new("Must specify $BUILD_PLATFORM")
 end
 
 s

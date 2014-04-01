@@ -1,8 +1,6 @@
-begin
-  # optionally load `rake build/install/release tasks'
-  require 'bundler/gem_tasks'
-rescue LoadError
-end
+# load `rake build/install/release tasks'
+require 'bundler/setup'
+Bundler::GemHelper.install_tasks(:name => 'rest-client')
 
 require "rspec/core/rake_task"
 
@@ -58,7 +56,7 @@ def built_gem_path
 end
 
 namespace :windows do
-  spec_path = File.join(File.dirname(__FILE__), 'rest-client.gemspec')
+  spec_path = File.join(File.dirname(__FILE__), 'rest-client.windows.gemspec')
 
   WindowsPlatforms.each do |platform|
     namespace platform do
@@ -68,7 +66,7 @@ namespace :windows do
         begin
           ENV['BUILD_PLATFORM'] = platform
 
-          sh("gem build -V #{spec_path + '.windows'}") do |ok, res|
+          sh("gem build -V #{spec_path}") do |ok, res|
             if !ok
               puts "not OK: #{ok.inspect} #{res.inspect}"
             end
