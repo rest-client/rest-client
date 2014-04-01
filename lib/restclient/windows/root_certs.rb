@@ -28,7 +28,7 @@ class RestClient::Windows::RootCerts
   end
 
   # Returns a new instance.
-  # @return [Puppet::Util::Windows::RootCerts] object constructed from current root certificates
+  # @return [RestClient::Windows::RootCerts] object constructed from current root certificates
   def self.instance
     new(self.load_certs)
   end
@@ -51,7 +51,7 @@ class RestClient::Windows::RootCerts
         begin
           certs << OpenSSL::X509::Certificate.new(cert_buf)
         rescue => detail
-          Puppet.warning("Failed to import root certificate: #{detail.inspect}")
+          warn("Failed to import root certificate: #{detail.inspect}")
         end
       end
     ensure
