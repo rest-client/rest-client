@@ -55,5 +55,14 @@ describe RestClient::Request do
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
     end
+
+    it "is successful using the default system cert store" do
+      request = RestClient::Request.new(
+        :method => :get,
+        :url => 'https://www.mozilla.org',
+        :verify_ssl => true,
+      )
+      expect {request.execute }.to_not raise_error
+    end
   end
 end
