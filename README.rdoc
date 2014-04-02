@@ -320,3 +320,6 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 "Master Shake" photo (http://www.flickr.com/photos/solgrundy/924205581/) by
 "SolGrundy"; used under terms of the Creative Commons Attribution-ShareAlike 2.0
 Generic license (http://creativecommons.org/licenses/by-sa/2.0/)
+
+Code for reading Windows root certificate store derived from work by Puppet;
+used under terms of the Apache License, Version 2.0.
