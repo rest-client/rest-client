@@ -50,7 +50,7 @@ if @verb
     end
     exit 0
   rescue RestClient::Exception => e
-    puts e.response.body if e.respond_to? :response
+    puts e.response.body if e.respond_to?(:response) && e.response
     raise
   end
 end
