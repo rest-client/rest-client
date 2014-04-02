@@ -1,6 +1,10 @@
 # load `rake build/install/release tasks'
 require 'bundler/setup'
-Bundler::GemHelper.install_tasks(:name => 'rest-client')
+require_relative './lib/restclient/version'
+
+namespace :ruby do
+  Bundler::GemHelper.install_tasks(:name => 'rest-client')
+end
 
 require "rspec/core/rake_task"
 
@@ -44,15 +48,17 @@ alias_task(:test, :spec)
 
 WindowsPlatforms = %w{x86-mingw32 x64-mingw32 x86-mswin32}
 
-desc "build all platform gems at once"
-task :gems => [:rm_gems, 'ruby:gem'] + \
-               WindowsPlatforms.map {|p| "windows:#{p}:gem"}
+namespace :all do
 
-task :rm_gems => ['ruby:clobber_package']
+  desc "Build rest-client #{RestClient::VERSION} for all platforms"
+  task :build => ['ruby:build'] + \
+    WindowsPlatforms.map {|p| "windows:#{p}:build"}
 
-def built_gem_path
-  base = '.'
-  Dir[File.join(base, "#{name}-*.gem")].sort_by{|f| File.mtime(f)}.last
+  desc "Create tag v#{RestClient::VERSION} and for all platforms build and push " \
+    "rest-client #{RestClient::VERSION} to Rubygems"
+  task :release => ['build', 'ruby:release'] + \
+    WindowsPlatforms.map {|p| "windows:#{p}:push"}
+
 end
 
 namespace :windows do
@@ -60,21 +66,36 @@ namespace :windows do
 
   WindowsPlatforms.each do |platform|
     namespace platform do
-      desc "build gem for #{platform}"
+      gem_filename = "rest-client-#{RestClient::VERSION}-#{platform}.gem"
+      base = File.dirname(__FILE__)
+      pkg_dir = File.join(base, 'pkg')
+      gem_file_path = File.join(pkg_dir, gem_filename)
+
+      desc "Build #{gem_filename} into the pkg directory"
       task 'build' do
         orig_platform = ENV['BUILD_PLATFORM']
         begin
           ENV['BUILD_PLATFORM'] = platform
 
           sh("gem build -V #{spec_path}") do |ok, res|
-            if !ok
-              puts "not OK: #{ok.inspect} #{res.inspect}"
+            if ok
+              FileUtils.mkdir_p(pkg_dir)
+              FileUtils.mv(File.join(base, gem_filename), pkg_dir)
+              Bundler.ui.confirm("rest-client #{RestClient::VERSION} " +
+                                 "built to pkg/#{gem_filename}")
+            else
+              abort "Command `gem build` failed: #{res}"
             end
           end
 
         ensure
           ENV['BUILD_PLATFORM'] = orig_platform
         end
+      end
+
+      desc "Push #{gem_filename} to Rubygems"
+      task 'push' do
+        sh("gem push #{gem_file_path}")
       end
     end
   end
