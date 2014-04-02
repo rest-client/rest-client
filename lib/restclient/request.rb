@@ -334,19 +334,10 @@ module RestClient
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
-      err_msg = nil
-      if verify_ssl
-        net.verify_mode = verify_ssl
-        net.verify_callback = lambda do |preverify_ok, ssl_context|
-          if (!preverify_ok) || ssl_context.error != 0
-            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
-            return false
-          end
-          true
-        end
-      else
-        net.verify_mode = verify_ssl
-      end
+
+      # we no longer set net.verify_callback because it's not well supported on
+      # all platforms (see comments below)
+      net.verify_mode = verify_ssl
 
       net.cert = ssl_client_cert if ssl_client_cert
       net.key = ssl_client_key if ssl_client_key
@@ -393,16 +384,31 @@ module RestClient
           process_result res, & block
         end
       end
-    rescue OpenSSL::SSL::SSLError => e
-      if err_msg
-        raise SSLCertificateNotVerified.new(err_msg)
-      else
-        raise e
-      end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
     rescue Timeout::Error, Errno::ETIMEDOUT
       raise RestClient::RequestTimeout
+
+    rescue OpenSSL::SSL::SSLError => error
+      # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
+      # pass through OpenSSL::SSL::SSLError directly.
+      #
+      # Exceptions in verify_callback are ignored [1], and jruby doesn't support
+      # it at all [2]. RestClient has to catch OpenSSL::SSL::SSLError and either
+      # re-throw it as is, or throw SSLCertificateNotVerified based on the
+      # contents of the message field of the original exception.
+      #
+      # The client has to handle OpenSSL::SSL::SSLError exceptions anyway, so
+      # we shouldn't make them handle both OpenSSL and RestClient exceptions.
+      #
+      # [1] https://github.com/ruby/ruby/blob/89e70fe8e7/ext/openssl/ossl.c#L238
+      # [2] https://github.com/jruby/jruby/issues/597
+
+      if error.message.include?("certificate verify failed")
+        raise SSLCertificateNotVerified.new(error.message)
+      else
+        raise error
+      end
     end
 
     def setup_credentials(req)
