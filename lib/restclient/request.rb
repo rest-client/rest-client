@@ -150,6 +150,15 @@ module RestClient
       Net::HTTP.const_get(method.to_s.capitalize)
     end
 
+    def net_http_do_request(http, req, body=nil, &block)
+      if body != nil && body.respond_to?(:read)
+        req.body_stream = body
+        return http.request(req, nil, &block)
+      else
+        return http.request(req, body, &block)
+      end
+    end
+
     def parse_url(url)
       url = "http://#{url}" unless url.match(/^http/)
       URI.parse(url)
@@ -227,11 +236,14 @@ module RestClient
 
       log_request
 
+
       net.start do |http|
         if @block_response
-          http.request(req, payload ? payload.to_s : nil, & @block_response)
+          net_http_do_request(http, req, payload ? payload.to_s : nil,
+                           & @block_response)
         else
-          res = http.request(req, payload ? payload.to_s : nil) { |http_response| fetch_body(http_response) }
+          res = net_http_do_request(http, req, payload ? payload.to_s : nil) \
+            { |http_response| fetch_body(http_response) }
           log_response res
           process_result res, & block
         end
@@ -361,9 +373,10 @@ module RestClient
     end
 
     private
-      def parser
-        URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      end
+
+    def parser
+      URI.const_defined?(:Parser) ? URI::Parser.new : URI
+    end
 
   end
 end
