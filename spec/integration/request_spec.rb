@@ -31,7 +31,10 @@ describe RestClient::Request do
     # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
     # pass through OpenSSL::SSL::SSLError directly. See note in
     # lib/restclient/request.rb.
-    it "is unsuccessful with an incorrect ca_file" do
+    #
+    # On OS X, this test fails since Apple has patched OpenSSL to always fall
+    # back on the system CA store.
+    it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
@@ -40,7 +43,9 @@ describe RestClient::Request do
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
     end
 
-    it "is unsuccessful with an incorrect ca_path" do
+    # On OS X, this test fails since Apple has patched OpenSSL to always fall
+    # back on the system CA store.
+    it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.com',
