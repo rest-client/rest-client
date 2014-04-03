@@ -1,7 +1,7 @@
 require 'spec_helper'
 
 describe 'RestClient::Windows::RootCerts',
-         :if => RestClient::Windows.windows? do
+         :if => RestClient::Platform.windows? do
   let(:x509_store) { RestClient::Windows::RootCerts.instance.to_a }
 
   it 'should return at least one X509 certificate' do

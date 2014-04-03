@@ -10,6 +10,7 @@ rescue LoadError => e
 end
 
 require File.dirname(__FILE__) + '/restclient/version'
+require File.dirname(__FILE__) + '/restclient/platform'
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
 require File.dirname(__FILE__) + '/restclient/abstract_response'
@@ -18,7 +19,6 @@ require File.dirname(__FILE__) + '/restclient/raw_response'
 require File.dirname(__FILE__) + '/restclient/resource'
 require File.dirname(__FILE__) + '/restclient/payload'
 require File.dirname(__FILE__) + '/restclient/windows'
-require File.dirname(__FILE__) + '/restclient/platform'
 
 # This module's static methods are the entry point for using the REST client.
 #
