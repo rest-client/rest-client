@@ -2,6 +2,7 @@ require 'tempfile'
 require 'mime/types'
 require 'cgi'
 require 'netrc'
+require 'set'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -20,22 +21,86 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
-  # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
+  # * :verify_ssl enable ssl verification, possible values are constants from
+  #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
-  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
-  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
+  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
+  #     :ssl_cert_store
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
+  # * :ssl_ciphers sets SSL ciphers for the connection. See
+  #     OpenSSL::SSL::SSLContext#ciphers=
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
-                :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
-                :ssl_version, :ssl_ca_path
+                :open_timeout, :raw_response, :processed_headers, :args,
+                :ssl_opts
 
     def self.execute(args, & block)
       new(args).execute(& block)
     end
+
+    # This is similar to the list now in ruby core, but adds HIGH and RC4-MD5
+    # for better compatibility (similar to Firefox) and moves AES-GCM cipher
+    # suites above DHE/ECDHE CBC suites (similar to Chromium).
+    # https://github.com/ruby/ruby/commit/699b209cf8cf11809620e12985ad33ae33b119ee
+    #
+    # This list will be used by default if the Ruby global OpenSSL default
+    # ciphers appear to be a weak list.
+    DefaultCiphers = %w{
+      !aNULL
+      !eNULL
+      !EXPORT
+      !SSLV2
+      !LOW
+
+      ECDHE-ECDSA-AES128-GCM-SHA256
+      ECDHE-RSA-AES128-GCM-SHA256
+      ECDHE-ECDSA-AES256-GCM-SHA384
+      ECDHE-RSA-AES256-GCM-SHA384
+      DHE-RSA-AES128-GCM-SHA256
+      DHE-DSS-AES128-GCM-SHA256
+      DHE-RSA-AES256-GCM-SHA384
+      DHE-DSS-AES256-GCM-SHA384
+      AES128-GCM-SHA256
+      AES256-GCM-SHA384
+      ECDHE-ECDSA-AES128-SHA256
+      ECDHE-RSA-AES128-SHA256
+      ECDHE-ECDSA-AES128-SHA
+      ECDHE-RSA-AES128-SHA
+      ECDHE-ECDSA-AES256-SHA384
+      ECDHE-RSA-AES256-SHA384
+      ECDHE-ECDSA-AES256-SHA
+      ECDHE-RSA-AES256-SHA
+      DHE-RSA-AES128-SHA256
+      DHE-RSA-AES256-SHA256
+      DHE-RSA-AES128-SHA
+      DHE-RSA-AES256-SHA
+      DHE-DSS-AES128-SHA256
+      DHE-DSS-AES256-SHA256
+      DHE-DSS-AES128-SHA
+      DHE-DSS-AES256-SHA
+      AES128-SHA256
+      AES256-SHA256
+      AES128-SHA
+      AES256-SHA
+      ECDHE-ECDSA-RC4-SHA
+      ECDHE-RSA-RC4-SHA
+      RC4-SHA
+
+      HIGH
+      +RC4
+      RC4-MD5
+    }.join(":")
+
+    # A set of weak default ciphers that we will override by default.
+    WeakDefaultCiphers = Set.new([
+      "ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
+    ])
+
+    SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
+                       version ciphers}
 
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
@@ -57,12 +122,49 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
-      @verify_ssl = args[:verify_ssl] || false
-      @ssl_client_cert = args[:ssl_client_cert] || nil
-      @ssl_client_key = args[:ssl_client_key] || nil
-      @ssl_ca_file = args[:ssl_ca_file] || nil
-      @ssl_ca_path = args[:ssl_ca_path] || nil
-      @ssl_version = args[:ssl_version] || 'SSLv3'
+
+      @ssl_opts = {}
+
+      if args.include?(:verify_ssl)
+        v_ssl = args.fetch(:verify_ssl)
+        if v_ssl
+          if v_ssl == true
+            # interpret :verify_ssl => true as VERIFY_PEER
+            @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+          else
+            # otherwise pass through any truthy values
+            @ssl_opts[:verify_ssl] = v_ssl
+          end
+        else
+          # interpret all falsy :verify_ssl values as VERIFY_NONE
+          @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_NONE
+        end
+      else
+        # if :verify_ssl was not passed, default to VERIFY_PEER
+        @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+      end
+
+      SSLOptionList.each do |key|
+        source_key = ('ssl_' + key).to_sym
+        if args.has_key?(source_key)
+          @ssl_opts[key.to_sym] = args.fetch(source_key)
+        end
+      end
+
+      # If there's no CA file, CA path, or cert store provided, use default
+      if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
+        @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
+      end
+
+      unless @ssl_opts.include?(:ciphers)
+        # If we're on a Ruby version that has insecure default ciphers,
+        # override it with our default list.
+        if WeakDefaultCiphers.include?(
+             OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
+          @ssl_opts[:ciphers] = DefaultCiphers
+        end
+      end
+
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -74,6 +176,16 @@ module RestClient
       transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
     ensure
       payload.close if payload
+    end
+
+    # SSL-related options
+    def verify_ssl
+      @ssl_opts.fetch(:verify_ssl)
+    end
+    SSLOptionList.each do |key|
+      define_method('ssl_' + key) do
+        @ssl_opts[key.to_sym]
+      end
     end
 
     # Extract the query parameters and append them to the url
@@ -191,29 +303,53 @@ module RestClient
       end
     end
 
+    # Return a certificate store that can be used to validate certificates with
+    # the system certificate authorities. This will probably not do anything on
+    # OS X, which monkey patches OpenSSL in terrible ways to insert its own
+    # validation. On most *nix platforms, this will add the system certifcates
+    # using OpenSSL::X509::Store#set_default_paths. On Windows, this will use
+    # RestClient::Windows::RootCerts to look up the CAs trusted by the system.
+    #
+    # @return [OpenSSL::X509::Store]
+    #
+    def self.default_ssl_cert_store
+      cert_store = OpenSSL::X509::Store.new
+      cert_store.set_default_paths
+
+      # set_default_paths() doesn't do anything on Windows, so look up
+      # certificates using the win32 API.
+      if RestClient::Platform.windows?
+        RestClient::Windows::RootCerts.instance.to_a.uniq.each do |cert|
+          cert_store.add_cert(cert)
+        end
+      end
+
+      cert_store
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
-      net.ssl_version = @ssl_version
-      err_msg = nil
-      if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
-        net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      elsif @verify_ssl.is_a? Integer
-        net.verify_mode = @verify_ssl
-        net.verify_callback = lambda do |preverify_ok, ssl_context|
-          if (!preverify_ok) || ssl_context.error != 0
-            err_msg = "SSL Verification failed -- Preverify: #{preverify_ok}, Error: #{ssl_context.error_string} (#{ssl_context.error})"
-            return false
-          end
-          true
-        end
+      net.ssl_version = ssl_version if ssl_version
+      net.ciphers = ssl_ciphers if ssl_ciphers
+
+      # we no longer set net.verify_callback because it's not well supported on
+      # all platforms (see comments below)
+      net.verify_mode = verify_ssl
+
+      net.cert = ssl_client_cert if ssl_client_cert
+      net.key = ssl_client_key if ssl_client_key
+      net.ca_file = ssl_ca_file if ssl_ca_file
+      net.ca_path = ssl_ca_path if ssl_ca_path
+      net.cert_store = ssl_cert_store if ssl_cert_store
+
+      if OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE
+        warn('WARNING: OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE')
+        warn('This dangerous monkey patch leaves you open to MITM attacks!')
+        warn('Try passing :verify_ssl => false instead.')
       end
-      net.cert = @ssl_client_cert if @ssl_client_cert
-      net.key = @ssl_client_key if @ssl_client_key
-      net.ca_file = @ssl_ca_file if @ssl_ca_file
-      net.ca_path = @ssl_ca_path if @ssl_ca_path
 
       if defined? @timeout
         if @timeout == -1
@@ -248,16 +384,31 @@ module RestClient
           process_result res, & block
         end
       end
-    rescue OpenSSL::SSL::SSLError => e
-      if err_msg
-        raise SSLCertificateNotVerified.new(err_msg)
-      else
-        raise e
-      end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
     rescue Timeout::Error, Errno::ETIMEDOUT
       raise RestClient::RequestTimeout
+
+    rescue OpenSSL::SSL::SSLError => error
+      # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
+      # pass through OpenSSL::SSL::SSLError directly.
+      #
+      # Exceptions in verify_callback are ignored [1], and jruby doesn't support
+      # it at all [2]. RestClient has to catch OpenSSL::SSL::SSLError and either
+      # re-throw it as is, or throw SSLCertificateNotVerified based on the
+      # contents of the message field of the original exception.
+      #
+      # The client has to handle OpenSSL::SSL::SSLError exceptions anyway, so
+      # we shouldn't make them handle both OpenSSL and RestClient exceptions.
+      #
+      # [1] https://github.com/ruby/ruby/blob/89e70fe8e7/ext/openssl/ossl.c#L238
+      # [2] https://github.com/jruby/jruby/issues/597
+
+      if error.message.include?("certificate verify failed")
+        raise SSLCertificateNotVerified.new(error.message)
+      else
+        raise error
+      end
     end
 
     def setup_credentials(req)
