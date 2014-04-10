@@ -23,5 +23,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('pry-doc')
   s.add_dependency('netrc', '~> 0.7.7')
   s.add_dependency('rdoc', '>= 2.4.2')
+
+  s.required_ruby_version = '>= 1.9.2'
 end
 

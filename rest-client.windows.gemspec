@@ -17,5 +17,3 @@ when /(mingw32|mswin32)/
 end
 
 s
-
-# vim: ft=ruby :
