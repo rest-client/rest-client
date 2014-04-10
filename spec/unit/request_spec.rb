@@ -857,6 +857,13 @@ describe RestClient::Request do
               :ssl_verify_callback => callback,
       )
       @net.should_receive(:verify_callback=).with(callback)
+
+      # we'll read cert_store on jruby
+      # https://github.com/jruby/jruby/issues/597
+      if RestClient::Platform.jruby?
+        allow(@net).to receive(:cert_store)
+      end
+
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)

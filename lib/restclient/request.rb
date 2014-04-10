@@ -330,11 +330,11 @@ module RestClient
     def print_verify_callback_warnings
       warned = false
       if RestClient::Platform.mac?
-        warn('warning: ssl_verify_callback probably does not work on OS X')
+        warn('warning: ssl_verify_callback return code is ignored on OS X')
         warned = true
       end
       if RestClient::Platform.jruby?
-        warn('warning: SSL verify_callback not implemented in jruby')
+        warn('warning: SSL verify_callback may not work correctly in jruby')
         warn('see https://github.com/jruby/jruby/issues/597')
         warned = true
       end
@@ -349,18 +349,6 @@ module RestClient
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
 
-      # We no longer rely on net.verify_callback for the main SSL verification
-      # because it's not well supported on all platforms (see comments below).
-      # But do allow users to set one if they want.
-      if ssl_verify_callback
-        net.verify_callback = ssl_verify_callback
-
-        if ssl_verify_callback_warnings != false
-          if print_verify_callback_warnings
-            warn('pass :ssl_verify_callback_warnings => false to silence this')
-          end
-        end
-      end
       net.verify_mode = verify_ssl
 
       net.cert = ssl_client_cert if ssl_client_cert
@@ -368,6 +356,26 @@ module RestClient
       net.ca_file = ssl_ca_file if ssl_ca_file
       net.ca_path = ssl_ca_path if ssl_ca_path
       net.cert_store = ssl_cert_store if ssl_cert_store
+
+      # We no longer rely on net.verify_callback for the main SSL verification
+      # because it's not well supported on all platforms (see comments below).
+      # But do allow users to set one if they want.
+      if ssl_verify_callback
+        net.verify_callback = ssl_verify_callback
+
+        # Hilariously, jruby only calls the callback when cert_store is set to
+        # something, so make sure to set one.
+        # https://github.com/jruby/jruby/issues/597
+        if RestClient::Platform.jruby?
+          net.cert_store ||= OpenSSL::X509::Store.new
+        end
+
+        if ssl_verify_callback_warnings != false
+          if print_verify_callback_warnings
+            warn('pass :ssl_verify_callback_warnings => false to silence this')
+          end
+        end
+      end
 
       if OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE
         warn('WARNING: OpenSSL::SSL::VERIFY_PEER == OpenSSL::SSL::VERIFY_NONE')

@@ -37,7 +37,7 @@ describe RestClient::Request do
     it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
@@ -48,7 +48,7 @@ describe RestClient::Request do
     it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_verisign")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
@@ -82,7 +82,7 @@ describe RestClient::Request do
        :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => true,
         :ssl_verify_callback => lambda { |preverify_ok, store_ctx| false },
       )
@@ -93,7 +93,7 @@ describe RestClient::Request do
        :unless => RestClient::Platform.mac? do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => true,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt"),
         :ssl_verify_callback => lambda { |preverify_ok, store_ctx| true },
