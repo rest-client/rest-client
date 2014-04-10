@@ -834,6 +834,43 @@ describe RestClient::Request do
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', 'payload')
     end
+
+    it "should not set the ssl_verify_callback by default" do
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload',
+      )
+      @net.should_not_receive(:verify_callback=)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    it "should set the ssl_verify_callback if passed" do
+      callback = lambda {}
+      @request = RestClient::Request.new(
+              :method => :put,
+              :url => 'https://some/resource',
+              :payload => 'payload',
+              :ssl_verify_callback => callback,
+      )
+      @net.should_receive(:verify_callback=).with(callback)
+
+      # we'll read cert_store on jruby
+      # https://github.com/jruby/jruby/issues/597
+      if RestClient::Platform.jruby?
+        allow(@net).to receive(:cert_store)
+      end
+
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+      @request.transmit(@uri, 'req', 'payload')
+    end
+
+    # </ssl>
   end
 
   it "should still return a response object for 204 No Content responses" do
