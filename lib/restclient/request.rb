@@ -26,7 +26,7 @@ module RestClient
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
-  #     :ssl_cert_store
+  #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
@@ -100,7 +100,7 @@ module RestClient
     ])
 
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
-                       version ciphers}
+                       version ciphers verify_callback verify_callback_warnings}
 
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
@@ -327,6 +327,20 @@ module RestClient
       cert_store
     end
 
+    def print_verify_callback_warnings
+      warned = false
+      if RestClient::Platform.mac?
+        warn('warning: ssl_verify_callback probably does not work on OS X')
+        warned = true
+      end
+      if RestClient::Platform.jruby?
+        warn('warning: SSL verify_callback not implemented in jruby')
+        warn('see https://github.com/jruby/jruby/issues/597')
+        warned = true
+      end
+      warned
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
@@ -335,8 +349,18 @@ module RestClient
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
 
-      # we no longer set net.verify_callback because it's not well supported on
-      # all platforms (see comments below)
+      # We no longer rely on net.verify_callback for the main SSL verification
+      # because it's not well supported on all platforms (see comments below).
+      # But do allow users to set one if they want.
+      if ssl_verify_callback
+        net.verify_callback = ssl_verify_callback
+
+        if ssl_verify_callback_warnings != false
+          if print_verify_callback_warnings
+            warn('pass :ssl_verify_callback_warnings => false to silence this')
+          end
+        end
+      end
       net.verify_mode = verify_ssl
 
       net.cert = ssl_client_cert if ssl_client_cert
