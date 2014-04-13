@@ -55,7 +55,7 @@ describe RestClient::Response do
   describe "exceptions processing" do
     it "should return itself for normal codes" do
       (200..206).each do |code|
-        net_http_res = double('net http response', :code => '200')
+        net_http_res = double('net http response', :code => '200', :to_hash => {})
         response = RestClient::Response.create('abc', net_http_res, {})
         response.return! @request
       end
@@ -64,7 +64,7 @@ describe RestClient::Response do
     it "should throw an exception for other codes" do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
         unless (200..207).include? code
-          net_http_res = double('net http response', :code => code.to_i)
+          net_http_res = double('net http response', :code => code.to_i, :to_hash => {})
           response = RestClient::Response.create('abc', net_http_res, {})
           lambda { response.return!}.should raise_error
         end
@@ -94,25 +94,25 @@ describe RestClient::Response do
     end
 
     it "doesn't follow a 301 when the request is a post" do
-      net_http_res = double('net http response', :code => 301)
+      net_http_res = double('net http response', :code => 301, :to_hash => {})
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
-      net_http_res = double('net http response', :code => 302)
+      net_http_res = double('net http response', :code => 302, :to_hash => {})
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
-      net_http_res = double('net http response', :code => 307)
+      net_http_res = double('net http response', :code => 307, :to_hash => {})
       response = RestClient::Response.create('abc', net_http_res, {:method => :post})
       lambda { response.return!(@request)}.should raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do
-      net_http_res = double('net http response', :code => 301)
+      net_http_res = double('net http response', :code => 301, :to_hash => {})
       response = RestClient::Response.create('abc', net_http_res, {:method => :put})
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
