@@ -166,7 +166,7 @@ module RestClient
       def build_stream(params)
         b = "--#{boundary}"
 
-        @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
+        @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}", RestClient.tmpdir)
         @stream.binmode
         @stream.write(b + EOL)
 
