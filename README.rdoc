@@ -68,7 +68,13 @@ dependencies for you.
       }
     })
 
-== Multipart
+== Usage: Specify HTTP headers
+
+You can specify HTTP headers entries after the params hash:
+
+  RestClient.post "http://example.com/resource", { :id => 50 }, { :Authorization => "token 108A8AF141A140D894ABEE78EB29E926" }
+
+== Usage: Multipart
 
 Yeah, that's right!  This does multipart sends for you!
 
