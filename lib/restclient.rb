@@ -1,13 +1,7 @@
 require 'uri'
 require 'zlib'
 require 'stringio'
-
-begin
-  require 'net/https'
-rescue LoadError => e
-  raise e unless RUBY_PLATFORM =~ /linux/
-  raise LoadError, "no such file to load -- net/https. Try running apt-get install libopenssl-ruby"
-end
+require 'net/https'
 
 require File.dirname(__FILE__) + '/restclient/version'
 require File.dirname(__FILE__) + '/restclient/platform'
