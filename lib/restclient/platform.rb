@@ -23,8 +23,7 @@ module RestClient
     # @return [Boolean]
     #
     def self.jruby?
-      # defined on mri >= 1.9
-      RUBY_ENGINE == 'jruby'
+      RUBY_PLATFORM == 'java'
     end
   end
 end
