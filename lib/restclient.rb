@@ -10,6 +10,7 @@ rescue LoadError => e
 end
 
 require File.dirname(__FILE__) + '/restclient/version'
+require File.dirname(__FILE__) + '/restclient/platform'
 require File.dirname(__FILE__) + '/restclient/exceptions'
 require File.dirname(__FILE__) + '/restclient/request'
 require File.dirname(__FILE__) + '/restclient/abstract_response'
