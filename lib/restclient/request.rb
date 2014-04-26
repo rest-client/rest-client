@@ -22,12 +22,14 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file
+  # * :ssl_verify_callback, :ssl_verify_callback_warnings
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :verify_ssl, :ssl_client_cert,
-                :ssl_client_key, :ssl_ca_file, :processed_headers, :args
+                :ssl_client_key, :ssl_ca_file, :processed_headers, :args,
+                :ssl_verify_callback, :ssl_verify_callback_warnings
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -53,6 +55,8 @@ module RestClient
       @ssl_client_cert = args[:ssl_client_cert] || nil
       @ssl_client_key = args[:ssl_client_key] || nil
       @ssl_ca_file = args[:ssl_ca_file] || nil
+      @ssl_verify_callback = args[:ssl_verify_callback] || nil
+      @ssl_verify_callback_warnings = args.fetch(:ssl_verify_callback, true)
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -136,6 +140,20 @@ module RestClient
       end
     end
 
+    def print_verify_callback_warnings
+      warned = false
+      if RestClient::Platform.mac?
+        warn('warning: ssl_verify_callback return code is ignored on OS X')
+        warned = true
+      end
+      if RestClient::Platform.jruby?
+        warn('warning: SSL verify_callback may not work correctly in jruby')
+        warn('see https://github.com/jruby/jruby/issues/597')
+        warned = true
+      end
+      warned
+    end
+
     def transmit uri, req, payload, & block
       setup_credentials req
 
@@ -159,6 +177,25 @@ module RestClient
       # disable the timeout if the timeout value is -1
       net.read_timeout = nil if @timeout == -1
       net.open_timeout = nil if @open_timeout == -1
+
+      # verify_callback isn't well supported on all platforms, but do allow
+      # users to set one if they want.
+      if ssl_verify_callback
+        net.verify_callback = ssl_verify_callback
+
+        # Hilariously, jruby only calls the callback when cert_store is set to
+        # something, so make sure to set one.
+        # https://github.com/jruby/jruby/issues/597
+        if RestClient::Platform.jruby?
+          net.cert_store ||= OpenSSL::X509::Store.new
+        end
+
+        if ssl_verify_callback_warnings != false
+          if print_verify_callback_warnings
+            warn('pass :ssl_verify_callback_warnings => false to silence this')
+          end
+        end
+      end
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
