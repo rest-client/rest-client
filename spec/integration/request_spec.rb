@@ -42,6 +42,7 @@ describe RestClient::Request do
           ran_callback = true
           preverify_ok
         },
+        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "digicert.crt")
       )
       expect {request.execute }.to_not raise_error
       ran_callback.should eq(true)
@@ -54,6 +55,7 @@ describe RestClient::Request do
         :url => 'https://www.mozilla.org',
         :verify_ssl => true,
         :ssl_verify_callback => lambda { |preverify_ok, store_ctx| false },
+        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "digicert.crt")
       )
       expect { request.execute }.to raise_error(RestClient::SSLCertificateNotVerified)
     end
@@ -65,7 +67,7 @@ describe RestClient::Request do
         :url => 'https://www.mozilla.org',
         :verify_ssl => true,
         :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "verisign.crt"),
-        :ssl_verify_callback => lambda { |preverify_ok, store_ctx| true },
+        :ssl_verify_callback => lambda { |preverify_ok, store_ctx| true }
       )
       expect { request.execute }.to_not raise_error
     end
