@@ -1,3 +1,12 @@
+# 1.6.8
+
+- The 1.6.x series will be the last to support Ruby 1.8.7
+- Pin mime-types to < 2.0 to maintain Ruby 1.8.7 support
+- Add Gemfile, AUTHORS, add license to gemspec
+- Point homepage at https://github.com/rest-client/rest-client
+- Clean up and fix various tests and ruby warnings
+- Backport `ssl_verify_callback` functionality from 1.7.0
+
 # 1.6.7
 
 - rebuild with 1.8.7 to avoid https://github.com/rubygems/rubygems/pull/57

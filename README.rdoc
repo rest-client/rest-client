@@ -303,7 +303,7 @@ Have a look at rest-client-components: http://github.com/crohr/rest-client-compo
 
 == Credits
 
-REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert
+REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert, Andy Brody
 
 Creator:: Adam Wiggins
 
