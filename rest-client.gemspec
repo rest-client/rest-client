@@ -13,7 +13,7 @@ Gem::Specification.new do |s|
   s.extra_rdoc_files = ['README.rdoc', 'history.md']
   s.files = `git ls-files -z`.split("\0")
   s.test_files = `git ls-files -z spec/`.split("\0")
-  s.homepage = 'http://github.com/rest-client/rest-client'
+  s.homepage = 'https://github.com/rest-client/rest-client'
   s.summary = 'Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.'
 
   s.add_dependency('mime-types', '~> 2.0')
