@@ -63,7 +63,7 @@ describe RestClient::Request do
       expect {request.execute }.to_not raise_error
     end
 
-    it "executes the verify_callack" do
+    it "executes the verify_callback" do
       ran_callback = false
       request = RestClient::Request.new(
         :method => :get,
