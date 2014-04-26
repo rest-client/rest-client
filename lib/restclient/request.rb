@@ -141,10 +141,14 @@ module RestClient
 
       net = net_http_class.new(uri.host, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
-      if (@verify_ssl == false) || (@verify_ssl == OpenSSL::SSL::VERIFY_NONE)
+      if @verify_ssl
+        if @verify_ssl.is_a? Integer
+          net.verify_mode = @verify_ssl
+        else
+          net.verify_mode = OpenSSL::SSL::VERIFY_PEER
+        end
+      else
         net.verify_mode = OpenSSL::SSL::VERIFY_NONE
-      elsif @verify_ssl.is_a? Integer
-        net.verify_mode = @verify_ssl
       end
       net.cert = @ssl_client_cert if @ssl_client_cert
       net.key = @ssl_client_key if @ssl_client_key
