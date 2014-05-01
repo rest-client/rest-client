@@ -12,7 +12,7 @@ platform = ENV['BUILD_PLATFORM'] || RUBY_PLATFORM
 case platform
 when /(mingw32|mswin32)/
   # ffi is needed for RestClient::Windows::RootCerts
-  s.add_dependency('ffi', '~> 1.9.3')
+  s.add_dependency('ffi', '~> 1.9')
   s.platform = platform
 end
 
