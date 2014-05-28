@@ -1,3 +1,35 @@
+# 1.7.0
+
+- This release drops support for Ruby 1.8.7 and breaks compatibility in a few
+  other relatively minor ways
+- Upgrade to mime-types ~> 2.0
+- Don't CGI.unescape cookie values sent to the server (issue #89)
+- Add support for reading credentials from netrc
+- Lots of SSL changes and enhancements: (#268)
+  - Enable peer verification by default (setting `VERIFY_PEER` with OpenSSL)
+  - By default, use the system default certificate store for SSL verification,
+    even on Windows (this uses a separate Windows build that pulls in ffi)
+  - Add support for SSL `ca_path`
+  - Add support for SSL `cert_store`
+  - Add support for SSL `verify_callback` (with some caveats for jruby, OS X, #277)
+  - Add support for SSL ciphers, and choose secure ones by default
+- Run tests under travis
+- Several other bugfixes and test improvements
+  - Convert Errno::ETIMEDOUT to RestClient::RequestTimeout
+  - Handle more HTTP response codes from recent standards
+  - Save raw responses to binary mode tempfile (#110)
+  - Disable timeouts with :timeout => nil rather than :timeout => -1
+  - Drop all Net::HTTP monkey patches
+
+# 1.6.8
+
+- The 1.6.x series will be the last to support Ruby 1.8.7
+- Pin mime-types to < 2.0 to maintain Ruby 1.8.7 support
+- Add Gemfile, AUTHORS, add license to gemspec
+- Point homepage at https://github.com/rest-client/rest-client
+- Clean up and fix various tests and ruby warnings
+- Backport `ssl_verify_callback` functionality from 1.7.0
+
 # 1.6.7
 
 - rebuild with 1.8.7 to avoid https://github.com/rubygems/rubygems/pull/57

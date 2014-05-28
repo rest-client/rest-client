@@ -40,13 +40,16 @@ module RestClient
               415 => 'Unsupported Media Type',
               416 => 'Requested Range Not Satisfiable',
               417 => 'Expectation Failed',
-              418 => 'I\'m A Teapot',
+              418 => 'I\'m A Teapot', #RFC2324
               421 => 'Too Many Connections From This IP',
               422 => 'Unprocessable Entity', #WebDAV
               423 => 'Locked', #WebDAV
               424 => 'Failed Dependency', #WebDAV
               425 => 'Unordered Collection', #WebDAV
               426 => 'Upgrade Required',
+              428 => 'Precondition Required', #RFC6585
+              429 => 'Too Many Requests', #RFC6585
+              431 => 'Request Header Fields Too Large', #RFC6585
               449 => 'Retry With', #Microsoft
               450 => 'Blocked By Windows Parental Controls', #Microsoft
 
@@ -59,7 +62,9 @@ module RestClient
               506 => 'Variant Also Negotiates',
               507 => 'Insufficient Storage', #WebDAV
               509 => 'Bandwidth Limit Exceeded', #Apache
-              510 => 'Not Extended'}
+              510 => 'Not Extended',
+              511 => 'Network Authentication Required', # RFC6585
+  }
 
   # Compatibility : make the Response act like a Net::HTTPResponse when needed
   module ResponseForException

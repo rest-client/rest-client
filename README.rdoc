@@ -6,7 +6,7 @@ Build status: {<img src="https://travis-ci.org/rest-client/rest-client.png" />}[
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
-* Main page: http://github.com/rest-client/rest-client
+* Main page: https://github.com/rest-client/rest-client
 * Mailing list: rest.client@librelist.com (send a mail to subscribe).
 
 == Requirements
@@ -303,7 +303,7 @@ Have a look at rest-client-components: http://github.com/crohr/rest-client-compo
 
 == Credits
 
-REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert
+REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert, Andy Brody
 
 Creator:: Adam Wiggins
 
@@ -320,3 +320,6 @@ Released under the MIT License: http://www.opensource.org/licenses/mit-license.p
 "Master Shake" photo (http://www.flickr.com/photos/solgrundy/924205581/) by
 "SolGrundy"; used under terms of the Creative Commons Attribution-ShareAlike 2.0
 Generic license (http://creativecommons.org/licenses/by-sa/2.0/)
+
+Code for reading Windows root certificate store derived from work by Puppet;
+used under terms of the Apache License, Version 2.0.
