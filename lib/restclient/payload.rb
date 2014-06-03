@@ -72,6 +72,10 @@ module RestClient
           calculated_key = parent_key ? "#{parent_key}[#{handle_key(key)}]" : handle_key(key)
           if value.is_a? Hash
             result += flatten_params(value, calculated_key)
+          elsif value.is_a? RestMultiPartRepeatedField
+            value.each do |v|
+              result << [calculated_key, v]
+            end
           elsif value.is_a? Array
             result += flatten_params_array(value, calculated_key)
           else

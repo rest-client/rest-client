@@ -1,0 +1,2 @@
+class RestMultiPartRepeatedField < Array
+end
