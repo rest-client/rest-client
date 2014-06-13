@@ -193,6 +193,13 @@ module RestClient
       self.message = message
     end
   end
+
+  class ConnectTimeout < RequestTimeout
+    def initialize(message='Timed out connecting to server')
+      super nil, nil
+      self.message = message
+    end
+  end
 end
 
 class RestClient::Request

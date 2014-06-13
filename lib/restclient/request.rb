@@ -364,6 +364,8 @@ module RestClient
     end
 
     def transmit uri, req, payload, & block
+      established_connection = false
+
       setup_credentials req
 
       net = net_http_class.new(uri.hostname, uri.port)
@@ -428,6 +430,8 @@ module RestClient
 
 
       net.start do |http|
+        established_connection = true
+
         if @block_response
           net_http_do_request(http, req, payload ? payload.to_s : nil,
                               &@block_response)
@@ -441,8 +445,11 @@ module RestClient
     rescue EOFError
       raise RestClient::ServerBrokeConnection
     rescue Timeout::Error, Errno::ETIMEDOUT
-      raise RestClient::RequestTimeout
-
+      if established_connection
+        raise RestClient::RequestTimeout
+      else
+        raise RestClient::ConnectTimeout
+      end
     rescue OpenSSL::SSL::SSLError => error
       # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
       # pass through OpenSSL::SSL::SSLError directly.
