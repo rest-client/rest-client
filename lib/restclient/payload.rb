@@ -66,14 +66,14 @@ module RestClient
 
       # Flatten parameters by converting hashes of hashes to flat hashes
       # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
-      def flatten_params(params, parent_key = nil)
+      def self.flatten_params(params, parent_key = nil)
         result = []
         params.each do |key, value|
-          calculated_key = parent_key ? "#{parent_key}[#{handle_key(key)}]" : handle_key(key)
+          calculated_key = parent_key ? "#{parent_key}[#{self.handle_key(key)}]" : self.handle_key(key)
           if value.is_a? Hash
-            result += flatten_params(value, calculated_key)
+            result += self.flatten_params(value, calculated_key)
           elsif value.is_a? Array
-            result += flatten_params_array(value, calculated_key)
+            result += self.flatten_params_array(value, calculated_key)
           else
             result << [calculated_key, value]
           end
@@ -81,13 +81,13 @@ module RestClient
         result
       end
 
-      def flatten_params_array value, calculated_key
+      def self.flatten_params_array value, calculated_key
         result = []
         value.each do |elem|
           if elem.is_a? Hash
-            result += flatten_params(elem, calculated_key)
+            result += self.flatten_params(elem, calculated_key)
           elsif elem.is_a? Array
-            result += flatten_params_array(elem, calculated_key)
+            result += self.flatten_params_array(elem, calculated_key)
           else
             result << ["#{calculated_key}[]", elem]
           end
@@ -139,14 +139,14 @@ module RestClient
 
     class UrlEncoded < Base
       def build_stream(params = nil)
-        @stream = StringIO.new(flatten_params(params).collect do |entry|
-          "#{entry[0]}=#{handle_key(entry[1])}"
+        @stream = StringIO.new(self.class.flatten_params(params).collect do |entry|
+          "#{entry[0]}=#{UrlEncoded.handle_key(entry[1])}"
         end.join("&"))
         @stream.seek(0)
       end
 
       # for UrlEncoded escape the keys
-      def handle_key key
+      def self.handle_key key
         parser.escape(key.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
       end
 
@@ -155,7 +155,7 @@ module RestClient
       end
 
       private
-        def parser
+        def self.parser
           URI.const_defined?(:Parser) ? URI::Parser.new : URI
         end
     end
@@ -171,7 +171,7 @@ module RestClient
         @stream.write(b + EOL)
 
         if params.is_a? Hash
-          x = flatten_params(params)
+          x = self.class.flatten_params(params)
         else
           x = params
         end
@@ -224,7 +224,7 @@ module RestClient
       end
 
       # for Multipart do not escape the keys
-      def handle_key key
+      def self.handle_key key
         key
       end
 
