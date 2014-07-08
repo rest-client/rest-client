@@ -26,10 +26,10 @@ end
 
 config = YAML.load(File.read(ENV['HOME'] + "/.restclient")) rescue {}
 
-@url, @username, @password = if c = config[@url]
-  [c['url'], c['username'], c['password']]
+if (c = config[@url])
+  @url, @username, @password = [c['url'], c['username'], c['password']]
 else
-  [@url, * ARGV]
+  @url, @username, @password = [@url, * ARGV]
 end
 
 usage("invalid url '#{@url}") unless @url =~ /^https?/
@@ -83,7 +83,8 @@ if File.exists? ".irbrc"
   ENV['IRBRC'] = ".irbrc"
 end
 
-if File.exists?(File.expand_path(rcfile = "~/.restclientrc"))
+rcfile = File.expand_path("~/.restclientrc")
+if File.exists?(rcfile)
   load(rcfile)
 end
 
