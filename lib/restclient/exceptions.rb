@@ -86,7 +86,7 @@ module RestClient
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
     attr_accessor :response
-    attr_writer   :message
+    attr_writer :message
 
     def initialize response = nil, initial_response_code = nil
       @response = response

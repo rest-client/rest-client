@@ -81,7 +81,7 @@ namespace :windows do
             if ok
               FileUtils.mkdir_p(pkg_dir)
               FileUtils.mv(File.join(base, gem_filename), pkg_dir)
-              Bundler.ui.confirm("rest-client #{RestClient::VERSION} " +
+              Bundler.ui.confirm("rest-client #{RestClient::VERSION} " \
                                  "built to pkg/#{gem_filename}")
             else
               abort "Command `gem build` failed: #{res}"
@@ -114,4 +114,3 @@ Rake::RDocTask.new do |t|
   t.rdoc_files.include('README.rdoc')
   t.rdoc_files.include('lib/*.rb')
 end
-

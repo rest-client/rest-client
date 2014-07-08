@@ -35,9 +35,9 @@ describe RestClient::Response do
       response = RestClient::Response.create('abc', net_http_res, {})
       response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]
       response.cookies.should eq({
-              "main_page" => "main_page_no_rewrite",
-              "remember_me" => "",
-              "user" => "somebody"
+        "main_page" => "main_page_no_rewrite",
+        "remember_me" => "",
+        "user" => "somebody"
       })
     end
 
@@ -45,9 +45,9 @@ describe RestClient::Response do
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT, remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT, user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, {})
       response.cookies.should eq({
-              "main_page" => "main_page_no_rewrite",
-              "remember_me" => "",
-              "user" => "somebody"
+        "main_page" => "main_page_no_rewrite",
+        "remember_me" => "",
+        "user" => "somebody"
       })
     end
   end

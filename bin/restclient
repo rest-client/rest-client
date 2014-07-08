@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-$:.unshift File.dirname(__FILE__) + "/../lib"
+$LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 
 require 'rubygems'
 require 'restclient'
@@ -58,7 +58,7 @@ end
 POSSIBLE_VERBS.each do |m|
   eval <<-end_eval
 def  #{m}(path, *args, &b)
-	r[path].#{m}(*args, &b)
+  r[path].#{m}(*args, &b)
 end
   end_eval
 end

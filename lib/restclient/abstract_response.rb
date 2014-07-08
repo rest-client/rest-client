@@ -82,7 +82,7 @@ module RestClient
       Request.execute args, &block
     end
 
-    def AbstractResponse.beautify_headers(headers)
+    def self.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
         out[key.gsub(/-/, '_').downcase.to_sym] = %w{ set-cookie }.include?(key.downcase) ? value : value.first
         out

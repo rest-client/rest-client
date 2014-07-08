@@ -408,7 +408,7 @@ module RestClient
       net.start do |http|
         if @block_response
           net_http_do_request(http, req, payload ? payload.to_s : nil,
-                           & @block_response)
+                              &@block_response)
         else
           res = net_http_do_request(http, req, payload ? payload.to_s : nil) \
             { |http_response| fetch_body(http_response) }
@@ -511,20 +511,25 @@ module RestClient
     end
 
     def log_request
-      if RestClient.log
-        out = []
-        out << "RestClient.#{method} #{url.inspect}"
-        out << payload.short_inspect if payload
-        out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
-        RestClient.log << out.join(', ') + "\n"
-      end
+      return unless RestClient.log
+
+      out = []
+      out << "RestClient.#{method} #{url.inspect}"
+      out << payload.short_inspect if payload
+      out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
+      RestClient.log << out.join(', ') + "\n"
     end
 
     def log_response res
-      if RestClient.log
-        size = @raw_response ? File.size(@tf.path) : (res.body.nil? ? 0 : res.body.size)
-        RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
-      end
+      return unless RestClient.log
+
+      size = if @raw_response
+               File.size(@tf.path)
+             else
+               res.body.nil? ? 0 : res.body.size
+             end
+
+      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
     # Return a hash of headers whose keys are capitalized strings

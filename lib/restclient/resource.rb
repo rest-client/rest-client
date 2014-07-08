@@ -149,10 +149,9 @@ module RestClient
     #
     def [](suburl, &new_block)
       case
-        when block_given? then self.class.new(concat_urls(url, suburl), options, &new_block)
-        when block        then self.class.new(concat_urls(url, suburl), options, &block)
-      else
-        self.class.new(concat_urls(url, suburl), options)
+      when block_given? then self.class.new(concat_urls(url, suburl), options, &new_block)
+      when block        then self.class.new(concat_urls(url, suburl), options, &block)
+      else                   self.class.new(concat_urls(url, suburl), options)
       end
     end
 

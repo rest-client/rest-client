@@ -80,14 +80,14 @@ describe RestClient::Resource do
   end
 
   it "passes a given block to subresources" do
-    block = Proc.new{|r| r}
+    block = proc {|r| r}
     parent = RestClient::Resource.new('http://example.com', &block)
     parent['posts'].block.should eq block
   end
 
   it "the block should be overrideable" do
-    block1 = Proc.new {|r| r}
-    block2 = Proc.new {|r| }
+    block1 = proc {|r| r}
+    block2 = proc {|r| }
     parent = RestClient::Resource.new('http://example.com', &block1)
     # parent['posts', &block2].block.should eq block2 # ruby 1.9 syntax
     parent.send(:[], 'posts', &block2).block.should eq block2
@@ -95,7 +95,7 @@ describe RestClient::Resource do
   end
 
   it "the block should be overrideable in ruby 1.9 syntax" do
-    block1 = Proc.new {|r| r}
+    block1 = proc {|r| r}
     block2 = ->(r) {}
 
     parent = RestClient::Resource.new('http://example.com', &block1)
