@@ -79,12 +79,12 @@ end
 require 'irb'
 require 'irb/completion'
 
-if File.exists? ".irbrc"
+if File.exist? ".irbrc"
   ENV['IRBRC'] = ".irbrc"
 end
 
 rcfile = File.expand_path("~/.restclientrc")
-if File.exists?(rcfile)
+if File.exist?(rcfile)
   load(rcfile)
 end
 
