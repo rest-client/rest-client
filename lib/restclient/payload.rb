@@ -147,18 +147,15 @@ module RestClient
 
       # for UrlEncoded escape the keys
       def handle_key key
-        parser.escape(key.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+        Parser.escape(key.to_s, Escape)
       end
 
       def headers
         super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
 
-      private
-
-      def parser
-        URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      end
+      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
+      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Multipart < Base
