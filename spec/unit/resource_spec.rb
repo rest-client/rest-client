@@ -96,14 +96,7 @@ describe RestClient::Resource do
   it "the block should be overrideable in ruby 1.9 syntax" do
     block = Proc.new{|r| r}
     parent = RestClient::Resource.new('http://example.com', &block)
-    r19_syntax = %q{
-      parent['posts', &->(r){r}].block.should_not eq block
-    }
-    if is_ruby_19?
-      eval(r19_syntax)
-    else
-      parent.should_not be_nil
-    end
+    parent['posts', &->(r){r}].block.should_not eq block
   end
 
   it "prints its url with to_s" do
