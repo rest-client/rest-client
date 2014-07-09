@@ -1,9 +1,7 @@
 *.gem
-.idea
-.rvmrc
-Gemfile.lock
-doc
-pkg
-rdoc
-scratchpad.rb
-/.bundle/
+/Gemfile.lock
+/.bundle
+/vendor
+/doc
+/pkg
+/rdoc
