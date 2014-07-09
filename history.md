@@ -1,3 +1,11 @@
+# 1.7.1
+
+- Relax mime-types dependency to continue supporting mime-types 1.x series.
+  There seem to be a large number of popular gems that have depended on
+  mime-types '~> 1.16' until very recently.
+- Improve urlencode performance
+- Clean up a number of style points
+
 # 1.7.0
 
 - This release drops support for Ruby 1.8.7 and breaks compatibility in a few
