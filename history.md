@@ -1,3 +1,7 @@
+# 1.7.2
+
+- Ignore duplicate certificates in CA store on Windows
+
 # 1.7.1
 
 - Relax mime-types dependency to continue supporting mime-types 1.x series.
