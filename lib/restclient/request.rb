@@ -281,7 +281,11 @@ module RestClient
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
       if !@user && !@password
-        @user, @password = Netrc.read[uri.host]
+        begin
+          @user, @password = Netrc.read[uri.host]
+        rescue SystemCallError
+          # Quietly ignore errors reading ~/.netrc
+        end
       end
       uri
     end
