@@ -251,6 +251,9 @@ the URL for GET, HEAD and DELETE requests, escaping the keys and values as neede
 
 == Headers
 
+Request headers can be set by passing a ruby hash containing keys and values
+representing header names and values:
+
   # GET request with modified headers
   RestClient.get 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
 
