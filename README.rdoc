@@ -249,6 +249,17 @@ the URL for GET, HEAD and DELETE requests, escaping the keys and values as neede
   RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
   # will GET http://example.com/resource?foo=bar&baz=qux
 
+== Headers
+
+  # GET request with modified headers
+  RestClient.get 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
+  # POST request with modified headers
+  RestClient.post 'http://example.com/resource', {:foo => 'bar', :baz => 'qux'}, {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
+  # DELETE request with modified headers
+  RestClient.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
 == Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically
