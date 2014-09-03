@@ -11,6 +11,11 @@ module RestClient
       @code ||= @net_http_res.code.to_i
     end
 
+    # true if the HTTP status code is between 200-299
+    def success?
+      (200..299).include?(code)
+    end
+
     # A hash of the headers, beautified with symbols and underscores.
     # e.g. "Content-type" will become :content_type.
     def headers
