@@ -100,6 +100,10 @@ module RestClient
     @@log = create_log log
   end
 
+  def self.log_verbosity= verbosity
+    @@log_verbosity = verbosity
+  end
+
   # Create a log that respond to << like a logger
   # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
   def self.create_log param
@@ -140,9 +144,14 @@ module RestClient
   @@env_log = create_log ENV['RESTCLIENT_LOG']
 
   @@log = nil
+  @@log_verbosity = :default
 
   def self.log # :nodoc:
     @@env_log || @@log
+  end
+
+  def self.log_verbosity
+    @@log_verbosity
   end
 
   @@before_execution_procs = []

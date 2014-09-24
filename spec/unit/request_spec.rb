@@ -414,6 +414,27 @@ describe RestClient::Request do
       @request.log_response res
       log[0].should eq "# => 200 OK | text/html 0 bytes\n"
     end
+
+    context "log_verbosity is set to :verbose" do
+      before(:each) { RestClient.log_verbosity = :verbose }
+      let!(:log) { RestClient.log = [] }
+
+      it "logs a response with a body" do
+        res = double('result', :code => '200', :class => Net::HTTPOK, :body => %Q{{"some": "json"}})
+        res.stub(:[]).with('Content-type').and_return('application/json; charset=utf-8')
+        @request.log_response res
+        log[0].should eq "# => 200 OK | application/json 16 bytes\n"
+        log[1].should eq %Q{# => {"some": "json"}}
+      end
+
+      it "logs a response with a nil body" do
+        res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+        res.stub(:[]).with('Content-type').and_return('text/html; charset=utf-8')
+        @request.log_response res
+        log[0].should eq "# => 200 OK | text/html 0 bytes\n"
+        log[1].should eq %Q{# => nil}
+      end
+    end
   end
 
   it "strips the charset from the response content type" do

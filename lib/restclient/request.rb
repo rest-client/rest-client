@@ -535,6 +535,7 @@ module RestClient
              end
 
       RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+      RestClient.log << "# => #{res.body || 'nil'}"  if RestClient.log_verbosity == :verbose
     end
 
     # Return a hash of headers whose keys are capitalized strings
