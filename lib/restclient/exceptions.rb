@@ -106,6 +106,10 @@ module RestClient
       end
     end
 
+    def http_headers
+      @response.headers if @response
+    end
+    
     def http_body
       @response.body if @response
     end
