@@ -100,6 +100,12 @@ module RestClient
     @@log = create_log log
   end
 
+  # Determines whether to log payloads which are bigger than 500b.
+  # If the limit is enabled, the size of the payload will be logged instead of the payload's content.
+  def self.limit_payload_log= limited
+    @@limit_payload_log = limited
+  end
+
   # Create a log that respond to << like a logger
   # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
   def self.create_log param
@@ -141,8 +147,14 @@ module RestClient
 
   @@log = nil
 
+  @@limit_payload_log = true
+
   def self.log # :nodoc:
     @@env_log || @@log
+  end
+
+  def self.limit_payload_log?
+    @@limit_payload_log
   end
 
   @@before_execution_procs = []
