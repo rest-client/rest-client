@@ -116,9 +116,12 @@ module RestClient
       end
 
       def short_inspect
-        (size > 500 ? "#{size} byte(s) length" : inspect)
+        if RestClient.limit_payload_log? && size > 500
+          "#{size} byte(s) length"
+        else
+          inspect
+        end
       end
-
     end
 
     class Streamed < Base
