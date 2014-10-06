@@ -142,6 +142,18 @@ Content-Type: text/plain\r
       EOS
     end
 
+    it "should be possible to set custom content type in multipart request" do
+      m = RestClient::Payload::Multipart.new({data: 'something', content_type: 'text/plain'})
+      m.to_s.should eq <<-EOS
+--#{m.boundary}\r
+Content-Disposition: form-data; name="data"\r
+Content-Type: text/plain;\r
+\r
+something\r
+--#{m.boundary}--\r
+      EOS
+    end
+
     it "should handle hash in hash parameters" do
       m = RestClient::Payload::Multipart.new({:bar => {:baz => "foo"}})
       m.to_s.should eq <<-EOS
