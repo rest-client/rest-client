@@ -195,8 +195,8 @@ module RestClient
   end
 end
 
-# backwards compatibility
 class RestClient::Request
+  # backwards compatibility
   Redirect = RestClient::Redirect
   Unauthorized = RestClient::Unauthorized
   RequestFailed = RestClient::RequestFailed
