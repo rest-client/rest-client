@@ -24,7 +24,8 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
-  #     open a connection, in seconds. Pass nil to disable the timeout.
+  #     open a connection, in seconds. :keep_alive_timeout is how long to reuse
+  #     the previous connection. Pass nil to disable the timeout.
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -35,7 +36,7 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :keep_alive_timeout
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -119,6 +120,9 @@ module RestClient
       end
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
+      end
+      if args.include?(:keep_alive_timeout)
+        @keep_alive_timeout = args[:keep_alive_timeout]
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
@@ -401,6 +405,13 @@ module RestClient
           @open_timeout = nil
         end
         net.open_timeout = @open_timeout
+      end
+      if defined? @keep_alive_timeout
+        if @keep_alive_timeout == -1
+          warn 'To disable keep-alive timeouts, please set keep_alive_timeout to nil instead of -1'
+          @keep_alive_timeout = nil
+        end
+        net.keep_alive_timeout = @keep_alive_timeout
       end
 
       RestClient.before_execution_procs.each do |before_proc|

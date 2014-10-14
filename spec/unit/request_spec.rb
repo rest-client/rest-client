@@ -433,6 +433,7 @@ describe RestClient::Request do
 
       @net.should_not_receive(:read_timeout=)
       @net.should_not_receive(:open_timeout=)
+      @net.should_not_receive(:keep_alive_timeout=)
 
       @request.transmit(@uri, 'req', nil)
     end
@@ -459,20 +460,32 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', nil)
     end
 
+    it "set keep_alive_timeout" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :keep_alive_timeout => 42)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:keep_alive_timeout=).with(42)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
     it "disable timeout by setting it to nil" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil, :keep_alive_timeout => nil)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
 
       @net.should_receive(:read_timeout=).with(nil)
       @net.should_receive(:open_timeout=).with(nil)
+      @net.should_receive(:keep_alive_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end
 
     it "deprecated: disable timeout by setting it to -1" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1, :keep_alive_timeout => -1)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -482,6 +495,9 @@ describe RestClient::Request do
 
       @request.should_receive(:warn)
       @net.should_receive(:open_timeout=).with(nil)
+
+      @request.should_receive(:warn)
+      @net.should_receive(:keep_alive_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
     end
