@@ -202,7 +202,7 @@ describe RestClient::Request do
 
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
-    @net.should_receive(:ssl_version=).with('SSLv3')
+    @net.should_receive(:ssl_version=).with('TLSv1_2')
     @request.should_receive(:process_result)
     @request.transmit(@uri, 'req', 'payload')
   end
@@ -210,7 +210,7 @@ describe RestClient::Request do
   describe "payload" do
     it "sends nil payloads" do
       @http.should_receive(:request).with('req', nil)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1_2')
       @request.should_receive(:process_result)
       @request.stub(:response_log)
       @request.transmit(@uri, 'req', nil)
@@ -240,7 +240,7 @@ describe RestClient::Request do
   describe "credentials" do
     it "sets up the credentials prior to the request" do
       @http.stub(:request)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1_2')
 
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -270,7 +270,7 @@ describe RestClient::Request do
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
     @http.stub(:request).and_raise(EOFError)
-    @net.should_receive(:ssl_version=).with('SSLv3')
+    @net.should_receive(:ssl_version=).with('TLSv1_2')
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
@@ -405,7 +405,7 @@ describe RestClient::Request do
     it "uses SSL when the URI refers to a https address" do
       @uri.stub(:is_a?).with(URI::HTTPS).and_return(true)
       @net.should_receive(:use_ssl=).with(true)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1_2')
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -418,7 +418,7 @@ describe RestClient::Request do
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1_2')
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
