@@ -22,7 +22,7 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from OpenSSL::SSL
   # * :timeout and :open_timeout passing in -1 will disable the timeout by setting the corresponding net timeout values to nil
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path
-  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'SSLv3')
+  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection (defaults to 'TLSv1_2')
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
