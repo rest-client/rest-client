@@ -23,9 +23,9 @@ describe RestClient::Request do
     it "is successful with the correct ca_path" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.com',
+        :url => 'https://www.mozilla.org',
         :verify_ssl => OpenSSL::SSL::VERIFY_PEER,
-        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_equifax")
+        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_digicert")
       )
       expect { request.execute }.to_not raise_error
     end
