@@ -1,6 +1,6 @@
 = REST Client -- simple DSL for accessing HTTP and REST resources
 
-NOTE: This fork simply gets rid of the mime-types gem dependency, it was causing issues for us. 
+=== NOTE: This fork simply gets rid of the mime-types gem dependency, it was causing issues for us.
 
 Build status: {<img src="https://travis-ci.org/rest-client/rest-client.png" />}[https://travis-ci.org/rest-client/rest-client]
 
