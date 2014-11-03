@@ -334,7 +334,7 @@ module RestClient
 
     def print_verify_callback_warnings
       warned = false
-      if RestClient::Platform.mac?
+      if RestClient::Platform.mac_mri?
         warn('warning: ssl_verify_callback return code is ignored on OS X')
         warned = true
       end

@@ -34,7 +34,7 @@ describe RestClient::Request do
     #
     # On OS X, this test fails since Apple has patched OpenSSL to always fall
     # back on the system CA store.
-    it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac? do
+    it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -45,7 +45,7 @@ describe RestClient::Request do
 
     # On OS X, this test fails since Apple has patched OpenSSL to always fall
     # back on the system CA store.
-    it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac? do
+    it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -79,7 +79,7 @@ describe RestClient::Request do
     end
 
     it "fails verification when the callback returns false",
-       :unless => RestClient::Platform.mac? do
+       :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -90,7 +90,7 @@ describe RestClient::Request do
     end
 
     it "succeeds verification when the callback returns true",
-       :unless => RestClient::Platform.mac? do
+       :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
