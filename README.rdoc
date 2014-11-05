@@ -31,9 +31,16 @@ dependencies for you.
 
 == Usage: Raw URL
 
-  require 'rest_client'
+Getting started is easy.  Simply require the gem in your controller and make the request in the appropriate method.  Responses can be parsed into a more readable format here as well.
 
-  RestClient.get 'http://example.com/resource'
+class ResourcesController < ApplicationController
+  require 'rest_client'
+  
+  def index
+    resources = RestClient.get 'http://example.com/resource'
+    @resources = JSON.parse(resources, :symbolize_names => true)
+  end
+end
 
   RestClient.get 'http://example.com/resource', {:params => {:id => 50, 'foo' => 'bar'}}
 
