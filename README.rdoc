@@ -33,14 +33,14 @@ dependencies for you.
 
 Getting started is easy.  Simply require the gem in your controller and make the request in the appropriate method.  Responses can be parsed into a more readable format here as well.
 
-class ResourcesController < ApplicationController
-  require 'rest_client'
+  class ResourcesController < ApplicationController
+    require 'rest_client'
   
-  def index
-    resources = RestClient.get 'http://example.com/resource'
-    @resources = JSON.parse(resources, :symbolize_names => true)
+    def index
+      resources = RestClient.get 'http://example.com/resource'
+      @resources = JSON.parse(resources, :symbolize_names => true)
+    end
   end
-end
 
   RestClient.get 'http://example.com/resource', {:params => {:id => 50, 'foo' => 'bar'}}
 
