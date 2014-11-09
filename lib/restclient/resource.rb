@@ -20,6 +20,10 @@ module RestClient
   #
   #   RestClient::Resource.new('http://behindfirewall', :open_timeout => 10)
   #
+  # With an keep-alive timeout (seconds):
+  #
+  #   RestClient::Resource.new('http://lb', :keep_alive_timeout => 2)
+  #
   # You can also use resources to share common headers. For headers keys,
   # symbols are converted to strings. Example:
   #
@@ -119,6 +123,10 @@ module RestClient
 
     def open_timeout
       options[:open_timeout]
+    end
+
+    def keep_alive_timeout
+      options[:keep_alive_timeout]
     end
 
     # Construct a subresource, preserving authentication.
