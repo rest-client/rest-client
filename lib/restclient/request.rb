@@ -272,7 +272,7 @@ module RestClient
     end
 
     def parse_url(url)
-      url = "http://#{url}" unless url.match(/^http/)
+      url = "http://#{url}" unless url.match(/^*:\/\//)
       URI.parse(url)
     end
 
