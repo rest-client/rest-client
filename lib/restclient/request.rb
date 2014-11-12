@@ -492,7 +492,7 @@ module RestClient
       if block_given?
         block.call(response, self, res, & block)
       else
-        response.return!(self, res, & block)
+        response.return!(response,self, res, & block)
       end
 
     end
