@@ -137,6 +137,7 @@ module RestClient
 
     def message
       "HTTP status code #{http_code}"
+      "\nHTTP header:#{http_headers}"
     end
 
     def to_s
