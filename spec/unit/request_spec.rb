@@ -6,7 +6,7 @@ describe RestClient::Request do
 
     @uri = double("uri")
     @uri.stub(:request_uri).and_return('/resource')
-    @uri.stub(:host).and_return('some')
+    @uri.stub(:hostname).and_return('some')
     @uri.stub(:port).and_return(80)
 
     @net = double("net::http base")
@@ -358,6 +358,11 @@ describe RestClient::Request do
     it "creates a proxy class if a proxy url is given" do
       RestClient.stub(:proxy).and_return("http://example.com/")
       @request.net_http_class.proxy_class?.should be_true
+    end
+
+    it "creates a proxy class with the correct address if a IPv6 proxy url is given" do
+      RestClient.stub(:proxy).and_return("http://[::1]/")
+      @request.net_http_class.proxy_address.should == "::1"
     end
 
     it "creates a non-proxy class if a proxy url is not given" do
