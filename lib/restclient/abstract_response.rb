@@ -74,6 +74,8 @@ module RestClient
         args[:user] = request.user
         args[:headers] = request.headers
         args[:max_redirects] = request.max_redirects - 1
+        args[:timeout] = request.timeout
+        args[:open_timeout] = request.open_timeout
         # pass any cookie set in the result
         if result && result['set-cookie']
           args[:headers][:cookies] = (args[:headers][:cookies] || {}).merge(parse_cookie(result['set-cookie']))
