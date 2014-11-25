@@ -10,14 +10,15 @@ of specifying actions: get, put, post, delete.
 
 == Requirements
 
-MRI Ruby 1.9.2 and newer are supported. Alternative interpreters compatible with
-1.9.1+ should work as well.
+MRI Ruby 1.9.3 and newer are supported. Alternative interpreters compatible with
+1.9+ should work as well.
 
-Ruby 1.8.7 is no longer supported.  That's because the Ruby 1.8.7 interpreter
-itself no longer has official support, _not_ _even_ _security_ _patches!_ If you
-have been putting off upgrading your servers, now is the time.
-({More info is on the Ruby developers'
-blog.}[http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/])
+Earlier Ruby versions such as 1.8.7 and 1.9.2 are no longer supported. These
+versions are no longer have any official support, and do not receive security
+updates.
+
+* http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/
+* https://www.ruby-lang.org/en/news/2013/12/17/maintenance-of-1-8-7-and-1-9-2/
 
 The rest-client gem depends on these other gems for installation and usage:
 

@@ -1,3 +1,9 @@
+# 2.0.0
+
+- Drop support for Ruby 1.9.2
+- Change default Accept header to `*/*`
+- Use a more descriptive User-Agent header by default
+
 # 1.7.2
 
 - Ignore duplicate certificates in CA store on Windows
