@@ -562,7 +562,7 @@ module RestClient
     end
 
     def default_headers
-      {:accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate'}
+      {:accept => '*/*', :accept_encoding => 'gzip, deflate'}
     end
 
     private

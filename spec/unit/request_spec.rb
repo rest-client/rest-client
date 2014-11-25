@@ -21,8 +21,8 @@ describe RestClient::Request do
     RestClient.log = nil
   end
 
-  it "accept */* mimetype, preferring xml" do
-    @request.default_headers[:accept].should eq '*/*; q=0.5, application/xml'
+  it "accept */* mimetype" do
+    @request.default_headers[:accept].should eq '*/*'
   end
 
   describe "compression" do
@@ -166,7 +166,7 @@ describe RestClient::Request do
 
   describe "user headers" do
     it "merges user headers with the default headers" do
-      @request.should_receive(:default_headers).and_return({ :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' })
+      @request.should_receive(:default_headers).and_return({ :accept => '*/*', :accept_encoding => 'gzip, deflate' })
       headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
       headers.should have_key "Accept-Encoding"
       headers["Accept-Encoding"].should eq "gzip"
@@ -370,19 +370,19 @@ describe RestClient::Request do
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url').log_request
-      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate"\n}
+      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log_request
-      log[0].should eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
+      log[0].should eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      log[0].should eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
+      log[0].should eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
     end
 
     it "logs input headers as a hash" do
