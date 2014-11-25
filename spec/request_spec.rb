@@ -23,7 +23,7 @@ describe RestClient::Request do
 
     @req = mock("net::http::request")
     @req.stub!(:body=)
-    
+
   end
 
   it "accept */* mimetype, preferring xml" do
@@ -210,7 +210,7 @@ describe RestClient::Request do
 
   it "transmits the request with Net::HTTP" do
     @net.should_receive(:request).with(@uri, @req)
-    @net.should_receive(:ssl_version=).with('SSLv3')
+    @net.should_receive(:ssl_version=).with('TLSv1')
     @request.should_receive(:process_result)
     @request.transmit(@uri, @req, 'payload')
   end
@@ -218,7 +218,7 @@ describe RestClient::Request do
   describe "payload" do
     it "sends nil payloads" do
       @net.should_receive(:request).with(@uri, @req)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1')
       @request.should_receive(:process_result)
       @request.stub!(:response_log)
       @request.transmit(@uri, @req, nil)
@@ -248,7 +248,7 @@ describe RestClient::Request do
   describe "credentials" do
     it "sets up the credentials prior to the request" do
       @net.stub!(:request)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1')
 
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -278,7 +278,7 @@ describe RestClient::Request do
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
     @net.stub!(:request).and_raise(EOFError)
-    @net.should_receive(:ssl_version=).with('SSLv3')
+    @net.should_receive(:ssl_version=).with('TLSv1')
     lambda { @request.transmit(@uri, @req, nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
@@ -471,7 +471,7 @@ describe RestClient::Request do
 
   describe "ssl" do
     it "uses SSL when the URI refers to a https address" do
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1')
       @net.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -484,7 +484,7 @@ describe RestClient::Request do
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
-      @net.should_receive(:ssl_version=).with('SSLv3')
+      @net.should_receive(:ssl_version=).with('TLSv1')
       @net.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
@@ -611,11 +611,11 @@ describe RestClient::Request do
       @request = RestClient::Request.new(
               :method => :put,
               :url => 'https://some/resource',
-              :ssl_version => 'TSLv1',
+              :ssl_version => 'TLSv1',
               :payload => 'payload'
       )
       @net.should_not_receive(:ca_file=).with("Certificate Authority File")
-      @net.should_receive(:ssl_version=).with('TSLv1')
+      @net.should_receive(:ssl_version=).with('TLSv1')
       @net.stub!(:request)
       @request.stub!(:process_result)
       @request.stub!(:response_log)
