@@ -4,6 +4,7 @@
 - Change default Accept header to `*/*`
 - Use a more descriptive User-Agent header by default
 - Drop RC4-MD5 from default cipher list (will have no affect on most users)
+- Only prepend http:// to URIs without a scheme
 
 # 1.7.2
 
