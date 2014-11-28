@@ -285,7 +285,7 @@ module RestClient
       # followed by two forward slashes. (The slashes are not part of the URI
       # RFC, but specified by the URL RFC 1738.)
       # https://tools.ietf.org/html/rfc3986#section-3.1
-      url = 'http://' + url unless url.match(/\A[a-z][a-z0-9+.-]*:\/\//i)
+      url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
       URI.parse(url)
     end
 
@@ -554,7 +554,7 @@ module RestClient
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
         if key.is_a? Symbol
-          key = key.to_s.split(/_/).map { |w| w.capitalize }.join('-')
+          key = key.to_s.split(/_/).map(&:capitalize).join('-')
         end
         if 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s
