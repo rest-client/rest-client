@@ -41,9 +41,9 @@ module RestClient
       new(args).execute(& block)
     end
 
-    # This is similar to the list now in ruby core, but adds HIGH and RC4-MD5
-    # for better compatibility (similar to Firefox) and moves AES-GCM cipher
-    # suites above DHE/ECDHE CBC suites (similar to Chromium).
+    # This is similar to the list now in ruby core, but adds HIGH for better
+    # compatibility (similar to Firefox) and moves AES-GCM cipher suites above
+    # DHE/ECDHE CBC suites (similar to Chromium).
     # https://github.com/ruby/ruby/commit/699b209cf8cf11809620e12985ad33ae33b119ee
     #
     # This list will be used by default if the Ruby global OpenSSL default
@@ -91,7 +91,6 @@ module RestClient
 
       HIGH
       +RC4
-      RC4-MD5
     }.join(":")
 
     # A set of weak default ciphers that we will override by default.

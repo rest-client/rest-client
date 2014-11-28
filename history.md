@@ -3,6 +3,7 @@
 - Drop support for Ruby 1.9.2
 - Change default Accept header to `*/*`
 - Use a more descriptive User-Agent header by default
+- Drop RC4-MD5 from default cipher list (will have no affect on most users)
 
 # 1.7.2
 
