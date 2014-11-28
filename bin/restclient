@@ -56,11 +56,9 @@ if @verb
 end
 
 POSSIBLE_VERBS.each do |m|
-  eval <<-end_eval
-def  #{m}(path, *args, &b)
-  r[path].#{m}(*args, &b)
-end
-  end_eval
+  define_method(m.to_sym) do |path, *args, &b|
+    r[path].public_send(m.to_sym, *args, &b)
+  end
 end
 
 def method_missing(s, * args, & b)
