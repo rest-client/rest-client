@@ -25,6 +25,7 @@ module RestClient
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
   #     open a connection, in seconds. Pass nil to disable the timeout.
+  # * :local_host sets the local address for the outgoing connection
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -32,7 +33,7 @@ module RestClient
   #     OpenSSL::SSL::SSLContext#ciphers=
   class Request
 
-    attr_reader :method, :url, :headers, :cookies,
+    attr_reader :method, :url, :headers, :cookies, :local_host,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
@@ -119,6 +120,9 @@ module RestClient
       end
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
+      end
+      if args.include?(:local_host)
+        @local_host = args[:local_host]
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
@@ -350,6 +354,8 @@ module RestClient
       setup_credentials req
 
       net = net_http_class.new(uri.host, uri.port)
+      net.local_host = local_host if local_host
+
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
