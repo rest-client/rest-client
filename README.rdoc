@@ -230,9 +230,11 @@ shell or a script to replay your sequence of rest calls.
 == Proxy
 
 All calls to RestClient, including Resources, will use the proxy specified by
-RestClient.proxy:
+RestClient.proxy, and optionally by RestClient.proxy_user and RestClient.proxy_pass:
 
   RestClient.proxy = "http://proxy.example.com/"
+  RestClient.proxy_user = "proxy_user"
+  RestClient.proxy_pass = "proxy_pass"
   RestClient.get "http://some/resource"
   # => response from some/resource as proxied through proxy.example.com
 

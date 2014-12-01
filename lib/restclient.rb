@@ -50,6 +50,11 @@ require File.dirname(__FILE__) + '/restclient/windows'
 #
 #   RestClient.proxy = "http://proxy.example.com/"
 #
+# And optionally:
+#
+#   RestClient.proxy_user = "proxy_user"
+#   RestClient.proxy_pass = "proxy_pass"
+#
 # Or inherit the proxy from the environment:
 #
 #   RestClient.proxy = ENV['http_proxy']
@@ -90,7 +95,7 @@ module RestClient
   end
 
   class << self
-    attr_accessor :proxy
+    attr_accessor :proxy, :proxy_user, :proxy_pass
   end
 
   # Setup the log for RestClient calls.
