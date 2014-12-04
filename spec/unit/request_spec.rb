@@ -6,7 +6,7 @@ describe RestClient::Request do
 
     @uri = double("uri")
     @uri.stub(:request_uri).and_return('/resource')
-    @uri.stub(:host).and_return('some')
+    @uri.stub(:hostname).and_return('some')
     @uri.stub(:port).and_return(80)
 
     @net = double("net::http base")
@@ -145,7 +145,7 @@ describe RestClient::Request do
   end
 
   it "uses netrc credentials" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
+    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://example.com/resource')
     @request.user.should eq 'a'
@@ -153,7 +153,7 @@ describe RestClient::Request do
   end
 
   it "uses credentials in the url in preference to netrc" do
-    URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
+    URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
     @request.user.should eq 'joe '
@@ -358,6 +358,11 @@ describe RestClient::Request do
     it "creates a proxy class if a proxy url is given" do
       RestClient.stub(:proxy).and_return("http://example.com/")
       @request.net_http_class.proxy_class?.should be_true
+    end
+
+    it "creates a proxy class with the correct address if a IPv6 proxy url is given" do
+      RestClient.stub(:proxy).and_return("http://[::1]/")
+      @request.net_http_class.proxy_address.should == "::1"
     end
 
     it "creates a non-proxy class if a proxy url is not given" do
