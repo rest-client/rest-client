@@ -41,9 +41,9 @@ module RestClient
       new(args).execute(& block)
     end
 
-    # This is similar to the list now in ruby core, but adds HIGH and RC4-MD5
-    # for better compatibility (similar to Firefox) and moves AES-GCM cipher
-    # suites above DHE/ECDHE CBC suites (similar to Chromium).
+    # This is similar to the list now in ruby core, but adds HIGH for better
+    # compatibility (similar to Firefox) and moves AES-GCM cipher suites above
+    # DHE/ECDHE CBC suites (similar to Chromium).
     # https://github.com/ruby/ruby/commit/699b209cf8cf11809620e12985ad33ae33b119ee
     #
     # This list will be used by default if the Ruby global OpenSSL default
@@ -91,7 +91,6 @@ module RestClient
 
       HIGH
       +RC4
-      RC4-MD5
     }.join(":")
 
     # A set of weak default ciphers that we will override by default.
@@ -271,8 +270,22 @@ module RestClient
       end
     end
 
+    # Parse a string into a URI object. If the string has no HTTP-like scheme
+    # (i.e. scheme followed by '//'), a scheme of 'http' will be added. This
+    # mimics the behavior of browsers and user agents like cURL.
+    #
+    # @param url [String] A URL string.
+    #
+    # @return [URI]
+    #
+    # @raise URI::InvalidURIError on invalid URIs
+    #
     def parse_url(url)
-      url = "http://#{url}" unless url.match(/^http/)
+      # Prepend http:// unless the string already contains an RFC 3986 scheme
+      # followed by two forward slashes. (The slashes are not part of the URI
+      # RFC, but specified by the URL RFC 1738.)
+      # https://tools.ietf.org/html/rfc3986#section-3.1
+      url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
       URI.parse(url)
     end
 
@@ -541,7 +554,7 @@ module RestClient
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
         if key.is_a? Symbol
-          key = key.to_s.split(/_/).map { |w| w.capitalize }.join('-')
+          key = key.to_s.split(/_/).map(&:capitalize).join('-')
         end
         if 'CONTENT-TYPE' == key.upcase
           target_value = value.to_s

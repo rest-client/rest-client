@@ -68,14 +68,36 @@ describe RestClient::Request do
     end
   end
 
-  it "parses a url into a URI object" do
-    URI.should_receive(:parse).with('http://example.com/resource')
-    @request.parse_url('http://example.com/resource')
-  end
+  describe '.parse_url' do
+    it "parses a url into a URI object" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      @request.parse_url('http://example.com/resource')
+    end
 
-  it "adds http:// to the front of resources specified in the syntax example.com/resource" do
-    URI.should_receive(:parse).with('http://example.com/resource')
-    @request.parse_url('example.com/resource')
+    it "adds http:// to the front of resources specified in the syntax example.com/resource" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      @request.parse_url('example.com/resource')
+    end
+
+    it 'adds http:// to resources containing a colon' do
+      URI.should_receive(:parse).with('http://example.com:1234')
+      @request.parse_url('example.com:1234')
+    end
+
+    it 'does not add http:// to the front of https resources' do
+      URI.should_receive(:parse).with('https://example.com/resource')
+      @request.parse_url('https://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTP resources' do
+      URI.should_receive(:parse).with('HTTP://example.com/resource')
+      @request.parse_url('HTTP://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTPS resources' do
+      URI.should_receive(:parse).with('HTTPS://example.com/resource')
+      @request.parse_url('HTTPS://example.com/resource')
+    end
   end
 
   describe "user - password" do
