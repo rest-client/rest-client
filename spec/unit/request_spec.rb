@@ -260,6 +260,21 @@ describe RestClient::Request do
     @request.execute
   end
 
+  it "IPv6: executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
+    @request = RestClient::Request.new(:method => :put, :url => 'http://[::1]/some/resource', :payload => 'payload')
+    klass = double("net:http class")
+    @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
+
+    if RUBY_VERSION >= "2.0.0"
+      klass.should_receive(:new).with(kind_of(URI), kind_of(Hash)).and_return('result')
+    else
+      klass.should_receive(:new).with(kind_of(String), kind_of(Hash)).and_return('result')
+    end
+
+    @request.should_receive(:transmit)
+    @request.execute
+  end
+
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
     @request.should_receive(:process_result)
