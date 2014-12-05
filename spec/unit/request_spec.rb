@@ -350,14 +350,26 @@ describe RestClient::Request do
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(OpenSSL::SSL::SSLError)
   end
 
-  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+  it "catches Timeout::Error and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Timeout::Error)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
-  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+  it "catches Errno::ETIMEDOUT and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Errno::ETIMEDOUT)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+  end
+
+  it "catches Net::ReadTimeout and raises RestClient's ReadTimeout",
+     :if => defined?(Net::ReadTimeout) do
+    @http.stub(:request).and_raise(Net::ReadTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+  end
+
+  it "catches Net::OpenTimeout and raises RestClient's OpenTimeout",
+     :if => defined?(Net::OpenTimeout) do
+    @http.stub(:request).and_raise(Net::OpenTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout)
   end
 
   it "class method execute wraps constructor" do

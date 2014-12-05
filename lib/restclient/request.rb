@@ -32,6 +32,8 @@ module RestClient
   #     OpenSSL::SSL::SSLContext#ciphers=
   class Request
 
+    # TODO: rename timeout to read_timeout
+
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
@@ -364,6 +366,9 @@ module RestClient
     end
 
     def transmit uri, req, payload, & block
+
+      # We set this to true in the net/http block so that we can distinguish
+      # read_timeout from open_timeout. This isn't needed in Ruby >= 2.0.
       established_connection = false
 
       setup_credentials req
@@ -444,12 +449,24 @@ module RestClient
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
-    rescue Timeout::Error, Errno::ETIMEDOUT
-      if established_connection
-        raise RestClient::RequestTimeout
-      else
-        raise RestClient::ConnectTimeout
+    rescue Timeout::Error, Errno::ETIMEDOUT => err
+      # Net::HTTP has OpenTimeout, ReadTimeout in Ruby >= 2.0
+      if defined?(Net::OpenTimeout)
+        case err
+        when Net::OpenTimeout
+          raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+        when Net::ReadTimeout
+          raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+        end
       end
+
+      # compatibility for Ruby 1.9.3, handling for non-Net::HTTP timeouts
+      if established_connection
+        raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+      else
+        raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+      end
+
     rescue OpenSSL::SSL::SSLError => error
       # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
       # pass through OpenSSL::SSL::SSLError directly.

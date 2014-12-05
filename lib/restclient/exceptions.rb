@@ -26,7 +26,7 @@ module RestClient
               401 => 'Unauthorized',
               402 => 'Payment Required',
               403 => 'Forbidden',
-              404 => 'Resource Not Found',
+              404 => 'Resource Not Found', # TODO: change to 'Not Found'
               405 => 'Method Not Allowed',
               406 => 'Not Acceptable',
               407 => 'Proxy Authentication Required',
@@ -86,6 +86,7 @@ module RestClient
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
     attr_accessor :response
+    attr_accessor :original_exception
     attr_writer :message
 
     def initialize response = nil, initial_response_code = nil
@@ -119,9 +120,12 @@ module RestClient
     end
 
     def message
-      @message || self.class.name
+      @message || self.class.default_message
     end
 
+    def self.default_message
+      self.name
+    end
   end
 
   # Compatibility
@@ -140,10 +144,41 @@ module RestClient
     end
   end
 
-  # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  # RestClient exception classes. TODO: move all exceptions into this module.
+  #
+  # We will a create an exception for each status code, see
+  # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  #
   module Exceptions
     # Map http status codes to the corresponding exception class
     EXCEPTIONS_MAP = {}
+
+    # Base class for request timeouts.
+    # NB: Previous releases of rest-client would raise RequestTimeout both for
+    # HTTP 408 responses and for actual connection timeouts.
+    class Timeout < RestClient::Exception
+      def initialize(message=nil, original_exception=nil)
+        super(nil, nil)
+        self.message = message if message
+        self.original_exception = original_exception if original_exception
+      end
+    end
+
+    # Timeout when connecting to a server. Typically wraps Net::OpenTimeout (in
+    # ruby 2.0 or greater).
+    class OpenTimeout < Timeout
+      def self.default_message
+        'Timed out connecting to server'
+      end
+    end
+
+    # Timeout when reading from a server. Typically wraps Net::ReadTimeout (in
+    # ruby 2.0 or greater).
+    class ReadTimeout < Timeout
+      def self.default_message
+        'Timed out reading data from server'
+      end
+    end
   end
 
   STATUSES.each_pair do |code, message|
@@ -189,13 +224,6 @@ module RestClient
 
   class SSLCertificateNotVerified < Exception
     def initialize(message)
-      super nil, nil
-      self.message = message
-    end
-  end
-
-  class ConnectTimeout < RequestTimeout
-    def initialize(message='Timed out connecting to server')
       super nil, nil
       self.message = message
     end
