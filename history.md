@@ -1,10 +1,16 @@
 # 2.0.0
 
+This release is largely API compatible, but makes several minor breaking
+changes that should not affect most people:
+
 - Drop support for Ruby 1.9.2
 - Change default Accept header to `*/*`
 - Use a more descriptive User-Agent header by default
 - Drop RC4-MD5 from default cipher list (will have no affect on most users)
 - Only prepend http:// to URIs without a scheme
+- Fix some support for using IPv6 addresses in URLs (still affected by Ruby
+  2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
+  backported to 2.0 and 2.1)
 
 # 1.7.2
 
