@@ -213,7 +213,7 @@ Use as a one-off, curl-style:
 
 To enable logging you can:
 
-* set RestClient.log with a Ruby Logger, or
+* set RestClient.log with a Ruby Logger, e.g. <tt>RestClient.log = Logger.new(STDOUT)</tt>, or
 * set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
 
    $ RESTCLIENT_LOG=stdout path/to/my/program
