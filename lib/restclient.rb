@@ -61,33 +61,20 @@ require File.dirname(__FILE__) + '/restclient/windows'
 #
 module RestClient
 
-  def self.get(url, headers={}, &block)
-    Request.execute(:method => :get, :url => url, :headers => headers, &block)
+  # Methods have payload
+  %w(post patch put).each do |method|
+    define_singleton_method "#{method}" do |url,payload, headers={}, &block|
+      Request.execute(:method => method.to_sym , :url => url, :payload => payload, :headers => headers, &block)
+    end
   end
 
-  def self.post(url, payload, headers={}, &block)
-    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers, &block)
+  # Methods don't have payload
+  %w(get delete head options).each do |method|
+    define_singleton_method "#{method}" do |url, headers={}, &block|
+      Request.execute(:method => method.to_sym, :url => url, :headers => headers, &block)
+    end
   end
 
-  def self.patch(url, payload, headers={}, &block)
-    Request.execute(:method => :patch, :url => url, :payload => payload, :headers => headers, &block)
-  end
-
-  def self.put(url, payload, headers={}, &block)
-    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
-  end
-
-  def self.delete(url, headers={}, &block)
-    Request.execute(:method => :delete, :url => url, :headers => headers, &block)
-  end
-
-  def self.head(url, headers={}, &block)
-    Request.execute(:method => :head, :url => url, :headers => headers, &block)
-  end
-
-  def self.options(url, headers={}, &block)
-    Request.execute(:method => :options, :url => url, :headers => headers, &block)
-  end
 
   class << self
     attr_accessor :proxy
