@@ -17,7 +17,7 @@ Gem::Specification.new do |s|
   s.summary = 'Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.'
 
   s.add_development_dependency('webmock', '~> 1.4')
-  s.add_development_dependency('rspec', '~> 2.4')
+  s.add_development_dependency('rspec', '~> 3')
   s.add_development_dependency('pry')
   s.add_development_dependency('pry-doc')
   s.add_development_dependency('rdoc', '>= 2.4.2', '< 5.0')
