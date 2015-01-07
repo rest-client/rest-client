@@ -431,8 +431,8 @@ describe RestClient::Request do
     it "logs a post request with a large payload without a payload log limit" do
       RestClient.limit_payload_log = false
       log = RestClient.log = []
-      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      log[0].should eq %Q{RestClient.post "http://url", "#{'x' * 1000}", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
+      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000), :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.post "http://url", "#{'x' * 1000}", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs input headers as a hash" do
