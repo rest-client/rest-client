@@ -228,6 +228,10 @@ Either produces logs like this:
 Note that these logs are valid Ruby, so you can paste them into the restclient
 shell or a script to replay your sequence of rest calls.
 
+Payload logs are limited to 500 bytes. You can remove this limitation by adding:
+
+  RestClient.limit_payload_log = false
+
 == Proxy
 
 All calls to RestClient, including Resources, will use the proxy specified by
