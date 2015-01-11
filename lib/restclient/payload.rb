@@ -6,6 +6,8 @@ module RestClient
   module Payload
     extend self
 
+    PAYLOAD_LOG_SIZE_LIMIT = 500
+
     def generate(params)
       if params.is_a?(String)
         Base.new(params)
@@ -116,7 +118,7 @@ module RestClient
       end
 
       def short_inspect
-        if RestClient.limit_payload_log? && size > 500
+        if RestClient.limit_payload_log? && size > PAYLOAD_LOG_SIZE_LIMIT
           "#{size} byte(s) length"
         else
           inspect
