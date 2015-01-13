@@ -2,6 +2,8 @@ require 'uri'
 require 'zlib'
 require 'stringio'
 
+puts 'WARNING: The rest_client gem is deprecated and will be removed from RubyGems. Please use rest-client gem instead.'
+
 begin
   require 'net/https'
 rescue LoadError => e
