@@ -61,6 +61,11 @@ describe RestClient::AbstractResponse do
     @response.cookies.should eq({ 'session_id' => 'BAh7BzoNYXBwX25hbWUiEGFwcGxpY2F0aW9uOgpsb2dpbiIKYWRtaW4%3D%0A--08114ba654f17c04d20dcc5228ec672508f738ca' })
   end
 
+  it "removes all reserved words and is case insensitive" do
+    @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['key=value; path=/; domain=.example.com; EXPIRES=Tue, 21-Apr-2015 04:57:03 GMT; secure'])
+    @response.cookies.should eq({ 'key' => 'value' })
+  end
+
   it "can access the net http result directly" do
     @response.net_http_res.should eq @net_http_res
   end

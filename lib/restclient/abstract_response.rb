@@ -95,7 +95,7 @@ module RestClient
     def parse_cookie cookie_content
       out = {}
       CGI::Cookie::parse(cookie_content).each do |key, cookie|
-        unless ['expires', 'path'].include? key
+        unless ['expires', 'path', 'domain', 'secure'].include? key.downcase
           out[CGI::escape(key)] = cookie.value[0] ? (CGI::escape(cookie.value[0]) || '') : ''
         end
       end
