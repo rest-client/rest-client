@@ -519,7 +519,18 @@ module RestClient
       return unless RestClient.log
 
       out = []
-      out << "RestClient.#{method} #{url.inspect}"
+      sanitized_url = begin
+        uri = URI.parse(url)
+        uri.password = "REDACTED" if uri.password
+        uri.to_s
+      rescue URI::InvalidURIError
+        # An attacker may be able to manipulate the URL to be
+        # invalid, which could force discloure of a password if
+        # we show any of the un-parsed URL here.
+        "[invalid uri]"
+      end
+
+      out << "RestClient.#{method} #{sanitized_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
       RestClient.log << out.join(', ') + "\n"
