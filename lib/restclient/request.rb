@@ -585,8 +585,7 @@ module RestClient
           key = key.to_s.split(/_/).map(&:capitalize).join('-')
         end
         if 'CONTENT-TYPE' == key.upcase
-          target_value = value.to_s
-          result[key] = MIME::Types.type_for_extension target_value
+          result[key] = maybe_convert_extension(value.to_s)
         elsif 'ACCEPT' == key.upcase
           # Accept can be composed of several comma-separated values
           if value.is_a? Array
@@ -594,7 +593,9 @@ module RestClient
           else
             target_values = value.to_s.split ','
           end
-          result[key] = target_values.map { |ext| MIME::Types.type_for_extension(ext.to_s.strip) }.join(', ')
+          result[key] = target_values.map { |ext|
+            maybe_convert_extension(ext.to_s.strip)
+          }.join(', ')
         else
           result[key] = value.to_s
         end
@@ -616,21 +617,38 @@ module RestClient
       URI.const_defined?(:Parser) ? URI::Parser.new : URI
     end
 
-  end
-end
+    # Given a MIME type or file extension, return either a MIME type or, if
+    # none is found, the input unchanged.
+    #
+    #     >> maybe_convert_extension('json')
+    #     => 'application/json'
+    #
+    #     >> maybe_convert_extension('unknown')
+    #     => 'unknown'
+    #
+    #     >> maybe_convert_extension('application/xml')
+    #     => 'application/xml'
+    #
+    # @param ext [String]
+    #
+    # @return [String]
+    #
+    def maybe_convert_extension(ext)
+      unless ext =~ /\A[a-zA-Z0-9_@-]+\z/
+        # Don't look up strings unless they look like they could be a file
+        # extension known to mime-types.
+        #
+        # There currently isn't any API public way to look up extensions
+        # directly out of MIME::Types, but the type_for() method only strips
+        # off after a period anyway.
+        return ext
+      end
 
-module MIME
-  class Types
-
-    # Return the first found content-type for a value considered as an extension or the value itself
-    def type_for_extension ext
-      candidates = @extension_index[ext]
-      candidates.empty? ? ext : candidates[0].content_type
-    end
-
-    class << self
-      def type_for_extension ext
-        @__types__.type_for_extension ext
+      types = MIME::Types.type_for(ext)
+      if types.empty?
+        ext
+      else
+        types.first.content_type
       end
     end
   end
