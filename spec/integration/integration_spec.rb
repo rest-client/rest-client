@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'spec_helper'
 
 describe RestClient do
@@ -31,5 +32,42 @@ describe RestClient do
     end
   end
 
+  describe 'charset parsing' do
+    it 'handles utf-8' do
+      body = "λ".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=UTF-8'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::UTF_8
+      response.valid_encoding?.should eq true
+    end
 
+    it 'handles windows-1252' do
+      body = "\xff".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=windows-1252'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::WINDOWS_1252
+      response.encode('utf-8').should eq "ÿ"
+      response.valid_encoding?.should eq true
+    end
+
+    it 'handles binary' do
+      body = "\xfe".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'application/octet-stream; charset=binary'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::BINARY
+      lambda {
+        response.encode('utf-8')
+      }.should_raise(Encoding::UndefinedConversionError)
+      response.valid_encoding?.should eq true
+    end
+  end
 end
