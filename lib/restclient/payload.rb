@@ -1,6 +1,7 @@
 require 'tempfile'
 require 'stringio'
 require 'mime/types'
+require 'json'
 
 module RestClient
   module Payload
@@ -191,8 +192,12 @@ module RestClient
       end
 
       def create_regular_field(s, k, v)
-        s.write("Content-Disposition: form-data; name=\"#{k}\"")
-        s.write(EOL)
+        s.write("Content-Disposition: form-data; name=\"#{k}\"#{EOL}")
+        begin
+          JSON.parse(v)
+          s.write("Content-Type: application/json#{EOL}")
+        rescue
+        end
         s.write(EOL)
         s.write(v)
       end

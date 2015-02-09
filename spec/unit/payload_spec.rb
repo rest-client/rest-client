@@ -167,6 +167,18 @@ Content-Type: text/plain\r
       EOS
     end
 
+    it "should detect JSON documents and set Content-Type" do
+      m = RestClient::Payload::Multipart.new(:data => '{"param1":"value1","param2":"value2"}')
+      m.to_s.should eq <<-EOS
+--#{m.boundary}\r
+Content-Disposition: form-data; name="data"\r
+Content-Type: application/json\r
+\r
+{"param1":"value1","param2":"value2"}\r
+--#{m.boundary}--\r
+      EOS
+    end
+
   end
 
   context "streamed payloads" do
