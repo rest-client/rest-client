@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 require 'spec_helper'
 
 describe RestClient do
@@ -31,5 +32,10 @@ describe RestClient do
     end
   end
 
-
+  it "has the right encoding" do
+    body = "λ".force_encoding('ASCII-8BIT')
+    stub_request(:get, "www.example.com").to_return(:body => body, :status => 200, :headers => { 'Content-Type' => 'text/plain; charset=UTF-8' })
+    response = RestClient.get "www.example.com"
+    response.encoding.should eq Encoding::UTF_8
+  end
 end

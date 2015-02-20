@@ -50,7 +50,7 @@ describe RestClient::Request do
   end
 
   it "processes a successful result" do
-    res = double("result")
+    res = double("result", :to_hash => {})
     res.stub(:code).and_return("200")
     res.stub(:body).and_return('body')
     res.stub(:[]).with('content-encoding').and_return(nil)
@@ -60,7 +60,7 @@ describe RestClient::Request do
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = double("result")
+      res = double("result", :to_hash => {})
       res.stub(:code).and_return(code.to_s)
       res.stub(:body).and_return("")
       res.stub(:[]).with('content-encoding').and_return(nil)
@@ -381,24 +381,24 @@ describe RestClient::Request do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '', :to_hash => {})
       lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = double('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '404', :[] => ['content-encoding' => ''], :body => '', :to_hash => {})
       lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = double('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '500', :[] => ['content-encoding' => ''], :body => '', :to_hash => {})
       lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '', :to_hash => {})
       @request.process_result(res){|response, request| "foo"}.should eq "foo"
     end
   end

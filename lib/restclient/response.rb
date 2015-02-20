@@ -17,7 +17,26 @@ module RestClient
       result.extend Response
       result.net_http_res = net_http_res
       result.args = args
-      result
+      fix_encoding(result)
+    end
+
+    private
+
+    def self.fix_encoding(response)
+      charset  = response.headers[:content_type].to_s[/\bcharset=([^ ]+)/, 1]
+      encoding = nil
+
+      begin
+        encoding = Encoding.find(charset) unless charset.nil?
+      rescue ArgumentError => e
+        RestClient.log "No such encoding: #{charset}"
+      end
+
+      if encoding && response.body.clone.force_encoding(encoding).valid_encoding?
+        response.body.force_encoding(encoding)
+      end
+
+      response
     end
 
   end
