@@ -17,6 +17,10 @@ breaking changes.
 - Fix some support for using IPv6 addresses in URLs (still affected by Ruby
   2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
   backported to 2.0 and 2.1)
+
+# 1.7.3
+
+- Security: redact password in URI from logs (#349 / OSVDB-117461)
 - Drop monkey patch on MIME::Types (added `type_for_extension` method, use
   the public interface instead.
 
