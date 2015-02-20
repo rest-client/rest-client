@@ -1,3 +1,9 @@
+# 1.7.3
+
+- Security: redact password in URI from logs (#349 / OSVDB-117461)
+- Drop monkey patch on MIME::Types (added `type_for_extension` method, use
+  the public interface instead.
+
 # 1.7.2
 
 - Ignore duplicate certificates in CA store on Windows
