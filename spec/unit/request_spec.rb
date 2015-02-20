@@ -417,13 +417,13 @@ describe RestClient::Request do
 
     it 'does not log request password' do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client', :accept => '*/*'}).log_request
       log[0].should eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
 
     it 'logs invalid URIs, even though they will fail elsewhere' do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://a@b:c', :headers => {:user_agent => 'rest-client'}).log_request
+      RestClient::Request.new(:method => :get, :url => 'http://a@b:c', :headers => {:user_agent => 'rest-client', :accept => '*/*'}).log_request
       log[0].should eq %Q{RestClient.get "[invalid uri]", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
   end
