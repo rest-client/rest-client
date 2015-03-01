@@ -195,7 +195,7 @@ module RestClient
 
       def create_regular_field(s, k, v, type = nil)
         s.write("Content-Disposition: form-data; name=\"#{k}\"")
-        s.write("Content-Type: #{type};") if type
+        s.write("#{EOL}Content-Type: #{type};") if type
         s.write(EOL)
         s.write(EOL)
         s.write(v)
