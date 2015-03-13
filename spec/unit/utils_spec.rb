@@ -2,10 +2,10 @@ require 'spec_helper'
 
 describe RestClient::Utils do
   describe '.get_encoding_from_headers' do
-    it 'assumes ISO-8859-1 by default for text' do
+    it 'assumes no encoding by default for text' do
       headers = {:content_type => 'text/plain'}
       RestClient::Utils.get_encoding_from_headers(headers).
-        should eq 'ISO-8859-1'
+        should eq nil
     end
 
     it 'returns nil on failures' do

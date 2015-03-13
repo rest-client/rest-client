@@ -4,23 +4,26 @@ module RestClient
 
     # Return encoding from an HTTP header hash.
     #
+    # We use the RFC 7231 specification and do not impose a default encoding on
+    # text. This differs from the older RFC 2616 behavior, which specifies
+    # using ISO-8859-1 for text/* content types without a charset.
+    #
+    # Strings will effectively end up using `Encoding.default_external` when
+    # this method returns nil.
+    #
     # @param headers [Hash]
     #
-    # @return [String] encoding
+    # @return [String, nil] encoding Return the string encoding or nil if no
+    #   header is found.
     #
     def self.get_encoding_from_headers(headers)
       type_header = headers[:content_type]
       return nil unless type_header
 
-      content_type, params = cgi_parse_header(type_header)
+      _content_type, params = cgi_parse_header(type_header)
 
       if params.include?('charset')
         return params.fetch('charset').gsub(/(\A["']*)|(["']*\z)/, '')
-      end
-
-      # HTTP typically defaults to ISO-8859-1 when not specified.
-      if content_type.include?('text')
-        return 'ISO-8859-1'
       end
 
       nil
@@ -69,7 +72,7 @@ module RestClient
       pdict = {}
 
       begin
-        while p = parts.next
+        while (p = parts.next)
           i = p.index('=')
           if i
             name = p[0...i].strip.downcase
