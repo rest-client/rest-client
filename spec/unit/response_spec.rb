@@ -10,6 +10,8 @@ describe RestClient::Response, :include_helpers do
   it "behaves like string" do
     @response.to_s.should eq 'abc'
     @response.to_str.should eq 'abc'
+
+    @response.should_receive(:warn)
     @response.to_i.should eq 0
   end
 

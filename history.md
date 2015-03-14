@@ -23,6 +23,8 @@ This release is largely API compatible, but makes several breaking changes.
   backported to 2.0 and 2.1)
 - Rename `:timeout` to `:read_timeout`, but still support the old option with a
   warning for now
+- `Response#to_i` will now behave like `String#to_i` instead of returning the
+  HTTP response code, which was very surprising behavior.
 
 # 1.7.3
 

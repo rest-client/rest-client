@@ -51,6 +51,11 @@ module RestClient
       end
     end
 
+    def to_i
+      warn('warning: calling Response#to_i is not recommended')
+      super
+    end
+
     def description
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
