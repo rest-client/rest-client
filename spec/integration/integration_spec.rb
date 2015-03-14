@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 require_relative '_lib'
+require 'base64'
 
 describe RestClient do
 
@@ -85,6 +86,28 @@ describe RestClient do
       response.valid_encoding?.should eq true
       response.length.should eq 5
       response.encode('utf-8').should eq body_utf8
+    end
+
+    it 'defaults to Encoding.default_external' do
+      stub_request(:get, 'www.example.com').to_return(
+        body: 'abc', status: 200, headers: {
+          'Content-Type' => 'text/plain'
+        })
+
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding.default_external
+    end
+
+    it 'leaves images as binary' do
+      gif = Base64.strict_decode64('R0lGODlhAQABAAAAADs=')
+
+      stub_request(:get, 'www.example.com').to_return(
+        body: gif, status: 200, headers: {
+          'Content-Type' => 'image/gif'
+        })
+
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding::BINARY
     end
   end
 end
