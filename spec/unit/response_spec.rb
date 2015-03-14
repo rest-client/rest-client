@@ -10,7 +10,7 @@ describe RestClient::Response, :include_helpers do
   it "behaves like string" do
     @response.to_s.should eq 'abc'
     @response.to_str.should eq 'abc'
-    @response.to_i.should eq 200
+    @response.to_i.should eq 0
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
