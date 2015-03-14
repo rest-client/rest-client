@@ -14,7 +14,7 @@ module RestClient
   #
   # With a timeout (seconds):
   #
-  #   RestClient::Resource.new('http://slow', :timeout => 10)
+  #   RestClient::Resource.new('http://slow', :read_timeout => 10)
   #
   # With an open timeout (seconds):
   #
@@ -113,8 +113,8 @@ module RestClient
       options[:headers] || {}
     end
 
-    def timeout
-      options[:timeout]
+    def read_timeout
+      options[:read_timeout]
     end
 
     def open_timeout
