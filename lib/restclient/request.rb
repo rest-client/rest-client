@@ -23,8 +23,10 @@ module RestClient
   # * :max_redirects maximum number of redirections (default to 10)
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
-  # * :timeout and :open_timeout are how long to wait for a response and to
-  #     open a connection, in seconds. Pass nil to disable the timeout.
+  # * :read_timeout and :open_timeout are how long to wait for a response and
+  #     to open a connection, in seconds. Pass nil to disable the timeout. For
+  #     backwards compatibility, :timeout is supported as an alias for
+  #     :read_timeout.
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -35,7 +37,7 @@ module RestClient
     # TODO: rename timeout to read_timeout
 
     attr_reader :method, :url, :headers, :cookies,
-                :payload, :user, :password, :timeout, :max_redirects,
+                :payload, :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
 
@@ -116,7 +118,11 @@ module RestClient
       @user = args[:user]
       @password = args[:password]
       if args.include?(:timeout)
-        @timeout = args[:timeout]
+        warn('Deprecated: please use `:read_timeout` instead of `:timeout`')
+        @read_timeout = args[:timeout]
+      end
+      if args.include?(:read_timeout)
+        @read_timeout = args[:read_timeout]
       end
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
@@ -412,16 +418,16 @@ module RestClient
         warn('Try passing :verify_ssl => false instead.')
       end
 
-      if defined? @timeout
-        if @timeout == -1
-          warn 'To disable read timeouts, please set timeout to nil instead of -1'
-          @timeout = nil
+      if defined? @read_timeout
+        if @read_timeout == -1
+          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
+          @read_timeout = nil
         end
-        net.read_timeout = @timeout
+        net.read_timeout = @read_timeout
       end
       if defined? @open_timeout
         if @open_timeout == -1
-          warn 'To disable open timeouts, please set open_timeout to nil instead of -1'
+          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
           @open_timeout = nil
         end
         net.open_timeout = @open_timeout

@@ -21,6 +21,8 @@ This release is largely API compatible, but makes several breaking changes.
 - Fix some support for using IPv6 addresses in URLs (still affected by Ruby
   2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
   backported to 2.0 and 2.1)
+- Rename `:timeout` to `:read_timeout`, but still support the old option with a
+  warning for now
 
 # 1.7.3
 
