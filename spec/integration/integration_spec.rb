@@ -66,7 +66,7 @@ describe RestClient do
       response.encoding.should eq Encoding::BINARY
       lambda {
         response.encode('utf-8')
-      }.should_raise(Encoding::UndefinedConversionError)
+      }.should raise_error(Encoding::UndefinedConversionError)
       response.valid_encoding?.should eq true
     end
   end

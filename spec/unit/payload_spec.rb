@@ -1,6 +1,6 @@
 # encoding: binary
 
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Payload do
   context "A regular Payload" do

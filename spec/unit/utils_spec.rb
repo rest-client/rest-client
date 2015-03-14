@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Utils do
   describe '.get_encoding_from_headers' do

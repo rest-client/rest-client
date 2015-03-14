@@ -1,6 +1,6 @@
-require 'spec_helper'
+require_relative './_lib'
 
-describe RestClient::Request do
+describe RestClient::Request, :include_helpers do
   before do
     @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
 
@@ -50,7 +50,7 @@ describe RestClient::Request do
   end
 
   it "processes a successful result" do
-    res = double("result")
+    res = response_double
     res.stub(:code).and_return("200")
     res.stub(:body).and_return('body')
     res.stub(:[]).with('content-encoding').and_return(nil)
@@ -60,7 +60,7 @@ describe RestClient::Request do
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = double("result")
+      res = response_double
       res.stub(:code).and_return(code.to_s)
       res.stub(:body).and_return("")
       res.stub(:[]).with('content-encoding').and_return(nil)
@@ -381,24 +381,24 @@ describe RestClient::Request do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = double('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = double('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
       @request.process_result(res){|response, request| "foo"}.should eq "foo"
     end
   end
@@ -406,7 +406,7 @@ describe RestClient::Request do
   describe "proxy" do
     it "creates a proxy class if a proxy url is given" do
       RestClient.stub(:proxy).and_return("http://example.com/")
-      @request.net_http_class.proxy_class?.should be_true
+      @request.net_http_class.proxy_class?.should be true
     end
 
     it "creates a proxy class with the correct address if a IPv6 proxy url is given" do
@@ -415,7 +415,7 @@ describe RestClient::Request do
     end
 
     it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.proxy_class?.should be_false
+      @request.net_http_class.proxy_class?.should be_falsey
     end
   end
 

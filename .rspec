@@ -1,1 +1,2 @@
---colour --format progress --order random
+--color
+--format progress

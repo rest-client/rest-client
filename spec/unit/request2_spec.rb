@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Request do
 
@@ -26,7 +26,7 @@ describe RestClient::Request do
     stub_request(:post, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
     RestClient::Request.execute(:url => 'http://some/resource', :method => :post, :payload => {:file => test_file})
 
-    test_file.closed?.should be_true
+    test_file.closed?.should be true
   end
 
 end

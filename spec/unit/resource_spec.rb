@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Resource do
   before do
