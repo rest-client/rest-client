@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Exception do
   it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
