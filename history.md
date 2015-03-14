@@ -1,9 +1,13 @@
 # 2.0.0
 
-This release is largely API compatible, but makes several relatively minor
-breaking changes.
+This release is largely API compatible, but makes several breaking changes.
 
 - Drop support for Ruby 1.9.2
+- Respect Content-Type charset header provided by server. Previously,
+  rest-client would not override the string encoding chosen by Net::HTTP. Now
+  responses that specify a charset will yield a body string in that encoding.
+  For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
+  encoded with `Encoding::EUC_JP`.
 - Change exceptions raised on request timeout. Instead of
   RestClient::RequestTimeout (which is still used for HTTP 408), network
   timeouts will now raise either RestClient::Exceptions::ReadTimeout or
