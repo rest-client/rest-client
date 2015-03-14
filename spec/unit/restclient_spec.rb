@@ -2,40 +2,20 @@ require_relative '_lib'
 
 describe RestClient do
   describe "API" do
-    it "GET" do
-      RestClient::Request.should_receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
-      RestClient.get('http://some/resource')
+    %w(get delete head options).each do |verb|
+      it verb.to_s.upcase do
+        RestClient::Request.should_receive(:execute).with(:method => verb.to_sym, :url => 'http://some/resource', :headers => {})
+        RestClient.send(verb.to_sym, 'http://some/resource')
+      end
     end
 
-    it "POST" do
-      RestClient::Request.should_receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {})
-      RestClient.post('http://some/resource', 'payload')
+    %w(post put patch).each do |verb|
+      it verb.to_s.upcase do
+        RestClient::Request.should_receive(:execute).with(:method => verb.to_sym, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+        RestClient.send(verb.to_sym, 'http://some/resource', 'payload')
+      end
     end
 
-    it "PUT" do
-      RestClient::Request.should_receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {})
-      RestClient.put('http://some/resource', 'payload')
-    end
-
-    it "PATCH" do
-      RestClient::Request.should_receive(:execute).with(:method => :patch, :url => 'http://some/resource', :payload => 'payload', :headers => {})
-      RestClient.patch('http://some/resource', 'payload')
-    end
-
-    it "DELETE" do
-      RestClient::Request.should_receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
-      RestClient.delete('http://some/resource')
-    end
-
-    it "HEAD" do
-      RestClient::Request.should_receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {})
-      RestClient.head('http://some/resource')
-    end
-
-    it "OPTIONS" do
-      RestClient::Request.should_receive(:execute).with(:method => :options, :url => 'http://some/resource', :headers => {})
-      RestClient.options('http://some/resource')
-    end
   end
 
   describe "logging" do
