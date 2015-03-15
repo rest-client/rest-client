@@ -274,7 +274,7 @@ module RestClient
     end
 
     def net_http_do_request(http, req, body=nil, &block)
-      if body != nil && body.respond_to?(:read)
+      if body && body.respond_to?(:read)
         req.body_stream = body
         return http.request(req, nil, &block)
       else
@@ -444,11 +444,11 @@ module RestClient
         established_connection = true
 
         if @block_response
-          net_http_do_request(http, req, payload ? payload.to_s : nil,
-                              &@block_response)
+          net_http_do_request(http, req, payload, &@block_response)
         else
-          res = net_http_do_request(http, req, payload ? payload.to_s : nil) \
-            { |http_response| fetch_body(http_response) }
+          res = net_http_do_request(http, req, payload) { |http_response|
+            fetch_body(http_response)
+          }
           log_response res
           process_result res, & block
         end

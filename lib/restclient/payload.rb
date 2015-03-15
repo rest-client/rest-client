@@ -58,8 +58,8 @@ module RestClient
         @stream.seek(0)
       end
 
-      def read(bytes=nil)
-        @stream.read(bytes)
+      def read(*args)
+        @stream.read(*args)
       end
 
       alias :to_s :read
