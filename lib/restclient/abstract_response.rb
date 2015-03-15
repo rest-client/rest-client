@@ -61,6 +61,10 @@ module RestClient
     end
 
     # Follow a redirection
+    #
+    # @param request [RestClient::Request, nil]
+    # @param result [Net::HTTPResponse, nil]
+    #
     def follow_redirection request = nil, result = nil, & block
       url = headers[:location]
       if url !~ /^http/
@@ -80,6 +84,7 @@ module RestClient
           args[:headers][:cookies] = (args[:headers][:cookies] || {}).merge(parse_cookie(result['set-cookie']))
         end
       end
+
       Request.execute args, &block
     end
 
