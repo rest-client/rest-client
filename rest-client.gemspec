@@ -22,6 +22,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('pry-doc')
   s.add_development_dependency('rdoc', '>= 2.4.2', '< 5.0')
 
+  s.add_dependency('http-cookie', '>= 1.0.2', '< 2.0')
   s.add_dependency('mime-types', '>= 1.16', '< 3.0')
   s.add_dependency('netrc', '~> 0.7')
 
