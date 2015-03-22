@@ -3,8 +3,9 @@ require 'spec_helper'
 describe RestClient::Response do
   before do
     @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
-    @request = double('http request', :user => nil, :password => nil)
-    @response = RestClient::Response.create('abc', @net_http_res, {})
+    @example_url = 'http://example.com'
+    @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+    @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
   end
 
   it "behaves like string" do
@@ -14,7 +15,7 @@ describe RestClient::Response do
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
-    RestClient::Response.create(nil, @net_http_res, {}).to_s.should eq ""
+    RestClient::Response.create(nil, @net_http_res, {}, @request).to_s.should eq ""
   end
 
   it "test headers and raw headers" do
@@ -24,16 +25,18 @@ describe RestClient::Response do
 
   describe "cookie processing" do
     it "should correctly deal with one Set-Cookie header with one cookie inside" do
-      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]})
-      response = RestClient::Response.create('abc', net_http_res, {})
-      response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT"]
+      header_val = "main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT".freeze
+
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => [header_val]})
+      response = RestClient::Response.create('abc', net_http_res, {}, @request)
+      response.headers[:set_cookie].should eq [header_val]
       response.cookies.should eq({ "main_page" => "main_page_no_rewrite" })
     end
 
     it "should correctly deal with multiple cookies [multiple Set-Cookie headers]" do
-      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
-      response = RestClient::Response.create('abc', net_http_res, {})
-      response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT", "remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT", "user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
+      response = RestClient::Response.create('abc', net_http_res, {}, @request)
+      response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]
       response.cookies.should eq({
         "main_page" => "main_page_no_rewrite",
         "remember_me" => "",
@@ -42,8 +45,8 @@ describe RestClient::Response do
     end
 
     it "should correctly deal with multiple cookies [one Set-Cookie header with multiple cookies]" do
-      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Tue, 20-Jan-2015 15:03:14 GMT, remember_me=; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT, user=somebody; path=/; expires=Thu, 01-Jan-1970 00:00:00 GMT"]})
-      response = RestClient::Response.create('abc', net_http_res, {})
+      net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT, remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT, user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
+      response = RestClient::Response.create('abc', net_http_res, {}, @request)
       response.cookies.should eq({
         "main_page" => "main_page_no_rewrite",
         "remember_me" => "",
@@ -56,7 +59,7 @@ describe RestClient::Response do
     it "should return itself for normal codes" do
       (200..206).each do |code|
         net_http_res = double('net http response', :code => '200')
-        response = RestClient::Response.create('abc', net_http_res, {})
+        response = RestClient::Response.create('abc', net_http_res, {}, @request)
         response.return! @request
       end
     end
@@ -65,7 +68,7 @@ describe RestClient::Response do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
         unless (200..207).include? code
           net_http_res = double('net http response', :code => code.to_i)
-          response = RestClient::Response.create('abc', net_http_res, {})
+          response = RestClient::Response.create('abc', net_http_res, {}, @request)
           lambda { response.return!}.should raise_error
         end
       end
@@ -88,32 +91,38 @@ describe RestClient::Response do
     end
 
     it "follows a redirection and keep the cookies" do
+      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://some/new_resource', })
+      stub_request(:get, 'http://some/new_resource').with(:headers => {'Cookie' => 'Foo=Bar'}).to_return(:body => 'Qux')
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Qux'
+    end
+
+    it 'does not keep cookies across domains' do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://new/resource', })
-      stub_request(:get, 'http://new/resource').with(:headers => {'Cookie' => 'Foo=Bar'}).to_return(:body => 'Qux')
+      stub_request(:get, 'http://new/resource').with(:headers => {'Cookie' => ''}).to_return(:body => 'Qux')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Qux'
     end
 
     it "doesn't follow a 301 when the request is a post" do
       net_http_res = double('net http response', :code => 301)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post})
+      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
       net_http_res = double('net http response', :code => 302)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post})
+      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
       lambda { response.return!(@request)}.should raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
       net_http_res = double('net http response', :code => 307)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post})
+      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
       lambda { response.return!(@request)}.should raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do
       net_http_res = double('net http response', :code => 301)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :put})
+      response = RestClient::Response.create('abc', net_http_res, {:method => :put}, @request)
       lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
     end
 

@@ -5,7 +5,7 @@ module RestClient
 
   module AbstractResponse
 
-    attr_reader :net_http_res, :args
+    attr_reader :net_http_res, :args, :request
 
     # HTTP status code
     def code
@@ -23,11 +23,17 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
+    def response_set_vars(net_http_res, args, request)
+      @net_http_res = net_http_res
+      @args = args
+      @request = request
+    end
+
     # Hash of cookies extracted from response headers
     def cookies
       hash = {}
 
-      cookie_jar.cookies.each do |out, cookie|
+      cookie_jar.cookies.each do |cookie|
         hash[cookie.name] = cookie.value
       end
 
@@ -43,7 +49,7 @@ module RestClient
 
       jar = HTTP::CookieJar.new
       headers.fetch(:set_cookie, []).each do |cookie|
-        jar.parse(cookie, @args.fetch(:url))
+        jar.parse(cookie, @request.url)
       end
 
       @cookie_jar = jar
@@ -85,7 +91,7 @@ module RestClient
 
       url = headers[:location]
       if url !~ /^http/
-        url = URI.parse(args[:url]).merge(url).to_s
+        url = URI.parse(request.url).merge(url).to_s
       end
       new_args[:url] = url
       if request
