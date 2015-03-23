@@ -71,9 +71,9 @@ describe RestClient do
   end
 
   describe 'version' do
-    it 'has a version ~> 1.7.0.alpha' do
+    it 'has a version ~> 1.8.0.alpha' do
       ver = Gem::Version.new(RestClient.version)
-      Gem::Requirement.new('~> 1.7.0.alpha').should be_satisfied_by(ver)
+      Gem::Requirement.new('~> 1.8.0.alpha').should be_satisfied_by(ver)
     end
   end
 end
