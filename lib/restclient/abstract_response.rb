@@ -58,6 +58,7 @@ module RestClient
     # Return the default behavior corresponding to the response code:
     # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
     def return! request = nil, result = nil, & block
+
       if (200..207).include? code
         self
       elsif [301, 302, 307].include? code
@@ -100,17 +101,8 @@ module RestClient
       end
       new_args[:url] = url
       if request
-        if request.max_redirects == 0
-          raise MaxRedirectsReached
-        end
-        new_args[:password] = request.password
-        new_args[:user] = request.user
-        new_args[:headers] = request.headers
-        new_args[:max_redirects] = request.max_redirects - 1
-
-        # TODO: figure out what to do with original :cookie, :cookies values
-        new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-          cookie_jar.cookies(new_args.fetch(:url)))
+        raise MaxRedirectsReached if request.max_redirects == 0
+        update_args_after_redirect!(new_args)
       end
 
       Request.execute(new_args, &block)
@@ -134,6 +126,18 @@ module RestClient
         end
       end
       out
+    end
+
+    # Decrease count of passed redirections
+    def update_args_after_redirect!(args)
+      args[:password] = request.password
+      args[:user] = request.user
+      args[:headers] = request.headers
+      args[:max_redirects] = request.max_redirects - 1
+
+      # TODO: figure out what to do with original :cookie, :cookies values
+      args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
+        cookie_jar.cookies(args.fetch(:url)))
     end
   end
 
