@@ -1,5 +1,5 @@
 module RestClient
-  VERSION = '1.7.3' unless defined?(self::VERSION)
+  VERSION = '1.8.0.rc1' unless defined?(self::VERSION)
 
   def self.version
     VERSION
