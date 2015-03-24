@@ -33,14 +33,28 @@ describe RestClient::AbstractResponse do
     @response.description.should eq "200 OK | application/pdf  bytes\n"
   end
 
-  it "beautifies the headers by turning the keys to symbols" do
-    h = RestClient::AbstractResponse.beautify_headers('content-type' => [ 'x' ])
-    h.keys.first.should eq :content_type
-  end
+  describe '.beautify_headers' do
+    it "beautifies the headers by turning the keys to symbols" do
+      h = RestClient::AbstractResponse.beautify_headers('content-type' => [ 'x' ])
+      h.keys.first.should eq :content_type
+    end
 
-  it "beautifies the headers by turning the values to strings instead of one-element arrays" do
-    h = RestClient::AbstractResponse.beautify_headers('x' => [ 'text/html' ] )
-    h.values.first.should eq 'text/html'
+    it "beautifies the headers by turning the values to strings instead of one-element arrays" do
+      h = RestClient::AbstractResponse.beautify_headers('x' => [ 'text/html' ] )
+      h.values.first.should eq 'text/html'
+    end
+
+    it 'joins multiple header values by comma' do
+      RestClient::AbstractResponse.beautify_headers(
+        {'My-Header' => ['one', 'two']}
+      ).should eq({:my_header => 'one, two'})
+    end
+
+    it 'leaves set-cookie headers as array' do
+      RestClient::AbstractResponse.beautify_headers(
+        {'Set-Cookie' => ['cookie1=foo', 'cookie2=bar']}
+      ).should eq({:set_cookie => ['cookie1=foo', 'cookie2=bar']})
+    end
   end
 
   it "fetches the headers" do
