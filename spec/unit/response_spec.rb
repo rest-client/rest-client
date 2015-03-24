@@ -20,9 +20,21 @@ describe RestClient::Response, :include_helpers do
     RestClient::Response.create(nil, @net_http_res, {}, @request).to_s.should eq ""
   end
 
-  it "test headers and raw headers" do
-    @response.raw_headers["Status"][0].should eq "200 OK"
-    @response.headers[:status].should eq "200 OK"
+  describe 'header processing' do
+    it "test headers and raw headers" do
+      @response.raw_headers["Status"][0].should eq "200 OK"
+      @response.headers[:status].should eq "200 OK"
+    end
+
+    it 'handles multiple headers by joining with comma' do
+      @net_http_res = double('net http response', :to_hash => {'My-Header' => ['foo', 'bar']}, :code => 200)
+      @example_url = 'http://example.com'
+      @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+      @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
+
+      @response.raw_headers['My-Header'].should eq ['foo', 'bar']
+      @response.headers[:my_header].should eq 'foo, bar'
+    end
   end
 
   describe "cookie processing" do

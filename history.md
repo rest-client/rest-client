@@ -25,6 +25,21 @@ This release is largely API compatible, but makes several breaking changes.
   warning for now
 - `Response#to_i` will now behave like `String#to_i` instead of returning the
   HTTP response code, which was very surprising behavior.
+- Handle multiple HTTP response headers with the same name (except for
+  Set-Cookie, which is special) by joining the values with a comma space,
+  compliant with RFC 7230
+
+# 1.8.0
+
+- Security: implement standards compliant cookie handling by adding a
+  dependency on http-cookie. This breaks compatibility, but was necessary to
+  address a session fixation / cookie disclosure vulnerability.
+  (#369 / CVE-2015-1820)
+
+  Previously, any Set-Cookie headers found in an HTTP 30x response would be
+  sent to the redirection target, regardless of domain. Responses now expose a
+  cookie jar and respect standards compliant domain / path flags in Set-Cookie
+  headers.
 
 # 1.7.3
 
