@@ -250,6 +250,11 @@ the URL for GET, HEAD and DELETE requests, escaping the keys and values as neede
   RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
   # will GET http://example.com/resource?foo=bar&baz=qux
 
+For the POST request, you can add query parameters to the URL like this:
+
+  RestClient.post 'http://example.com/resource', payload, :params => {:foo => 'bar', :baz => 'qux'}
+  # will POST http://example.com/resource?foo=bar&baz=qux
+
 == Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically
