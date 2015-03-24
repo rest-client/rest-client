@@ -116,9 +116,38 @@ module RestClient
       Request.execute(new_args, &block)
     end
 
+    # Convert headers hash into canonical form.
+    #
+    # Header names will be converted to lowercase symbols with underscores
+    # instead of hyphens.
+    #
+    # Headers specified multiple times will be joined by comma and space,
+    # except for Set-Cookie, which will always be an array.
+    #
+    # Per RFC 2616, if a server sends multiple headers with the same key, they
+    # MUST be able to be joined into a single header by a comma. However,
+    # Set-Cookie (RFC 6265) cannot because commas are valid within cookie
+    # definitions. The newer RFC 7230 notes (3.2.2) that Set-Cookie should be
+    # handled as a special case.
+    #
+    # http://tools.ietf.org/html/rfc2616#section-4.2
+    # http://tools.ietf.org/html/rfc7230#section-3.2.2
+    # http://tools.ietf.org/html/rfc6265
+    #
+    # @param headers [Hash]
+    # @return [Hash]
+    #
     def self.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
-        out[key.gsub(/-/, '_').downcase.to_sym] = %w{ set-cookie }.include?(key.downcase) ? value : value.first
+        key_sym = key.gsub(/-/, '_').downcase.to_sym
+
+        # Handle Set-Cookie specially since it cannot be joined by comma.
+        if key.downcase == 'set-cookie'
+          out[key_sym] = value
+        else
+          out[key_sym] = value.join(', ')
+        end
+
         out
       end
     end
