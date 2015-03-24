@@ -122,19 +122,5 @@ module RestClient
         out
       end
     end
-
-    private
-
-    # Parse a cookie value and return its content in an Hash
-    def parse_cookie cookie_content
-      out = {}
-      CGI::Cookie::parse(cookie_content).each do |key, cookie|
-        unless ['expires', 'path'].include? key
-          out[CGI::escape(key)] = cookie.value[0] ? (CGI::escape(cookie.value[0]) || '') : ''
-        end
-      end
-      out
-    end
   end
-
 end
