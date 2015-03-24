@@ -27,6 +27,22 @@ describe RestClient::AbstractResponse do
     @response.code.should eq 200
   end
 
+  successful_http_codes = [200, 201, 202, 204]
+  successful_http_codes.each do |response_code|
+    it "indentifies numeric response code #{response_code} as true via #success?" do
+      @net_http_res.should_receive(:code).and_return(response_code.to_s)
+      @response.should be_success
+    end
+  end
+
+  failing_http_codes = [100, 302, 403, 404, 500]
+  failing_http_codes.each do |response_code|
+    it "indentifies numeric response code #{response_code} as false via #success?" do
+      @net_http_res.should_receive(:code).and_return(response_code.to_s)
+      @response.should_not be_success
+    end
+  end
+
   it "has a nice description" do
     @net_http_res.should_receive(:to_hash).and_return({'Content-Type' => ['application/pdf']})
     @net_http_res.should_receive(:code).and_return('200')
