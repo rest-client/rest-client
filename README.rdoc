@@ -32,7 +32,7 @@ dependencies for you.
 
 == Usage: Raw URL
 
-  require 'rest_client'
+  require 'rest-client'
 
   RestClient.get 'http://example.com/resource'
 
