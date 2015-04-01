@@ -338,6 +338,15 @@ describe RestClient::Request, :include_helpers do
       req.should_receive(:basic_auth).with('joe', 'mypass')
       @request.setup_credentials(req)
     end
+
+    it "does not attempt to send credentials if Authorization header is set" do
+      @request.headers['Authorization'] = 'Token abc123'
+      @request.stub(:user).and_return('joe')
+      @request.stub(:password).and_return('mypass')
+      req = double("request")
+      req.should_not_receive(:basic_auth)
+      @request.setup_credentials(req)
+    end
   end
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
