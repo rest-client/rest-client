@@ -213,10 +213,23 @@ Use as a one-off, curl-style:
 
 To enable logging you can:
 
-* set RestClient.log with a Ruby Logger, or
+* set RestClient.log with a Ruby Logger
 * set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
 
    $ RESTCLIENT_LOG=stdout path/to/my/program
+   
+* also you can rewrite RestCllient.log for use default Rails logger
+  
+    require 'restclient'
+  
+    # RestClient logs using << which isn't supported by the Rails logger,
+    # so wrap it up with a little proxy object.
+    RestClient.log =
+      Object.new.tap do |proxy|
+        def proxy.<<(message)
+          Rails.logger.info message
+        end
+    end
 
 Either produces logs like this:
 
