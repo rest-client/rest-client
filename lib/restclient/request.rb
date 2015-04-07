@@ -32,6 +32,8 @@ module RestClient
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
+  # * :proxy override RestClient.proxy with different proxy details, or pass
+  #     false to disable proxy.
   class Request
 
     # TODO: rename timeout to read_timeout
@@ -39,7 +41,7 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies,
                 :payload, :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :proxy
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -117,6 +119,7 @@ module RestClient
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
+      @proxy = args[:proxy]
       if args.include?(:timeout)
         warn('Deprecated: please use `:read_timeout` instead of `:timeout`')
         @read_timeout = args[:timeout]
@@ -260,9 +263,17 @@ module RestClient
       ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
+    def net_http_proxy
+      if proxy.nil?
+        RestClient.proxy
+      else
+        proxy
+      end
+    end
+
     def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
+      if net_http_proxy
+        proxy_uri = URI.parse(net_http_proxy)
         Net::HTTP::Proxy(proxy_uri.hostname, proxy_uri.port, proxy_uri.user, proxy_uri.password)
       else
         Net::HTTP
