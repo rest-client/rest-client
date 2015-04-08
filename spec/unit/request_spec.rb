@@ -414,6 +414,18 @@ describe RestClient::Request, :include_helpers do
       @request.net_http_class.proxy_address.should == "::1"
     end
 
+    it "creates a socks proxy class if proxy's scheme is socks(5)" do
+      RestClient.stub(:proxy).and_return("socks5://localhost:8080")
+      @request.net_http_class.respond_to?(:socks_server).should be true
+    end
+
+    it "throws error if the URI's scheme is unsupported" do
+      lambda {
+        RestClient.stub(:proxy).and_return("ftp://example.com")
+        @request.net_http_class
+      }.should raise_error(URI::InvalidURIError)
+    end
+
     it "creates a non-proxy class if a proxy url is not given" do
       @request.net_http_class.proxy_class?.should be_falsey
     end
