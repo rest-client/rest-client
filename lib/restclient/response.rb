@@ -29,7 +29,7 @@ module RestClient
       begin
         encoding = Encoding.find(charset) if charset
       rescue ArgumentError
-        RestClient.log "No such encoding: #{charset.inspect}"
+        RestClient.log << "No such encoding: #{charset.inspect}"
       end
 
       return unless encoding
