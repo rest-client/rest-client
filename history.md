@@ -14,6 +14,8 @@ This release is largely API compatible, but makes several breaking changes.
   RestClient::Exceptions::OpenTimeout, both of which inherit from
   RestClient::Exceptions::Timeout. This class also makes the original wrapped
   exception available as `#original_exception`.
+- Rename `:timeout` to `:read_timeout`. When `:timeout` is passed, now set both
+  `:read_timeout` and `:open_timeout`.
 - Change default HTTP Accept header to `*/*`
 - Use a more descriptive User-Agent header by default
 - Drop RC4-MD5 from default cipher list
@@ -21,13 +23,15 @@ This release is largely API compatible, but makes several breaking changes.
 - Fix some support for using IPv6 addresses in URLs (still affected by Ruby
   2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
   backported to 2.0 and 2.1)
-- Rename `:timeout` to `:read_timeout`, but still support the old option with a
-  warning for now
 - `Response#to_i` will now behave like `String#to_i` instead of returning the
   HTTP response code, which was very surprising behavior.
+- `Response#body` will now return a true `String` object rather than self.
+  Previously there was no easy way to get the true `String` response instead of
+  the Frankenstein response string object with AbstractResponse mixed in.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
+- Don't set basic auth header if explicit `Authorization` header is specified
 
 # 1.8.0
 
