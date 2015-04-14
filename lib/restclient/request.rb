@@ -3,6 +3,7 @@ require 'mime/types'
 require 'cgi'
 require 'netrc'
 require 'set'
+require 'socksify/http'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -262,7 +263,14 @@ module RestClient
     def net_http_class
       if RestClient.proxy
         proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.hostname, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+        case proxy_uri.scheme
+        when /^https?$/i
+          Net::HTTP::Proxy(proxy_uri.hostname, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+        when /^socks5?$/i
+          Net::HTTP.SOCKSProxy(proxy_uri.hostname, proxy_uri.port)
+        else
+          raise URI::InvalidURIError, "Unsupported proxy URI: #{RestClient.proxy}"
+        end
       else
         Net::HTTP
       end
