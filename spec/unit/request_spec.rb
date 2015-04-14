@@ -441,6 +441,16 @@ describe RestClient::Request, :include_helpers do
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://example.com')
       req.net_http_class.proxy_class?.should be true
     end
+
+    it "overrides global proxy with per-request proxy" do
+      RestClient.stub(:proxy).and_return('http://example.com')
+      @request.net_http_class.proxy_class?.should be true
+      @request.net_http_class.proxy_address.should == 'example.com'
+
+      req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://127.0.0.1/')
+      req.net_http_class.proxy_class?.should be true
+      req.net_http_class.proxy_address.should == '127.0.0.1'
+    end
   end
 
 
