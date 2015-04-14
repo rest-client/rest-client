@@ -263,19 +263,30 @@ module RestClient
       ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
-    def net_http_class
-      proxy_uri = nil
-
+    # The proxy URI for this request. If `:proxy` was provided on this request,
+    # use it over `RestClient.proxy`.
+    #
+    # @return [URI, nil]
+    #
+    def proxy_uri
       if defined?(@proxy)
         if @proxy
-          proxy_uri = URI.parse(@proxy)
+          URI.parse(@proxy)
+        else
+          nil
         end
       elsif RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
+        URI.parse(RestClient.proxy)
+      else
+        nil
       end
+    end
 
-      if proxy_uri
-        Net::HTTP::Proxy(proxy_uri.hostname, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+    def net_http_class
+      p_uri = proxy_uri
+
+      if p_uri
+        Net::HTTP::Proxy(p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
       else
         Net::HTTP
       end
