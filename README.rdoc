@@ -32,7 +32,7 @@ dependencies for you.
 
 == Usage: Raw URL
 
-  require 'rest_client'
+  require 'rest-client'
 
   RestClient.get 'http://example.com/resource'
 
@@ -317,15 +317,16 @@ Have a look at rest-client-components: http://github.com/crohr/rest-client-compo
 
 == Credits
 
-REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert, Andy Brody
+REST Client Team:: Andy Brody
 
 Creator:: Adam Wiggins
 
-Maintainer Emeritus:: Julien Kirch
+Maintainers Emeriti:: Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch
 
 Major contributions:: Blake Mizerany, Julien Kirch
 
-Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
+A great many generous folks have contributed features and patches.
+See AUTHORS for the full list.
 
 == Legal
 
