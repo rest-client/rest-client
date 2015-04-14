@@ -496,7 +496,7 @@ module RestClient
     end
 
     def setup_credentials(req)
-      req.basic_auth(user, password) if user
+      req.basic_auth(user, password) if user && !headers.has_key?("Authorization")
     end
 
     def fetch_body(http_response)
