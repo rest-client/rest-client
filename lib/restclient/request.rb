@@ -21,6 +21,8 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
+  # * :proxy An HTTP proxy URI to use for this request. Any value here
+  #   (including nil) will override RestClient.proxy.
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :read_timeout and :open_timeout are how long to wait for a response and
@@ -35,8 +37,8 @@ module RestClient
 
     # TODO: rename timeout to read_timeout
 
-    attr_reader :method, :url, :headers, :cookies,
-                :payload, :user, :password, :read_timeout, :max_redirects,
+    attr_reader :method, :url, :headers, :cookies, :payload, :proxy,
+                :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
 
@@ -128,6 +130,8 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
+
+      @proxy = args.fetch(:proxy) if args.include?(:proxy)
 
       @ssl_opts = {}
 
@@ -260,8 +264,17 @@ module RestClient
     end
 
     def net_http_class
-      if RestClient.proxy
+      proxy_uri = nil
+
+      if defined?(@proxy)
+        if @proxy
+          proxy_uri = URI.parse(@proxy)
+        end
+      elsif RestClient.proxy
         proxy_uri = URI.parse(RestClient.proxy)
+      end
+
+      if proxy_uri
         Net::HTTP::Proxy(proxy_uri.hostname, proxy_uri.port, proxy_uri.user, proxy_uri.password)
       else
         Net::HTTP
