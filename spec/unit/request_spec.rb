@@ -426,6 +426,17 @@ describe RestClient::Request, :include_helpers do
     it "creates a non-proxy class if a proxy url is not given" do
       @request.net_http_class.proxy_class?.should be_falsey
     end
+
+    it "creates a proxy class if a proxy option is given" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => "http://example.com")
+      @request.net_http_class.proxy_class?.should be true
+    end
+
+    it "ignores the proxy with proxy option set false" do
+      RestClient.stub(:proxy).and_return("http://example.com/")
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => false)
+      @request.net_http_class.proxy_class?.should be false
+    end
   end
 
 
