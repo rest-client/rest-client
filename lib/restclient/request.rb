@@ -24,9 +24,8 @@ module RestClient
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :read_timeout and :open_timeout are how long to wait for a response and
-  #     to open a connection, in seconds. Pass nil to disable the timeout. For
-  #     backwards compatibility, :timeout is supported as an alias for
-  #     :read_timeout.
+  #     to open a connection, in seconds. Pass nil to disable the timeout.
+  # * :timeout can be used to set both timeouts
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -118,8 +117,8 @@ module RestClient
       @user = args[:user]
       @password = args[:password]
       if args.include?(:timeout)
-        warn('Deprecated: please use `:read_timeout` instead of `:timeout`')
         @read_timeout = args[:timeout]
+        @open_timeout = args[:timeout]
       end
       if args.include?(:read_timeout)
         @read_timeout = args[:read_timeout]

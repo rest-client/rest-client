@@ -523,20 +523,7 @@ describe RestClient::Request, :include_helpers do
       @request.transmit(@uri, 'req', nil)
     end
 
-    it 'deprecated: sets read_timeout via :timeout' do
-      fake_stderr {
-        @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
-      }.should match(/^Deprecated: .*:read_timeout.*:timeout/)
-      @http.stub(:request)
-      @request.stub(:process_result)
-      @request.stub(:response_log)
-
-      @net.should_receive(:read_timeout=).with(123)
-
-      @request.transmit(@uri, 'req', nil)
-    end
-
-    it "set open_timeout" do
+    it "sets open_timeout" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123)
       @http.stub(:request)
       @request.stub(:process_result)
@@ -546,6 +533,31 @@ describe RestClient::Request, :include_helpers do
 
       @request.transmit(@uri, 'req', nil)
     end
+
+    it 'sets both timeouts with :timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:open_timeout=).with(123)
+      @net.should_receive(:read_timeout=).with(123)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+    it 'supersedes :timeout with open/read_timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34, :read_timeout => 56)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:open_timeout=).with(34)
+      @net.should_receive(:read_timeout=).with(56)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
 
     it "disable timeout by setting it to nil" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => nil, :open_timeout => nil)
@@ -557,6 +569,19 @@ describe RestClient::Request, :include_helpers do
       @net.should_receive(:open_timeout=).with(nil)
 
       @request.transmit(@uri, 'req', nil)
+    end
+
+    it 'deprecated: warns when disabling timeout by setting it to -1' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:read_timeout=).with(nil)
+
+      fake_stderr {
+        @request.transmit(@uri, 'req', nil)
+      }.should match(/^Deprecated: .*timeout.* nil instead of -1$/)
     end
 
     it "deprecated: disable timeout by setting it to -1" do
