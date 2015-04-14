@@ -7,7 +7,7 @@ module RestClient
     include AbstractResponse
 
     def body
-      self
+      @body ||= String.new(self)
     end
 
     def self.create body, net_http_res, args, request
@@ -34,7 +34,7 @@ module RestClient
 
       return unless encoding
 
-      response.body.force_encoding(encoding)
+      response.force_encoding(encoding)
 
       response
     end
