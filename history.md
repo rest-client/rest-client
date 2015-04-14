@@ -32,6 +32,8 @@ This release is largely API compatible, but makes several breaking changes.
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
 - Don't set basic auth header if explicit `Authorization` header is specified
+- Add `:proxy` option to requests, which can be used for thread-safe
+  per-request proxy configuration, overriding `RestClient.proxy`
 
 # 1.8.0
 
