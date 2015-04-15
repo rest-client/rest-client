@@ -210,12 +210,6 @@ module RestClient
     end
   end
 
-  class MaxRedirectsReached < Exception
-    def message
-      'Maximum number of redirect reached'
-    end
-  end
-
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.

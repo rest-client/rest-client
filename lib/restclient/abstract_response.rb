@@ -57,23 +57,19 @@ module RestClient
 
     # Return the default behavior corresponding to the response code:
     # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
-    def return! request = nil, result = nil, & block
+    def return!(&block)
       if (200..207).include? code
         self
       elsif [301, 302, 307].include? code
         unless [:get, :head].include? args[:method]
-          raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
+          raise exception_with_response
         else
-          follow_redirection(request, result, & block)
+          follow_redirection(&block)
         end
       elsif code == 303
-        args[:method] = :get
-        args.delete :payload
-        follow_redirection(request, result, & block)
-      elsif Exceptions::EXCEPTIONS_MAP[code]
-        raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
+        follow_get_redirection(&block)
       else
-        raise RequestFailed.new(self, code)
+        raise exception_with_response
       end
     end
 
@@ -86,34 +82,20 @@ module RestClient
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
-    # Follow a redirection
-    #
-    # @param request [RestClient::Request, nil]
-    # @param result [Net::HTTPResponse, nil]
-    #
-    def follow_redirection request = nil, result = nil, & block
+    # Follow a redirection response by making a new HTTP request to the
+    # redirection target.
+    def follow_redirection(&block)
+      _follow_redirection(@args.dup, &block)
+    end
+
+    # Follow a redirection response, but change the HTTP method to GET and drop
+    # the payload from the original request.
+    def follow_get_redirection(&block)
       new_args = @args.dup
+      new_args[:method] = :get
+      new_args.delete(:payload)
 
-      url = headers[:location]
-      if url !~ /^http/
-        url = URI.parse(request.url).merge(url).to_s
-      end
-      new_args[:url] = url
-      if request
-        if request.max_redirects == 0
-          raise MaxRedirectsReached
-        end
-        new_args[:password] = request.password
-        new_args[:user] = request.user
-        new_args[:headers] = request.headers
-        new_args[:max_redirects] = request.max_redirects - 1
-
-        # TODO: figure out what to do with original :cookie, :cookies values
-        new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-          cookie_jar.cookies(new_args.fetch(:url)))
-      end
-
-      Request.execute(new_args, &block)
+      _follow_redirection(new_args, &block)
     end
 
     # Convert headers hash into canonical form.
@@ -150,6 +132,48 @@ module RestClient
 
         out
       end
+    end
+
+    private
+
+    # Follow a redirection
+    #
+    # @param new_args [Hash] Start with this hash of arguments for the
+    #   redirection request. The hash will be mutated, so be sure to dup any
+    #   existing hash that should not be modified.
+    #
+    def _follow_redirection(new_args, &block)
+
+      # parse location header and merge into existing URL
+      url = headers[:location]
+      if url !~ /^http/
+        url = URI.parse(request.url).merge(url).to_s
+      end
+      new_args[:url] = url
+
+      if request.max_redirects <= 0
+        raise exception_with_response
+      end
+      new_args[:password] = request.password
+      new_args[:user] = request.user
+      new_args[:headers] = request.headers
+      new_args[:max_redirects] = request.max_redirects - 1
+
+      # TODO: figure out what to do with original :cookie, :cookies values
+      new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
+        cookie_jar.cookies(new_args.fetch(:url)))
+
+      Request.execute(new_args, &block)
+    end
+
+    def exception_with_response
+      begin
+        klass = Exceptions::EXCEPTIONS_MAP.fetch(code)
+      rescue KeyError
+        raise RequestFailed.new(self, code)
+      end
+
+      raise klass.new(self, code)
     end
   end
 end
