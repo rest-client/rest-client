@@ -15,6 +15,10 @@ module RestClient
 
     attr_reader :file, :request
 
+    def inspect
+      "<RestClient::RawResponse @code=#{code.inspect}, @file=#{file.inspect}, @request=#{request.inspect}>"
+    end
+
     def initialize(tempfile, net_http_res, args, request)
       @net_http_res = net_http_res
       @args = args

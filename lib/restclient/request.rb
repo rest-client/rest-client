@@ -109,6 +109,10 @@ module RestClient
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
                        version ciphers verify_callback verify_callback_warnings}
 
+    def inspect
+      "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
+    end
+
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @headers = (args[:headers] || {}).dup
