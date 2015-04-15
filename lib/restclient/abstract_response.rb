@@ -1,11 +1,14 @@
 require 'cgi'
-require 'http-cookie'
+require 'forwardable'
 
 module RestClient
 
   module AbstractResponse
+    extend Forwardable
 
     attr_reader :net_http_res, :args, :request
+
+    def_delegators :abstract_response_resolver, :cookie_jar, :return!, :follow_redirection
 
     # HTTP status code
     def code
@@ -40,43 +43,6 @@ module RestClient
       hash
     end
 
-    # Cookie jar extracted from response headers.
-    #
-    # @return [HTTP::CookieJar]
-    #
-    def cookie_jar
-      return @cookie_jar if @cookie_jar
-
-      jar = HTTP::CookieJar.new
-      headers.fetch(:set_cookie, []).each do |cookie|
-        jar.parse(cookie, @request.url)
-      end
-
-      @cookie_jar = jar
-    end
-
-    # Return the default behavior corresponding to the response code:
-    # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
-    def return! request = nil, result = nil, & block
-      if (200..207).include? code
-        self
-      elsif [301, 302, 307].include? code
-        unless [:get, :head].include? args[:method]
-          raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
-        else
-          follow_redirection(request, result, & block)
-        end
-      elsif code == 303
-        args[:method] = :get
-        args.delete :payload
-        follow_redirection(request, result, & block)
-      elsif Exceptions::EXCEPTIONS_MAP[code]
-        raise Exceptions::EXCEPTIONS_MAP[code].new(self, code)
-      else
-        raise RequestFailed.new(self, code)
-      end
-    end
-
     def to_i
       warn('warning: calling Response#to_i is not recommended')
       super
@@ -86,35 +52,6 @@ module RestClient
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
-    # Follow a redirection
-    #
-    # @param request [RestClient::Request, nil]
-    # @param result [Net::HTTPResponse, nil]
-    #
-    def follow_redirection request = nil, result = nil, & block
-      new_args = @args.dup
-
-      url = headers[:location]
-      if url !~ /^http/
-        url = URI.parse(request.url).merge(url).to_s
-      end
-      new_args[:url] = url
-      if request
-        if request.max_redirects == 0
-          raise MaxRedirectsReached
-        end
-        new_args[:password] = request.password
-        new_args[:user] = request.user
-        new_args[:headers] = request.headers
-        new_args[:max_redirects] = request.max_redirects - 1
-
-        # TODO: figure out what to do with original :cookie, :cookies values
-        new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-          cookie_jar.cookies(new_args.fetch(:url)))
-      end
-
-      Request.execute(new_args, &block)
-    end
 
     # Convert headers hash into canonical form.
     #
@@ -151,5 +88,12 @@ module RestClient
         out
       end
     end
+
+    private
+
+    def abstract_response_resolver
+      AbstractResponseResolver.new(self)
+    end
+
   end
 end
