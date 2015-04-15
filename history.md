@@ -25,9 +25,11 @@ This release is largely API compatible, but makes several breaking changes.
   backported to 2.0 and 2.1)
 - `Response#to_i` will now behave like `String#to_i` instead of returning the
   HTTP response code, which was very surprising behavior.
-- `Response#body` will now return a true `String` object rather than self.
-  Previously there was no easy way to get the true `String` response instead of
-  the Frankenstein response string object with AbstractResponse mixed in.
+- `Response#body` and `#to_s` will now return a true `String` object rather
+  than self. Previously there was no easy way to get the true `String` response
+  instead of the Frankenstein response string object with AbstractResponse
+  mixed in. Response objects also now implement `.inspect` to make this
+  distinction clearer.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
@@ -39,6 +41,13 @@ This release is largely API compatible, but makes several breaking changes.
   treat any object that responds to `.read` as a streaming payload and pass it
   through to `.body_stream=` on the Net:HTTP object. This massively reduces the
   memory required for large file uploads.
+- Remove `RestClient::MaxRedirectsReached` in favor of the normal
+  `ExceptionWithResponse` subclasses. This makes the response accessible on the
+  exception object as `.response`, making it possible for callers to tell what
+  has actually happened when the redirect limit is reached.
+- When following HTTP redirection, store a list of each previous response on
+  the response object as `.history`. This makes it possible to access the
+  original response headers and body before the redirection was followed.
 
 # 1.8.0
 
