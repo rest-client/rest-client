@@ -1040,4 +1040,28 @@ describe RestClient::Request, :include_helpers do
       @request.fetch_body(net_http_res)
     end
   end
+
+  describe 'payloads' do
+    it 'should accept string payloads' do
+      payload = 'Foo'
+      @request = RestClient::Request.new(method: :get, url: 'example.com', :payload => payload)
+      @request.should_receive(:process_result)
+      @http.should_receive(:request).with('req', payload)
+      @request.transmit(@uri, 'req', payload)
+    end
+
+    it 'should accept streaming IO payloads' do
+      payload = StringIO.new('streamed')
+
+      @request = RestClient::Request.new(method: :get, url: 'example.com', :payload => payload)
+      @request.should_receive(:process_result)
+
+      @get = double('net::http::get')
+      @get.should_receive(:body_stream=).with(instance_of(RestClient::Payload::Streamed))
+
+      @request.net_http_request_class(:GET).stub(:new).and_return(@get)
+      @http.should_receive(:request).with(@get, nil)
+      @request.execute
+    end
+  end
 end
