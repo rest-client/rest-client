@@ -14,7 +14,7 @@ describe RestClient::Exception do
   end
 
   it "sets the exception message to ErrorMessage" do
-    RestClient::ResourceNotFound.new.message.should eq 'Resource Not Found'
+    RestClient::ResourceNotFound.new.message.should eq 'Not Found'
   end
 
   it "contains exceptions in RestClient" do
@@ -77,5 +77,11 @@ describe RestClient::ResourceNotFound do
     rescue RestClient::ResourceNotFound => e
       e.response.body.should eq body
     end
+  end
+end
+
+describe "backwards compatibility" do
+  it 'aliases RestClient::NotFound as ResourceNotFound' do
+    RestClient::ResourceNotFound.should eq RestClient::NotFound
   end
 end

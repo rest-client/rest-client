@@ -26,7 +26,7 @@ module RestClient
               401 => 'Unauthorized',
               402 => 'Payment Required',
               403 => 'Forbidden',
-              404 => 'Resource Not Found', # TODO: change to 'Not Found'
+              404 => 'Not Found',
               405 => 'Method Not Allowed',
               406 => 'Not Acceptable',
               407 => 'Proxy Authentication Required',
@@ -181,6 +181,8 @@ module RestClient
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
+  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
+  ResourceNotFound = NotFound
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
