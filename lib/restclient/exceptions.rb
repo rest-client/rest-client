@@ -66,18 +66,6 @@ module RestClient
               511 => 'Network Authentication Required', # RFC6585
   }
 
-  # Compatibility : make the Response act like a Net::HTTPResponse when needed
-  module ResponseForException
-    def method_missing symbol, *args
-      if net_http_res.respond_to? symbol
-        warn "[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code"
-        net_http_res.send symbol, *args
-      else
-        super
-      end
-    end
-  end
-
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
   # You can get the status code by e.http_code, or see anything about the
@@ -93,9 +81,6 @@ module RestClient
       @response = response
       @message = nil
       @initial_response_code = initial_response_code
-
-      # compatibility: this make the exception behave like a Net::HTTPResponse
-      response.extend ResponseForException if response
     end
 
     def http_code
@@ -226,11 +211,4 @@ module RestClient
       self.message = message
     end
   end
-end
-
-class RestClient::Request
-  # backwards compatibility
-  Redirect = RestClient::Redirect
-  Unauthorized = RestClient::Unauthorized
-  RequestFailed = RestClient::RequestFailed
 end

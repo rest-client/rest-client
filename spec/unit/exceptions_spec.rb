@@ -67,22 +67,8 @@ describe RestClient::ResourceNotFound do
       e.response.should eq response
     end
   end
-end
 
-describe "backwards compatibility" do
-  it "alias RestClient::Request::Redirect to RestClient::Redirect" do
-    RestClient::Request::Redirect.should eq RestClient::Redirect
-  end
-
-  it "alias RestClient::Request::Unauthorized to RestClient::Unauthorized" do
-    RestClient::Request::Unauthorized.should eq RestClient::Unauthorized
-  end
-
-  it "alias RestClient::Request::RequestFailed to RestClient::RequestFailed" do
-    RestClient::Request::RequestFailed.should eq RestClient::RequestFailed
-  end
-
-  it "make the exception's response act like an Net::HTTPResponse" do
+  it 'stores the body on the response of the exception' do
     body = "body"
     stub_request(:get, "www.example.com").to_return(:body => body, :status => 404)
     begin
