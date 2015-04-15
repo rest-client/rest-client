@@ -12,6 +12,10 @@ module RestClient
       @code ||= @net_http_res.code.to_i
     end
 
+    def history
+      @history ||= request.redirection_history || []
+    end
+
     # A hash of the headers, beautified with symbols and underscores.
     # e.g. "Content-type" will become :content_type.
     def headers
@@ -27,6 +31,9 @@ module RestClient
       @net_http_res = net_http_res
       @args = args
       @request = request
+
+      # prime redirection history
+      history
     end
 
     # Hash of cookies extracted from response headers
@@ -163,7 +170,15 @@ module RestClient
       new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
         cookie_jar.cookies(new_args.fetch(:url)))
 
-      Request.execute(new_args, &block)
+
+      # prepare new request
+      new_req = Request.new(new_args)
+
+      # append self to redirection history
+      new_req.redirection_history = history + [self]
+
+      # execute redirected request
+      new_req.execute(&block)
     end
 
     def exception_with_response

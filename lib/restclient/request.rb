@@ -42,6 +42,9 @@ module RestClient
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
 
+    # An array of previous redirection responses
+    attr_accessor :redirection_history
+
     def self.execute(args, & block)
       new(args).execute(& block)
     end

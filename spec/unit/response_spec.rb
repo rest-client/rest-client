@@ -4,7 +4,7 @@ describe RestClient::Response, :include_helpers do
   before do
     @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
     @example_url = 'http://example.com'
-    @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+    @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
     @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
   end
 
@@ -29,7 +29,7 @@ describe RestClient::Response, :include_helpers do
     it 'handles multiple headers by joining with comma' do
       @net_http_res = double('net http response', :to_hash => {'My-Header' => ['foo', 'bar']}, :code => 200)
       @example_url = 'http://example.com'
-      @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+      @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
       @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
 
       @response.raw_headers['My-Header'].should eq ['foo', 'bar']
@@ -96,6 +96,16 @@ describe RestClient::Response, :include_helpers do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+    end
+
+    it "keeps redirection history" do
+      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
+      r = RestClient::Request.execute(url: 'http://some/resource', method: :get)
+      r.body.should eq 'Foo'
+      r.history.length.should eq 1
+      r.history.fetch(0).should be_a(RestClient::Response)
+      r.history.fetch(0).code.should be 301
     end
 
     it "follows a redirection and keep the parameters" do
@@ -187,7 +197,10 @@ describe RestClient::Response, :include_helpers do
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       lambda {
         RestClient::Request.execute(url: 'http://some/redirect-1', method: :get)
-      }.should raise_error(RestClient::MovedPermanently)
+      }.should raise_error(RestClient::MovedPermanently) { |ex|
+        ex.response.history.each {|r| r.should be_a(RestClient::Response) }
+        ex.response.history.length.should eq 10
+      }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(10)
     end
 
@@ -196,10 +209,11 @@ describe RestClient::Response, :include_helpers do
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       lambda {
         RestClient::Request.execute(url: 'http://some/redirect-1', method: :get, max_redirects: 5)
-      }.should raise_error(RestClient::MovedPermanently)
+      }.should raise_error(RestClient::MovedPermanently) { |ex|
+        ex.response.history.length.should eq 5
+      }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(5)
     end
   end
-
 
 end
