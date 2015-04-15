@@ -34,6 +34,11 @@ This release is largely API compatible, but makes several breaking changes.
 - Don't set basic auth header if explicit `Authorization` header is specified
 - Add `:proxy` option to requests, which can be used for thread-safe
   per-request proxy configuration, overriding `RestClient.proxy`
+- Add actual support for streaming request payloads. Previously rest-client
+  would call `.to_s` even on RestClient::Payload::Streamed objects. Instead,
+  treat any object that responds to `.read` as a streaming payload and pass it
+  through to `.body_stream=` on the Net:HTTP object. This massively reduces the
+  memory required for large file uploads.
 
 # 1.8.0
 
