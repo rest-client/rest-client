@@ -181,19 +181,6 @@ module RestClient
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
-  # A redirect was encountered; caught by execute to retry with the new url.
-  class Redirect < Exception
-
-    def message
-      'Redirect'
-    end
-
-    attr_accessor :url
-
-    def initialize(url)
-      @url = url
-    end
-  end
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
