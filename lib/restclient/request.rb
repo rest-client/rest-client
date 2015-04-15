@@ -42,6 +42,9 @@ module RestClient
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
 
+    # An array of previous redirection responses
+    attr_accessor :redirection_history
+
     def self.execute(args, & block)
       new(args).execute(& block)
     end
@@ -105,6 +108,10 @@ module RestClient
 
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
                        version ciphers verify_callback verify_callback_warnings}
+
+    def inspect
+      "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
+    end
 
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
@@ -556,13 +563,14 @@ module RestClient
         # We don't decode raw requests
         response = RawResponse.new(@tf, res, args, self)
       else
-        response = Response.create(Request.decode(res['content-encoding'], res.body), res, args, self)
+        decoded = Request.decode(res['content-encoding'], res.body)
+        response = Response.create(decoded, res, args, self)
       end
 
       if block_given?
         block.call(response, self, res, & block)
       else
-        response.return!(self, res, & block)
+        response.return!(&block)
       end
 
     end

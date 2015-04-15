@@ -4,7 +4,7 @@ describe RestClient::Response, :include_helpers do
   before do
     @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
     @example_url = 'http://example.com'
-    @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+    @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
     @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
   end
 
@@ -29,7 +29,7 @@ describe RestClient::Response, :include_helpers do
     it 'handles multiple headers by joining with comma' do
       @net_http_res = double('net http response', :to_hash => {'My-Header' => ['foo', 'bar']}, :code => 200)
       @example_url = 'http://example.com'
-      @request = double('http request', :user => nil, :password => nil, :url => @example_url)
+      @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
       @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
 
       @response.raw_headers['My-Header'].should eq ['foo', 'bar']
@@ -73,8 +73,8 @@ describe RestClient::Response, :include_helpers do
     it "should return itself for normal codes" do
       (200..206).each do |code|
         net_http_res = response_double(:code => '200')
-        response = RestClient::Response.create('abc', net_http_res, {}, @request)
-        response.return! @request
+        resp = RestClient::Response.create('abc', net_http_res, {}, @request)
+        resp.return!
       end
     end
 
@@ -82,8 +82,8 @@ describe RestClient::Response, :include_helpers do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
         unless (200..207).include? code
           net_http_res = response_double(:code => code.to_i)
-          response = RestClient::Response.create('abc', net_http_res, {}, @request)
-          lambda { response.return!}.should raise_error
+          resp = RestClient::Response.create('abc', net_http_res, {}, @request)
+          lambda { resp.return! }.should raise_error
         end
       end
     end
@@ -96,6 +96,16 @@ describe RestClient::Response, :include_helpers do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+    end
+
+    it "keeps redirection history" do
+      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
+      r = RestClient::Request.execute(url: 'http://some/resource', method: :get)
+      r.body.should eq 'Foo'
+      r.history.length.should eq 1
+      r.history.fetch(0).should be_a(RestClient::Response)
+      r.history.fetch(0).code.should be 301
     end
 
     it "follows a redirection and keep the parameters" do
@@ -118,26 +128,38 @@ describe RestClient::Response, :include_helpers do
 
     it "doesn't follow a 301 when the request is a post" do
       net_http_res = response_double(:code => 301)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
-      lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
+      response = RestClient::Response.create('abc', net_http_res,
+                                             {:method => :post}, @request)
+      lambda {
+        response.return!
+      }.should raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
       net_http_res = response_double(:code => 302)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
-      lambda { response.return!(@request)}.should raise_error(RestClient::Found)
+      response = RestClient::Response.create('abc', net_http_res,
+                                             {:method => :post}, @request)
+      lambda {
+        response.return!
+      }.should raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
       net_http_res = response_double(:code => 307)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :post}, @request)
-      lambda { response.return!(@request)}.should raise_error(RestClient::TemporaryRedirect)
+      response = RestClient::Response.create('abc', net_http_res,
+                                             {:method => :post}, @request)
+      lambda {
+        response.return!
+      }.should raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do
       net_http_res = response_double(:code => 301)
-      response = RestClient::Response.create('abc', net_http_res, {:method => :put}, @request)
-      lambda { response.return!(@request)}.should raise_error(RestClient::MovedPermanently)
+      response = RestClient::Response.create('abc', net_http_res,
+                                             {:method => :put}, @request)
+      lambda {
+        response.return!
+      }.should raise_error(RestClient::MovedPermanently)
     end
 
     it "follows a redirection when the request is a post and result is a 303" do
@@ -173,17 +195,25 @@ describe RestClient::Response, :include_helpers do
     it "follows no more than 10 redirections before raising error" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
-      lambda { RestClient::Request.execute(:url => 'http://some/redirect-1', :method => :get) }.should raise_error(RestClient::MaxRedirectsReached)
+      lambda {
+        RestClient::Request.execute(url: 'http://some/redirect-1', method: :get)
+      }.should raise_error(RestClient::MovedPermanently) { |ex|
+        ex.response.history.each {|r| r.should be_a(RestClient::Response) }
+        ex.response.history.length.should eq 10
+      }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(10)
     end
 
     it "follows no more than max_redirects redirections, if specified" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
-      lambda { RestClient::Request.execute(:url => 'http://some/redirect-1', :method => :get, :max_redirects => 5) }.should raise_error(RestClient::MaxRedirectsReached)
+      lambda {
+        RestClient::Request.execute(url: 'http://some/redirect-1', method: :get, max_redirects: 5)
+      }.should raise_error(RestClient::MovedPermanently) { |ex|
+        ex.response.history.length.should eq 5
+      }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(5)
     end
   end
-
 
 end

@@ -6,8 +6,36 @@ module RestClient
 
     include AbstractResponse
 
+    # Return the HTTP response body.
+    #
+    # Future versions of RestClient will deprecate treating response objects
+    # directly as strings, so it will be necessary to call `.body`.
+    #
+    # @return [String]
+    #
     def body
-      @body ||= String.new(self)
+      # Benchmarking suggests that "#{self}" is fastest, and that caching the
+      # body string in an instance variable doesn't make it enough faster to be
+      # worth the extra memory storage.
+      String.new(self)
+    end
+
+    # Convert the HTTP response body to a pure String object.
+    #
+    # @return [String]
+    def to_s
+      body
+    end
+
+    # Convert the HTTP response body to a pure String object.
+    #
+    # @return [String]
+    def to_str
+      body
+    end
+
+    def inspect
+      "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
     def self.create body, net_http_res, args, request
@@ -37,6 +65,14 @@ module RestClient
       response.force_encoding(encoding)
 
       response
+    end
+
+    def body_truncated(length)
+      if body.length > length
+        body[0..length] + '...'
+      else
+        body
+      end
     end
   end
 end
