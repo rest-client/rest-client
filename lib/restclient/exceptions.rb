@@ -26,7 +26,7 @@ module RestClient
               401 => 'Unauthorized',
               402 => 'Payment Required',
               403 => 'Forbidden',
-              404 => 'Resource Not Found', # TODO: change to 'Not Found'
+              404 => 'Not Found',
               405 => 'Method Not Allowed',
               406 => 'Not Acceptable',
               407 => 'Proxy Authentication Required',
@@ -66,18 +66,6 @@ module RestClient
               511 => 'Network Authentication Required', # RFC6585
   }
 
-  # Compatibility : make the Response act like a Net::HTTPResponse when needed
-  module ResponseForException
-    def method_missing symbol, *args
-      if net_http_res.respond_to? symbol
-        warn "[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code"
-        net_http_res.send symbol, *args
-      else
-        super
-      end
-    end
-  end
-
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
   # You can get the status code by e.http_code, or see anything about the
@@ -93,9 +81,6 @@ module RestClient
       @response = response
       @message = nil
       @initial_response_code = initial_response_code
-
-      # compatibility: this make the exception behave like a Net::HTTPResponse
-      response.extend ResponseForException if response
     end
 
     def http_code
@@ -196,19 +181,8 @@ module RestClient
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
-  # A redirect was encountered; caught by execute to retry with the new url.
-  class Redirect < Exception
-
-    def message
-      'Redirect'
-    end
-
-    attr_accessor :url
-
-    def initialize(url)
-      @url = url
-    end
-  end
+  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
+  ResourceNotFound = NotFound
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
@@ -226,11 +200,4 @@ module RestClient
       self.message = message
     end
   end
-end
-
-class RestClient::Request
-  # backwards compatibility
-  Redirect = RestClient::Redirect
-  Unauthorized = RestClient::Unauthorized
-  RequestFailed = RestClient::RequestFailed
 end
