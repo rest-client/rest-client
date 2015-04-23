@@ -92,6 +92,12 @@ module RestClient
 
   class << self
     attr_accessor :proxy
+
+    #customizable tmpdir for created files
+    attr_writer :tmpdir
+    def tmpdir
+      @tmpdir || Dir.tmpdir
+    end
   end
 
   # Setup the log for RestClient calls.
