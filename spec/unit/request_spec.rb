@@ -11,7 +11,9 @@ describe RestClient::Request, :include_helpers do
 
     @net = double("net::http base")
     @http = double("net::http connection")
+
     Net::HTTP.stub(:new).and_return(@net)
+
     @net.stub(:start).and_yield(@http)
     @net.stub(:use_ssl=)
     @net.stub(:verify_mode=)
@@ -414,7 +416,9 @@ describe RestClient::Request, :include_helpers do
 
   describe "proxy" do
     before do
-      allow(Net::HTTP).to receive(:new).and_call_original
+      # unstub Net::HTTP creation since we need to test it
+      Net::HTTP.unstub(:new)
+
       @proxy_req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
     end
 
@@ -436,7 +440,6 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "disables proxy on a per-request basis" do
-      allow(Net::HTTP).to receive(:new).and_call_original
       RestClient.stub(:proxy).and_return('http://example.com')
       RestClient.stub(:proxy_set?).and_return(true)
       @proxy_req.net_http_object('host', 80).proxy?.should be true
@@ -446,15 +449,13 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "sets proxy on a per-request basis" do
-      allow(Net::HTTP).to receive(:new).and_call_original
       @proxy_req.net_http_object('some', 80).proxy?.should be_falsey
 
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://example.com')
       req.net_http_object('host', 80).proxy?.should be true
     end
 
-    it "overrides proxy from environment" do
-      allow(Net::HTTP).to receive(:new).and_call_original
+    it "overrides proxy from environment", if: RUBY_VERSION >= '2.0' do
       allow(ENV).to receive(:[]).with("http_proxy").and_return("http://127.0.0.1")
       allow(ENV).to receive(:[]).with("no_proxy").and_return(nil)
       allow(ENV).to receive(:[]).with("NO_PROXY").and_return(nil)
@@ -463,18 +464,24 @@ describe RestClient::Request, :include_helpers do
       obj.proxy?.should be true
       obj.proxy_address.should eq '127.0.0.1'
 
+      # test original method .proxy?
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => nil)
       obj = req.net_http_object('host', 80)
       obj.proxy?.should be_falsey
 
+      # stub RestClient.proxy_set? to peek into implementation
       RestClient.stub(:proxy_set?).and_return(true)
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
       obj = req.net_http_object('host', 80)
       obj.proxy?.should be_falsey
+
+      # test stubbed Net::HTTP.new
+      req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => nil)
+      expect(Net::HTTP).to receive(:new).with('host', 80, nil, nil, nil, nil)
+      req.net_http_object('host', 80)
     end
 
     it "overrides global proxy with per-request proxy" do
-      allow(Net::HTTP).to receive(:new).and_call_original
       RestClient.stub(:proxy).and_return('http://example.com')
       RestClient.stub(:proxy_set?).and_return(true)
       obj = @proxy_req.net_http_object('host', 80)
