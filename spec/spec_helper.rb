@@ -15,4 +15,8 @@ RSpec.configure do |config|
 
   # add helpers
   config.include Helpers, :include_helpers
+
+  config.mock_with :rspec do |mocks|
+    mocks.yield_receiver_to_any_instance_implementation_blocks = true
+  end
 end

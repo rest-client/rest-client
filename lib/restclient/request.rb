@@ -273,29 +273,41 @@ module RestClient
     # The proxy URI for this request. If `:proxy` was provided on this request,
     # use it over `RestClient.proxy`.
     #
-    # @return [URI, nil]
+    # Return false if a proxy was explicitly set and is falsy.
+    #
+    # @return [URI, false, nil]
     #
     def proxy_uri
       if defined?(@proxy)
         if @proxy
           URI.parse(@proxy)
         else
-          nil
+          false
         end
-      elsif RestClient.proxy
-        URI.parse(RestClient.proxy)
+      elsif RestClient.proxy_set?
+        if RestClient.proxy
+          URI.parse(RestClient.proxy)
+        else
+          false
+        end
       else
         nil
       end
     end
 
-    def net_http_class
+    def net_http_object(hostname, port)
       p_uri = proxy_uri
 
-      if p_uri
-        Net::HTTP::Proxy(p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
+      if p_uri.nil?
+        # no proxy set
+        Net::HTTP.new(hostname, port)
+      elsif !p_uri
+        # proxy explicitly set to none
+        Net::HTTP.new(hostname, port, nil, nil, nil, nil)
       else
-        Net::HTTP
+        Net::HTTP.new(hostname, port,
+                      p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
+
       end
     end
 
@@ -409,7 +421,7 @@ module RestClient
 
       setup_credentials req
 
-      net = net_http_class.new(uri.hostname, uri.port)
+      net = net_http_object(uri.hostname, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
