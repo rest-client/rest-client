@@ -34,6 +34,22 @@ RSpec::Core::RakeTask.new('rcov') do |t|
   t.rcov_opts = ['--exclude', 'examples']
 end
 
+desc 'Regenerate authors file'
+task :authors do
+  Dir.chdir(File.dirname(__FILE__)) do
+    File.open('AUTHORS', 'w') do |f|
+      f.write( <<-EOM
+The Ruby REST Client would not be what it is today without the help of
+the following kind souls:
+
+      EOM
+      )
+    end
+
+    sh 'git shortlog -s | cut -f 2 >> AUTHORS'
+  end
+end
+
 task :default do
   sh 'rake -T'
 end

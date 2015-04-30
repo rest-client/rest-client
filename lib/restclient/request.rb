@@ -21,10 +21,13 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
+  # * :proxy An HTTP proxy URI to use for this request. Any value here
+  #   (including nil) will override RestClient.proxy.
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
-  # * :timeout and :open_timeout are how long to wait for a response and to
-  #     open a connection, in seconds. Pass nil to disable the timeout.
+  # * :read_timeout and :open_timeout are how long to wait for a response and
+  #     to open a connection, in seconds. Pass nil to disable the timeout.
+  # * :timeout can be used to set both timeouts
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -32,18 +35,23 @@ module RestClient
   #     OpenSSL::SSL::SSLContext#ciphers=
   class Request
 
-    attr_reader :method, :url, :headers, :cookies,
-                :payload, :user, :password, :timeout, :max_redirects,
+    # TODO: rename timeout to read_timeout
+
+    attr_reader :method, :url, :headers, :cookies, :payload, :proxy,
+                :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
+
+    # An array of previous redirection responses
+    attr_accessor :redirection_history
 
     def self.execute(args, & block)
       new(args).execute(& block)
     end
 
-    # This is similar to the list now in ruby core, but adds HIGH and RC4-MD5
-    # for better compatibility (similar to Firefox) and moves AES-GCM cipher
-    # suites above DHE/ECDHE CBC suites (similar to Chromium).
+    # This is similar to the list now in ruby core, but adds HIGH for better
+    # compatibility (similar to Firefox) and moves AES-GCM cipher suites above
+    # DHE/ECDHE CBC suites (similar to Chromium).
     # https://github.com/ruby/ruby/commit/699b209cf8cf11809620e12985ad33ae33b119ee
     #
     # This list will be used by default if the Ruby global OpenSSL default
@@ -91,7 +99,6 @@ module RestClient
 
       HIGH
       +RC4
-      RC4-MD5
     }.join(":")
 
     # A set of weak default ciphers that we will override by default.
@@ -102,9 +109,13 @@ module RestClient
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
                        version ciphers verify_callback verify_callback_warnings}
 
+    def inspect
+      "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
+    end
+
     def initialize args
       @method = args[:method] or raise ArgumentError, "must pass :method"
-      @headers = args[:headers] || {}
+      @headers = (args[:headers] || {}).dup
       if args[:url]
         @url = process_url_params(args[:url], headers)
       else
@@ -115,13 +126,19 @@ module RestClient
       @user = args[:user]
       @password = args[:password]
       if args.include?(:timeout)
-        @timeout = args[:timeout]
+        @read_timeout = args[:timeout]
+        @open_timeout = args[:timeout]
+      end
+      if args.include?(:read_timeout)
+        @read_timeout = args[:read_timeout]
       end
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
+
+      @proxy = args.fetch(:proxy) if args.include?(:proxy)
 
       @ssl_opts = {}
 
@@ -173,7 +190,11 @@ module RestClient
 
     def execute & block
       uri = parse_url_with_auth(url)
-      transmit uri, net_http_request_class(method).new(uri.request_uri, processed_headers), payload, & block
+
+      # With 2.0.0+, net/http accepts URI objects in requests and handles wrapping
+      # IPv6 addresses in [] for use in the Host request header.
+      request_uri = RUBY_VERSION >= "2.0.0" ? uri : uri.request_uri
+      transmit uri, net_http_request_class(method).new(request_uri, processed_headers), payload, & block
     ensure
       payload.close if payload
     end
@@ -249,10 +270,30 @@ module RestClient
       ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
+    # The proxy URI for this request. If `:proxy` was provided on this request,
+    # use it over `RestClient.proxy`.
+    #
+    # @return [URI, nil]
+    #
+    def proxy_uri
+      if defined?(@proxy)
+        if @proxy
+          URI.parse(@proxy)
+        else
+          nil
+        end
+      elsif RestClient.proxy
+        URI.parse(RestClient.proxy)
+      else
+        nil
+      end
+    end
+
     def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+      p_uri = proxy_uri
+
+      if p_uri
+        Net::HTTP::Proxy(p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
       else
         Net::HTTP
       end
@@ -263,7 +304,7 @@ module RestClient
     end
 
     def net_http_do_request(http, req, body=nil, &block)
-      if body != nil && body.respond_to?(:read)
+      if body && body.respond_to?(:read)
         req.body_stream = body
         return http.request(req, nil, &block)
       else
@@ -271,8 +312,22 @@ module RestClient
       end
     end
 
+    # Parse a string into a URI object. If the string has no HTTP-like scheme
+    # (i.e. scheme followed by '//'), a scheme of 'http' will be added. This
+    # mimics the behavior of browsers and user agents like cURL.
+    #
+    # @param url [String] A URL string.
+    #
+    # @return [URI]
+    #
+    # @raise URI::InvalidURIError on invalid URIs
+    #
     def parse_url(url)
-      url = "http://#{url}" unless url.match(/^http/)
+      # Prepend http:// unless the string already contains an RFC 3986 scheme
+      # followed by two forward slashes. (The slashes are not part of the URI
+      # RFC, but specified by the URL RFC 1738.)
+      # https://tools.ietf.org/html/rfc3986#section-3.1
+      url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
       URI.parse(url)
     end
 
@@ -281,7 +336,7 @@ module RestClient
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
       if !@user && !@password
-        @user, @password = Netrc.read[uri.host]
+        @user, @password = Netrc.read[uri.hostname]
       end
       uri
     end
@@ -334,7 +389,7 @@ module RestClient
 
     def print_verify_callback_warnings
       warned = false
-      if RestClient::Platform.mac?
+      if RestClient::Platform.mac_mri?
         warn('warning: ssl_verify_callback return code is ignored on OS X')
         warned = true
       end
@@ -347,9 +402,14 @@ module RestClient
     end
 
     def transmit uri, req, payload, & block
+
+      # We set this to true in the net/http block so that we can distinguish
+      # read_timeout from open_timeout. This isn't needed in Ruby >= 2.0.
+      established_connection = false
+
       setup_credentials req
 
-      net = net_http_class.new(uri.host, uri.port)
+      net = net_http_class.new(uri.hostname, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
@@ -388,16 +448,16 @@ module RestClient
         warn('Try passing :verify_ssl => false instead.')
       end
 
-      if defined? @timeout
-        if @timeout == -1
-          warn 'To disable read timeouts, please set timeout to nil instead of -1'
-          @timeout = nil
+      if defined? @read_timeout
+        if @read_timeout == -1
+          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
+          @read_timeout = nil
         end
-        net.read_timeout = @timeout
+        net.read_timeout = @read_timeout
       end
       if defined? @open_timeout
         if @open_timeout == -1
-          warn 'To disable open timeouts, please set open_timeout to nil instead of -1'
+          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
           @open_timeout = nil
         end
         net.open_timeout = @open_timeout
@@ -411,20 +471,37 @@ module RestClient
 
 
       net.start do |http|
+        established_connection = true
+
         if @block_response
-          net_http_do_request(http, req, payload ? payload.to_s : nil,
-                              &@block_response)
+          net_http_do_request(http, req, payload, &@block_response)
         else
-          res = net_http_do_request(http, req, payload ? payload.to_s : nil) \
-            { |http_response| fetch_body(http_response) }
+          res = net_http_do_request(http, req, payload) { |http_response|
+            fetch_body(http_response)
+          }
           log_response res
           process_result res, & block
         end
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
-    rescue Timeout::Error, Errno::ETIMEDOUT
-      raise RestClient::RequestTimeout
+    rescue Timeout::Error, Errno::ETIMEDOUT => err
+      # Net::HTTP has OpenTimeout, ReadTimeout in Ruby >= 2.0
+      if defined?(Net::OpenTimeout)
+        case err
+        when Net::OpenTimeout
+          raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+        when Net::ReadTimeout
+          raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+        end
+      end
+
+      # compatibility for Ruby 1.9.3, handling for non-Net::HTTP timeouts
+      if established_connection
+        raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+      else
+        raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+      end
 
     rescue OpenSSL::SSL::SSLError => error
       # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
@@ -449,7 +526,7 @@ module RestClient
     end
 
     def setup_credentials(req)
-      req.basic_auth(user, password) if user
+      req.basic_auth(user, password) if user && !headers.has_key?("Authorization")
     end
 
     def fetch_body(http_response)
@@ -484,15 +561,16 @@ module RestClient
     def process_result res, & block
       if @raw_response
         # We don't decode raw requests
-        response = RawResponse.new(@tf, res, args)
+        response = RawResponse.new(@tf, res, args, self)
       else
-        response = Response.create(Request.decode(res['content-encoding'], res.body), res, args)
+        decoded = Request.decode(res['content-encoding'], res.body)
+        response = Response.create(decoded, res, args, self)
       end
 
       if block_given?
         block.call(response, self, res, & block)
       else
-        response.return!(self, res, & block)
+        response.return!(&block)
       end
 
     end
@@ -519,7 +597,18 @@ module RestClient
       return unless RestClient.log
 
       out = []
-      out << "RestClient.#{method} #{url.inspect}"
+      sanitized_url = begin
+        uri = URI.parse(url)
+        uri.password = "REDACTED" if uri.password
+        uri.to_s
+      rescue URI::InvalidURIError
+        # An attacker may be able to manipulate the URL to be
+        # invalid, which could force discloure of a password if
+        # we show any of the un-parsed URL here.
+        "[invalid uri]"
+      end
+
+      out << "RestClient.#{method} #{sanitized_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
       RestClient.log << out.join(', ') + "\n"
@@ -541,11 +630,10 @@ module RestClient
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
         if key.is_a? Symbol
-          key = key.to_s.split(/_/).map { |w| w.capitalize }.join('-')
+          key = key.to_s.split(/_/).map(&:capitalize).join('-')
         end
         if 'CONTENT-TYPE' == key.upcase
-          target_value = value.to_s
-          result[key] = MIME::Types.type_for_extension target_value
+          result[key] = maybe_convert_extension(value.to_s)
         elsif 'ACCEPT' == key.upcase
           # Accept can be composed of several comma-separated values
           if value.is_a? Array
@@ -553,7 +641,9 @@ module RestClient
           else
             target_values = value.to_s.split ','
           end
-          result[key] = target_values.map { |ext| MIME::Types.type_for_extension(ext.to_s.strip) }.join(', ')
+          result[key] = target_values.map { |ext|
+            maybe_convert_extension(ext.to_s.strip)
+          }.join(', ')
         else
           result[key] = value.to_s
         end
@@ -562,7 +652,11 @@ module RestClient
     end
 
     def default_headers
-      {:accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate'}
+      {
+        :accept => '*/*',
+        :accept_encoding => 'gzip, deflate',
+        :user_agent => RestClient::Platform.default_user_agent,
+      }
     end
 
     private
@@ -571,21 +665,38 @@ module RestClient
       URI.const_defined?(:Parser) ? URI::Parser.new : URI
     end
 
-  end
-end
+    # Given a MIME type or file extension, return either a MIME type or, if
+    # none is found, the input unchanged.
+    #
+    #     >> maybe_convert_extension('json')
+    #     => 'application/json'
+    #
+    #     >> maybe_convert_extension('unknown')
+    #     => 'unknown'
+    #
+    #     >> maybe_convert_extension('application/xml')
+    #     => 'application/xml'
+    #
+    # @param ext [String]
+    #
+    # @return [String]
+    #
+    def maybe_convert_extension(ext)
+      unless ext =~ /\A[a-zA-Z0-9_@-]+\z/
+        # Don't look up strings unless they look like they could be a file
+        # extension known to mime-types.
+        #
+        # There currently isn't any API public way to look up extensions
+        # directly out of MIME::Types, but the type_for() method only strips
+        # off after a period anyway.
+        return ext
+      end
 
-module MIME
-  class Types
-
-    # Return the first found content-type for a value considered as an extension or the value itself
-    def type_for_extension ext
-      candidates = @extension_index[ext]
-      candidates.empty? ? ext : candidates[0].content_type
-    end
-
-    class << self
-      def type_for_extension ext
-        @__types__.type_for_extension ext
+      types = MIME::Types.type_for(ext)
+      if types.empty?
+        ext
+      else
+        types.first.content_type
       end
     end
   end

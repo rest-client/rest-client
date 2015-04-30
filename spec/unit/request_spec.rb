@@ -1,12 +1,12 @@
-require 'spec_helper'
+require_relative './_lib'
 
-describe RestClient::Request do
+describe RestClient::Request, :include_helpers do
   before do
     @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
 
     @uri = double("uri")
     @uri.stub(:request_uri).and_return('/resource')
-    @uri.stub(:host).and_return('some')
+    @uri.stub(:hostname).and_return('some')
     @uri.stub(:port).and_return(80)
 
     @net = double("net::http base")
@@ -21,8 +21,8 @@ describe RestClient::Request do
     RestClient.log = nil
   end
 
-  it "accept */* mimetype, preferring xml" do
-    @request.default_headers[:accept].should eq '*/*; q=0.5, application/xml'
+  it "accept */* mimetype" do
+    @request.default_headers[:accept].should eq '*/*'
   end
 
   describe "compression" do
@@ -50,7 +50,7 @@ describe RestClient::Request do
   end
 
   it "processes a successful result" do
-    res = double("result")
+    res = response_double
     res.stub(:code).and_return("200")
     res.stub(:body).and_return('body')
     res.stub(:[]).with('content-encoding').and_return(nil)
@@ -60,7 +60,7 @@ describe RestClient::Request do
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = double("result")
+      res = response_double
       res.stub(:code).and_return(code.to_s)
       res.stub(:body).and_return("")
       res.stub(:[]).with('content-encoding').and_return(nil)
@@ -68,14 +68,36 @@ describe RestClient::Request do
     end
   end
 
-  it "parses a url into a URI object" do
-    URI.should_receive(:parse).with('http://example.com/resource')
-    @request.parse_url('http://example.com/resource')
-  end
+  describe '.parse_url' do
+    it "parses a url into a URI object" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      @request.parse_url('http://example.com/resource')
+    end
 
-  it "adds http:// to the front of resources specified in the syntax example.com/resource" do
-    URI.should_receive(:parse).with('http://example.com/resource')
-    @request.parse_url('example.com/resource')
+    it "adds http:// to the front of resources specified in the syntax example.com/resource" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      @request.parse_url('example.com/resource')
+    end
+
+    it 'adds http:// to resources containing a colon' do
+      URI.should_receive(:parse).with('http://example.com:1234')
+      @request.parse_url('example.com:1234')
+    end
+
+    it 'does not add http:// to the front of https resources' do
+      URI.should_receive(:parse).with('https://example.com/resource')
+      @request.parse_url('https://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTP resources' do
+      URI.should_receive(:parse).with('HTTP://example.com/resource')
+      @request.parse_url('HTTP://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTPS resources' do
+      URI.should_receive(:parse).with('HTTPS://example.com/resource')
+      @request.parse_url('HTTPS://example.com/resource')
+    end
   end
 
   describe "user - password" do
@@ -145,7 +167,7 @@ describe RestClient::Request do
   end
 
   it "uses netrc credentials" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :host => 'example.com'))
+    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://example.com/resource')
     @request.user.should eq 'a'
@@ -153,7 +175,7 @@ describe RestClient::Request do
   end
 
   it "uses credentials in the url in preference to netrc" do
-    URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :host => 'example.com'))
+    URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
     @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
     @request.user.should eq 'joe '
@@ -166,7 +188,7 @@ describe RestClient::Request do
 
   describe "user headers" do
     it "merges user headers with the default headers" do
-      @request.should_receive(:default_headers).and_return({ :accept => '*/*; q=0.5, application/xml', :accept_encoding => 'gzip, deflate' })
+      @request.should_receive(:default_headers).and_return({ :accept => '*/*', :accept_encoding => 'gzip, deflate' })
       headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
       headers.should have_key "Accept-Encoding"
       headers["Accept-Encoding"].should eq "gzip"
@@ -238,6 +260,21 @@ describe RestClient::Request do
     @request.execute
   end
 
+  it "IPv6: executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
+    @request = RestClient::Request.new(:method => :put, :url => 'http://[::1]/some/resource', :payload => 'payload')
+    klass = double("net:http class")
+    @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
+
+    if RUBY_VERSION >= "2.0.0"
+      klass.should_receive(:new).with(kind_of(URI), kind_of(Hash)).and_return('result')
+    else
+      klass.should_receive(:new).with(kind_of(String), kind_of(Hash)).and_return('result')
+    end
+
+    @request.should_receive(:transmit)
+    @request.execute
+  end
+
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
     @request.should_receive(:process_result)
@@ -301,6 +338,15 @@ describe RestClient::Request do
       req.should_receive(:basic_auth).with('joe', 'mypass')
       @request.setup_credentials(req)
     end
+
+    it "does not attempt to send credentials if Authorization header is set" do
+      @request.headers['Authorization'] = 'Token abc123'
+      @request.stub(:user).and_return('joe')
+      @request.stub(:password).and_return('mypass')
+      req = double("request")
+      req.should_not_receive(:basic_auth)
+      @request.setup_credentials(req)
+    end
   end
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
@@ -313,14 +359,26 @@ describe RestClient::Request do
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(OpenSSL::SSL::SSLError)
   end
 
-  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+  it "catches Timeout::Error and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Timeout::Error)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
-  it "catches Timeout::Error and raise the more informative RequestTimeout" do
+  it "catches Errno::ETIMEDOUT and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Errno::ETIMEDOUT)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::RequestTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+  end
+
+  it "catches Net::ReadTimeout and raises RestClient's ReadTimeout",
+     :if => defined?(Net::ReadTimeout) do
+    @http.stub(:request).and_raise(Net::ReadTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+  end
+
+  it "catches Net::OpenTimeout and raises RestClient's OpenTimeout",
+     :if => defined?(Net::OpenTimeout) do
+    @http.stub(:request).and_raise(Net::OpenTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout)
   end
 
   it "class method execute wraps constructor" do
@@ -332,24 +390,24 @@ describe RestClient::Request do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = double('response', :code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = double('response', :code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
       lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = double('response', :code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
       @request.process_result(res){|response, request| "foo"}.should eq "foo"
     end
   end
@@ -357,11 +415,41 @@ describe RestClient::Request do
   describe "proxy" do
     it "creates a proxy class if a proxy url is given" do
       RestClient.stub(:proxy).and_return("http://example.com/")
-      @request.net_http_class.proxy_class?.should be_true
+      @request.net_http_class.proxy_class?.should be true
+    end
+
+    it "creates a proxy class with the correct address if a IPv6 proxy url is given" do
+      RestClient.stub(:proxy).and_return("http://[::1]/")
+      @request.net_http_class.proxy_address.should == "::1"
     end
 
     it "creates a non-proxy class if a proxy url is not given" do
-      @request.net_http_class.proxy_class?.should be_false
+      @request.net_http_class.proxy_class?.should be_falsey
+    end
+
+    it "disables proxy on a per-request basis" do
+      RestClient.stub(:proxy).and_return('http://example.com')
+      @request.net_http_class.proxy_class?.should be true
+
+      disabled_req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => nil)
+      disabled_req.net_http_class.proxy_class?.should be_falsey
+    end
+
+    it "sets proxy on a per-request basis" do
+      @request.net_http_class.proxy_class?.should be_falsey
+
+      req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://example.com')
+      req.net_http_class.proxy_class?.should be true
+    end
+
+    it "overrides global proxy with per-request proxy" do
+      RestClient.stub(:proxy).and_return('http://example.com')
+      @request.net_http_class.proxy_class?.should be true
+      @request.net_http_class.proxy_address.should == 'example.com'
+
+      req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://127.0.0.1/')
+      req.net_http_class.proxy_class?.should be true
+      req.net_http_class.proxy_address.should == '127.0.0.1'
     end
   end
 
@@ -369,26 +457,26 @@ describe RestClient::Request do
   describe "logging" do
     it "logs a get request" do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://url').log_request
-      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate"\n}
+      RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo').log_request
-      log[0].should eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3"\n}
+      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo', :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000)).log_request
-      log[0].should eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*; q=0.5, application/xml", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000"\n}
+      RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000), :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs input headers as a hash" do
       log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain' }).log_request
-      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate"\n}
+      RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain', :user_agent => 'rest-client' }).log_request
+      log[0].should eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a response including the status code, content type, and result body size in bytes" do
@@ -414,6 +502,18 @@ describe RestClient::Request do
       @request.log_response res
       log[0].should eq "# => 200 OK | text/html 0 bytes\n"
     end
+
+    it 'does not log request password' do
+      log = RestClient.log = []
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+    end
+
+    it 'logs invalid URIs, even though they will fail elsewhere' do
+      log = RestClient.log = []
+      RestClient::Request.new(:method => :get, :url => 'http://a@b:c', :headers => {:user_agent => 'rest-client'}).log_request
+      log[0].should eq %Q{RestClient.get "[invalid uri]", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+    end
   end
 
   it "strips the charset from the response content type" do
@@ -437,8 +537,8 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', nil)
     end
 
-    it "set read_timeout" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
+    it 'sets read_timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => 123)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -448,7 +548,7 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', nil)
     end
 
-    it "set open_timeout" do
+    it "sets open_timeout" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :open_timeout => 123)
       @http.stub(:request)
       @request.stub(:process_result)
@@ -459,8 +559,33 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', nil)
     end
 
+    it 'sets both timeouts with :timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:open_timeout=).with(123)
+      @net.should_receive(:read_timeout=).with(123)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+    it 'supersedes :timeout with open/read_timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34, :read_timeout => 56)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:open_timeout=).with(34)
+      @net.should_receive(:read_timeout=).with(56)
+
+      @request.transmit(@uri, 'req', nil)
+    end
+
+
     it "disable timeout by setting it to nil" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => nil, :open_timeout => nil)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => nil, :open_timeout => nil)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -471,8 +596,21 @@ describe RestClient::Request do
       @request.transmit(@uri, 'req', nil)
     end
 
+    it 'deprecated: warns when disabling timeout by setting it to -1' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1)
+      @http.stub(:request)
+      @request.stub(:process_result)
+      @request.stub(:response_log)
+
+      @net.should_receive(:read_timeout=).with(nil)
+
+      fake_stderr {
+        @request.transmit(@uri, 'req', nil)
+      }.should match(/^Deprecated: .*timeout.* nil instead of -1$/)
+    end
+
     it "deprecated: disable timeout by setting it to -1" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => -1, :open_timeout => -1)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1, :open_timeout => -1)
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
@@ -900,6 +1038,30 @@ describe RestClient::Request do
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       net_http_res.stub(:read_body).and_return("body")
       @request.fetch_body(net_http_res)
+    end
+  end
+
+  describe 'payloads' do
+    it 'should accept string payloads' do
+      payload = 'Foo'
+      @request = RestClient::Request.new(method: :get, url: 'example.com', :payload => payload)
+      @request.should_receive(:process_result)
+      @http.should_receive(:request).with('req', payload)
+      @request.transmit(@uri, 'req', payload)
+    end
+
+    it 'should accept streaming IO payloads' do
+      payload = StringIO.new('streamed')
+
+      @request = RestClient::Request.new(method: :get, url: 'example.com', :payload => payload)
+      @request.should_receive(:process_result)
+
+      @get = double('net::http::get')
+      @get.should_receive(:body_stream=).with(instance_of(RestClient::Payload::Streamed))
+
+      @request.net_http_request_class(:GET).stub(:new).and_return(@get)
+      @http.should_receive(:request).with(@get, nil)
+      @request.execute
     end
   end
 end

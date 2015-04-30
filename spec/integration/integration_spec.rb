@@ -1,4 +1,6 @@
-require 'spec_helper'
+# -*- coding: utf-8 -*-
+require_relative '_lib'
+require 'base64'
 
 describe RestClient do
 
@@ -31,5 +33,81 @@ describe RestClient do
     end
   end
 
+  describe 'charset parsing' do
+    it 'handles utf-8' do
+      body = "λ".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=UTF-8'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::UTF_8
+      response.valid_encoding?.should eq true
+    end
 
+    it 'handles windows-1252' do
+      body = "\xff".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=windows-1252'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::WINDOWS_1252
+      response.encode('utf-8').should eq "ÿ"
+      response.valid_encoding?.should eq true
+    end
+
+    it 'handles binary' do
+      body = "\xfe".force_encoding('ASCII-8BIT')
+      stub_request(:get, "www.example.com").to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'application/octet-stream; charset=binary'
+      })
+      response = RestClient.get "www.example.com"
+      response.encoding.should eq Encoding::BINARY
+      lambda {
+        response.encode('utf-8')
+      }.should raise_error(Encoding::UndefinedConversionError)
+      response.valid_encoding?.should eq true
+    end
+
+    it 'handles euc-jp' do
+      body = "\xA4\xA2\xA4\xA4\xA4\xA6\xA4\xA8\xA4\xAA".
+        force_encoding(Encoding::BINARY)
+      body_utf8 = 'あいうえお'
+      body_utf8.encoding.should eq Encoding::UTF_8
+
+      stub_request(:get, 'www.example.com').to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=EUC-JP'
+      })
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding::EUC_JP
+      response.valid_encoding?.should eq true
+      response.length.should eq 5
+      response.encode('utf-8').should eq body_utf8
+    end
+
+    it 'defaults to Encoding.default_external' do
+      stub_request(:get, 'www.example.com').to_return(
+        body: 'abc', status: 200, headers: {
+          'Content-Type' => 'text/plain'
+        })
+
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding.default_external
+    end
+
+    it 'leaves images as binary' do
+      gif = Base64.strict_decode64('R0lGODlhAQABAAAAADs=')
+
+      stub_request(:get, 'www.example.com').to_return(
+        body: gif, status: 200, headers: {
+          'Content-Type' => 'image/gif'
+        })
+
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding::BINARY
+    end
+  end
 end

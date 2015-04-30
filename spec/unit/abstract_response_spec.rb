@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::AbstractResponse do
 
@@ -8,16 +8,18 @@ describe RestClient::AbstractResponse do
 
     attr_accessor :size
 
-    def initialize net_http_res, args
+    def initialize net_http_res, args, request
       @net_http_res = net_http_res
       @args = args
+      @request = request
     end
 
   end
 
   before do
     @net_http_res = double('net http response')
-    @response = MyAbstractResponse.new(@net_http_res, {})
+    @request = double('restclient request', :url => 'http://example.com')
+    @response = MyAbstractResponse.new(@net_http_res, {}, @request)
   end
 
   it "fetches the numeric response code" do
@@ -31,14 +33,28 @@ describe RestClient::AbstractResponse do
     @response.description.should eq "200 OK | application/pdf  bytes\n"
   end
 
-  it "beautifies the headers by turning the keys to symbols" do
-    h = RestClient::AbstractResponse.beautify_headers('content-type' => [ 'x' ])
-    h.keys.first.should eq :content_type
-  end
+  describe '.beautify_headers' do
+    it "beautifies the headers by turning the keys to symbols" do
+      h = RestClient::AbstractResponse.beautify_headers('content-type' => [ 'x' ])
+      h.keys.first.should eq :content_type
+    end
 
-  it "beautifies the headers by turning the values to strings instead of one-element arrays" do
-    h = RestClient::AbstractResponse.beautify_headers('x' => [ 'text/html' ] )
-    h.values.first.should eq 'text/html'
+    it "beautifies the headers by turning the values to strings instead of one-element arrays" do
+      h = RestClient::AbstractResponse.beautify_headers('x' => [ 'text/html' ] )
+      h.values.first.should eq 'text/html'
+    end
+
+    it 'joins multiple header values by comma' do
+      RestClient::AbstractResponse.beautify_headers(
+        {'My-Header' => ['one', 'two']}
+      ).should eq({:my_header => 'one, two'})
+    end
+
+    it 'leaves set-cookie headers as array' do
+      RestClient::AbstractResponse.beautify_headers(
+        {'Set-Cookie' => ['cookie1=foo', 'cookie2=bar']}
+      ).should eq({:set_cookie => ['cookie1=foo', 'cookie2=bar']})
+    end
   end
 
   it "fetches the headers" do
@@ -53,7 +69,8 @@ describe RestClient::AbstractResponse do
 
   it "extract strange cookies" do
     @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=ZJ/HQVH6YE+rVkTpn0zvTQ==; path=/'])
-    @response.cookies.should eq({ 'session_id' => 'ZJ%2FHQVH6YE+rVkTpn0zvTQ%3D%3D' })
+    @response.headers.should eq({:set_cookie => ['session_id=ZJ/HQVH6YE+rVkTpn0zvTQ==; path=/']})
+    @response.cookies.should eq({ 'session_id' => 'ZJ/HQVH6YE+rVkTpn0zvTQ==' })
   end
 
   it "doesn't escape cookies" do

@@ -10,14 +10,15 @@ of specifying actions: get, put, post, delete.
 
 == Requirements
 
-MRI Ruby 1.9.2 and newer are supported. Alternative interpreters compatible with
-1.9.1+ should work as well.
+MRI Ruby 1.9.3 and newer are supported. Alternative interpreters compatible with
+1.9+ should work as well.
 
-Ruby 1.8.7 is no longer supported.  That's because the Ruby 1.8.7 interpreter
-itself no longer has official support, _not_ _even_ _security_ _patches!_ If you
-have been putting off upgrading your servers, now is the time.
-({More info is on the Ruby developers'
-blog.}[http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/])
+Earlier Ruby versions such as 1.8.7 and 1.9.2 are no longer supported. These
+versions are no longer have any official support, and do not receive security
+updates.
+
+* http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/
+* https://www.ruby-lang.org/en/news/2013/12/17/maintenance-of-1-8-7-and-1-9-2/
 
 The rest-client gem depends on these other gems for installation and usage:
 
@@ -31,7 +32,7 @@ dependencies for you.
 
 == Usage: Raw URL
 
-  require 'rest_client'
+  require 'rest-client'
 
   RestClient.get 'http://example.com/resource'
 
@@ -249,6 +250,20 @@ the URL for GET, HEAD and DELETE requests, escaping the keys and values as neede
   RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
   # will GET http://example.com/resource?foo=bar&baz=qux
 
+== Headers
+
+Request headers can be set by passing a ruby hash containing keys and values
+representing header names and values:
+
+  # GET request with modified headers
+  RestClient.get 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
+  # POST request with modified headers
+  RestClient.post 'http://example.com/resource', {:foo => 'bar', :baz => 'qux'}, {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
+  # DELETE request with modified headers
+  RestClient.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+
 == Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically
@@ -302,15 +317,16 @@ Have a look at rest-client-components: http://github.com/crohr/rest-client-compo
 
 == Credits
 
-REST Client Team:: Matthew Manning, Lawrence Leonard Gilbert, Andy Brody
+REST Client Team:: Andy Brody
 
 Creator:: Adam Wiggins
 
-Maintainer Emeritus:: Julien Kirch
+Maintainers Emeriti:: Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch
 
 Major contributions:: Blake Mizerany, Julien Kirch
 
-Patches contributed by many, including Chris Anderson, Greg Borenstein, Ardekantur, Pedro Belo, Rafael Souza, Rick Olson, Aman Gupta, François Beausoleil and Nick Plante.
+A great many generous folks have contributed features and patches.
+See AUTHORS for the full list.
 
 == Legal
 

@@ -1,3 +1,72 @@
+# 2.0.0
+
+This release is largely API compatible, but makes several breaking changes.
+
+- Drop support for Ruby 1.9.2
+- Respect Content-Type charset header provided by server. Previously,
+  rest-client would not override the string encoding chosen by Net::HTTP. Now
+  responses that specify a charset will yield a body string in that encoding.
+  For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
+  encoded with `Encoding::EUC_JP`.
+- Change exceptions raised on request timeout. Instead of
+  RestClient::RequestTimeout (which is still used for HTTP 408), network
+  timeouts will now raise either RestClient::Exceptions::ReadTimeout or
+  RestClient::Exceptions::OpenTimeout, both of which inherit from
+  RestClient::Exceptions::Timeout. This class also makes the original wrapped
+  exception available as `#original_exception`.
+- Rename `:timeout` to `:read_timeout`. When `:timeout` is passed, now set both
+  `:read_timeout` and `:open_timeout`.
+- Change default HTTP Accept header to `*/*`
+- Use a more descriptive User-Agent header by default
+- Drop RC4-MD5 from default cipher list
+- Only prepend http:// to URIs without a scheme
+- Fix some support for using IPv6 addresses in URLs (still affected by Ruby
+  2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
+  backported to 2.0 and 2.1)
+- `Response#to_i` will now behave like `String#to_i` instead of returning the
+  HTTP response code, which was very surprising behavior.
+- `Response#body` and `#to_s` will now return a true `String` object rather
+  than self. Previously there was no easy way to get the true `String` response
+  instead of the Frankenstein response string object with AbstractResponse
+  mixed in. Response objects also now implement `.inspect` to make this
+  distinction clearer.
+- Handle multiple HTTP response headers with the same name (except for
+  Set-Cookie, which is special) by joining the values with a comma space,
+  compliant with RFC 7230
+- Don't set basic auth header if explicit `Authorization` header is specified
+- Add `:proxy` option to requests, which can be used for thread-safe
+  per-request proxy configuration, overriding `RestClient.proxy`
+- Add actual support for streaming request payloads. Previously rest-client
+  would call `.to_s` even on RestClient::Payload::Streamed objects. Instead,
+  treat any object that responds to `.read` as a streaming payload and pass it
+  through to `.body_stream=` on the Net:HTTP object. This massively reduces the
+  memory required for large file uploads.
+- Remove `RestClient::MaxRedirectsReached` in favor of the normal
+  `ExceptionWithResponse` subclasses. This makes the response accessible on the
+  exception object as `.response`, making it possible for callers to tell what
+  has actually happened when the redirect limit is reached.
+- When following HTTP redirection, store a list of each previous response on
+  the response object as `.history`. This makes it possible to access the
+  original response headers and body before the redirection was followed.
+
+# 1.8.0
+
+- Security: implement standards compliant cookie handling by adding a
+  dependency on http-cookie. This breaks compatibility, but was necessary to
+  address a session fixation / cookie disclosure vulnerability.
+  (#369 / CVE-2015-1820)
+
+  Previously, any Set-Cookie headers found in an HTTP 30x response would be
+  sent to the redirection target, regardless of domain. Responses now expose a
+  cookie jar and respect standards compliant domain / path flags in Set-Cookie
+  headers.
+
+# 1.7.3
+
+- Security: redact password in URI from logs (#349 / OSVDB-117461)
+- Drop monkey patch on MIME::Types (added `type_for_extension` method, use
+  the public interface instead.
+
 # 1.7.2
 
 - Ignore duplicate certificates in CA store on Windows

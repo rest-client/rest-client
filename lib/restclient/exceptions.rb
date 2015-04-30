@@ -26,7 +26,7 @@ module RestClient
               401 => 'Unauthorized',
               402 => 'Payment Required',
               403 => 'Forbidden',
-              404 => 'Resource Not Found',
+              404 => 'Not Found',
               405 => 'Method Not Allowed',
               406 => 'Not Acceptable',
               407 => 'Proxy Authentication Required',
@@ -66,18 +66,6 @@ module RestClient
               511 => 'Network Authentication Required', # RFC6585
   }
 
-  # Compatibility : make the Response act like a Net::HTTPResponse when needed
-  module ResponseForException
-    def method_missing symbol, *args
-      if net_http_res.respond_to? symbol
-        warn "[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code"
-        net_http_res.send symbol, *args
-      else
-        super
-      end
-    end
-  end
-
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
   # You can get the status code by e.http_code, or see anything about the
@@ -86,15 +74,13 @@ module RestClient
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
     attr_accessor :response
+    attr_accessor :original_exception
     attr_writer :message
 
     def initialize response = nil, initial_response_code = nil
       @response = response
       @message = nil
       @initial_response_code = initial_response_code
-
-      # compatibility: this make the exception behave like a Net::HTTPResponse
-      response.extend ResponseForException if response
     end
 
     def http_code
@@ -105,11 +91,11 @@ module RestClient
         @initial_response_code
       end
     end
-    
+
     def http_headers
       @response.headers if @response
     end
-    
+
     def http_body
       @response.body if @response
     end
@@ -123,9 +109,12 @@ module RestClient
     end
 
     def message
-      @message || self.class.name
+      @message || self.class.default_message
     end
 
+    def self.default_message
+      self.name
+    end
   end
 
   # Compatibility
@@ -144,10 +133,41 @@ module RestClient
     end
   end
 
-  # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  # RestClient exception classes. TODO: move all exceptions into this module.
+  #
+  # We will a create an exception for each status code, see
+  # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  #
   module Exceptions
     # Map http status codes to the corresponding exception class
     EXCEPTIONS_MAP = {}
+
+    # Base class for request timeouts.
+    # NB: Previous releases of rest-client would raise RequestTimeout both for
+    # HTTP 408 responses and for actual connection timeouts.
+    class Timeout < RestClient::Exception
+      def initialize(message=nil, original_exception=nil)
+        super(nil, nil)
+        self.message = message if message
+        self.original_exception = original_exception if original_exception
+      end
+    end
+
+    # Timeout when connecting to a server. Typically wraps Net::OpenTimeout (in
+    # ruby 2.0 or greater).
+    class OpenTimeout < Timeout
+      def self.default_message
+        'Timed out connecting to server'
+      end
+    end
+
+    # Timeout when reading from a server. Typically wraps Net::ReadTimeout (in
+    # ruby 2.0 or greater).
+    class ReadTimeout < Timeout
+      def self.default_message
+        'Timed out reading data from server'
+      end
+    end
   end
 
   STATUSES.each_pair do |code, message|
@@ -161,25 +181,8 @@ module RestClient
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
-  # A redirect was encountered; caught by execute to retry with the new url.
-  class Redirect < Exception
-
-    def message
-      'Redirect'
-    end
-
-    attr_accessor :url
-
-    def initialize(url)
-      @url = url
-    end
-  end
-
-  class MaxRedirectsReached < Exception
-    def message
-      'Maximum number of redirect reached'
-    end
-  end
+  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
+  ResourceNotFound = NotFound
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
@@ -197,11 +200,4 @@ module RestClient
       self.message = message
     end
   end
-end
-
-# backwards compatibility
-class RestClient::Request
-  Redirect = RestClient::Redirect
-  Unauthorized = RestClient::Unauthorized
-  RequestFailed = RestClient::RequestFailed
 end

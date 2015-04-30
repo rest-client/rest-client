@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Exception do
   it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
@@ -14,7 +14,7 @@ describe RestClient::Exception do
   end
 
   it "sets the exception message to ErrorMessage" do
-    RestClient::ResourceNotFound.new.message.should eq 'Resource Not Found'
+    RestClient::ResourceNotFound.new.message.should eq 'Not Found'
   end
 
   it "contains exceptions in RestClient" do
@@ -67,22 +67,8 @@ describe RestClient::ResourceNotFound do
       e.response.should eq response
     end
   end
-end
 
-describe "backwards compatibility" do
-  it "alias RestClient::Request::Redirect to RestClient::Redirect" do
-    RestClient::Request::Redirect.should eq RestClient::Redirect
-  end
-
-  it "alias RestClient::Request::Unauthorized to RestClient::Unauthorized" do
-    RestClient::Request::Unauthorized.should eq RestClient::Unauthorized
-  end
-
-  it "alias RestClient::Request::RequestFailed to RestClient::RequestFailed" do
-    RestClient::Request::RequestFailed.should eq RestClient::RequestFailed
-  end
-
-  it "make the exception's response act like an Net::HTTPResponse" do
+  it 'stores the body on the response of the exception' do
     body = "body"
     stub_request(:get, "www.example.com").to_return(:body => body, :status => 404)
     begin
@@ -91,5 +77,11 @@ describe "backwards compatibility" do
     rescue RestClient::ResourceNotFound => e
       e.response.body.should eq body
     end
+  end
+end
+
+describe "backwards compatibility" do
+  it 'aliases RestClient::NotFound as ResourceNotFound' do
+    RestClient::ResourceNotFound.should eq RestClient::NotFound
   end
 end

@@ -1,31 +1,31 @@
 # encoding: binary
 
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Payload do
   context "A regular Payload" do
     it "should use standard enctype as default content-type" do
       RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
-          should eq 'application/x-www-form-urlencoded'
+        should eq 'application/x-www-form-urlencoded'
     end
 
     it "should form properly encoded params" do
       RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s.
-          should eq "foo=bar"
+        should eq "foo=bar"
       ["foo=bar&baz=qux", "baz=qux&foo=bar"].should include(
                                                         RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s)
     end
 
     it "should escape parameters" do
       RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'}).to_s.
-          should eq "foo%20=bar"
+        should eq "foo%20=bar"
     end
 
     it "should properly handle hashes as parameter" do
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz'}}).to_s.
-          should eq "foo[bar]=baz"
+        should eq "foo[bar]=baz"
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => {:baz => 'qux'}}}).to_s.
-          should eq "foo[bar][baz]=qux"
+        should eq "foo[bar][baz]=qux"
     end
 
     it "should handle many attributes inside a hash" do
@@ -45,16 +45,16 @@ describe RestClient::Payload do
 
     it "should form properly use symbols as parameters" do
       RestClient::Payload::UrlEncoded.new({:foo => :bar}).to_s.
-          should eq "foo=bar"
+        should eq "foo=bar"
       RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz}}).to_s.
-          should eq "foo[bar]=baz"
+        should eq "foo[bar]=baz"
     end
 
     it "should properly handle arrays as repeated parameters" do
       RestClient::Payload::UrlEncoded.new({:foo => ['bar']}).to_s.
-          should eq "foo[]=bar"
+        should eq "foo[]=bar"
       RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
-          should eq "foo[]=bar&foo[]=baz"
+        should eq "foo[]=bar&foo[]=baz"
     end
 
     it 'should not close if stream already closed' do

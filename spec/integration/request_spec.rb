@@ -1,4 +1,4 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::Request do
   before(:all) do
@@ -34,7 +34,7 @@ describe RestClient::Request do
     #
     # On OS X, this test fails since Apple has patched OpenSSL to always fall
     # back on the system CA store.
-    it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac? do
+    it "is unsuccessful with an incorrect ca_file", :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -45,7 +45,7 @@ describe RestClient::Request do
 
     # On OS X, this test fails since Apple has patched OpenSSL to always fall
     # back on the system CA store.
-    it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac? do
+    it "is unsuccessful with an incorrect ca_path", :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -79,7 +79,7 @@ describe RestClient::Request do
     end
 
     it "fails verification when the callback returns false",
-       :unless => RestClient::Platform.mac? do
+       :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -90,7 +90,7 @@ describe RestClient::Request do
     end
 
     it "succeeds verification when the callback returns true",
-       :unless => RestClient::Platform.mac? do
+       :unless => RestClient::Platform.mac_mri? do
       request = RestClient::Request.new(
         :method => :get,
         :url => 'https://www.mozilla.org',
@@ -101,4 +101,27 @@ describe RestClient::Request do
       expect { request.execute }.to_not raise_error
     end
   end
+
+  describe "timeouts" do
+    it "raises OpenTimeout when it hits an open timeout" do
+      request = RestClient::Request.new(
+        :method => :get,
+        :url => 'http://www.mozilla.org',
+        :open_timeout => 1e-10,
+      )
+      expect { request.execute }.to(
+        raise_error(RestClient::Exceptions::OpenTimeout))
+    end
+
+    it "raises ReadTimeout when it hits a read timeout via :read_timeout" do
+      request = RestClient::Request.new(
+        :method => :get,
+        :url => 'https://www.mozilla.org',
+        :read_timeout => 1e-10,
+      )
+      expect { request.execute }.to(
+        raise_error(RestClient::Exceptions::ReadTimeout))
+    end
+  end
+
 end
