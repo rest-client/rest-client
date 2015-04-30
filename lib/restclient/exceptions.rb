@@ -125,7 +125,7 @@ module RestClient
   class RequestFailed < ExceptionWithResponse
 
     def message
-      "HTTP status code #{http_code}"
+      "HTTP code:#{http_code}\nHeader:#{http_headers}\nBody:#{http_body}"
     end
 
     def to_s
@@ -175,7 +175,7 @@ module RestClient
     # Compatibility
     superclass = ([304, 401, 404].include? code) ? ExceptionWithResponse : RequestFailed
     klass = Class.new(superclass) do
-      send(:define_method, :message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
+      send(:define_method, :message) {"#{http_code ? "#{http_code} " : ''}#{message}\n#{http_headers}"}
     end
     klass_constant = const_set message.delete(' \-\''), klass
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
