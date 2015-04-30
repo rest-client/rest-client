@@ -40,6 +40,11 @@ module RestClient
 
     def self.create body, net_http_res, args, request
       result = body || ''
+      if result.respond_to?(:force_encoding)
+        if (charset = net_http_res.type_params['charset'])
+          result.force_encoding(charset)
+        end
+      end
       result.extend Response
 
       result.response_set_vars(net_http_res, args, request)
