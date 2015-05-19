@@ -36,6 +36,9 @@ This release is largely API compatible, but makes several breaking changes.
 - Don't set basic auth header if explicit `Authorization` header is specified
 - Add `:proxy` option to requests, which can be used for thread-safe
   per-request proxy configuration, overriding `RestClient.proxy`
+- Allow overriding `ENV['http_proxy']` to disable proxies by setting
+  `RestClient.proxy` to a falsey value. Previously there was no way in Ruby 2.x
+  to turn off a proxy specified in the environment without changing `ENV`.
 - Add actual support for streaming request payloads. Previously rest-client
   would call `.to_s` even on RestClient::Payload::Streamed objects. Instead,
   treat any object that responds to `.read` as a streaming payload and pass it
