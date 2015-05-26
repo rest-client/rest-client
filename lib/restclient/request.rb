@@ -1,8 +1,15 @@
 require 'tempfile'
-require 'mime/types'
 require 'cgi'
 require 'netrc'
 require 'set'
+
+begin
+  # Use mime/types/columnar if available, for reduced memory usage
+  require 'mime/types/columnar'
+rescue LoadError
+  require 'mime/types'
+end
+
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
