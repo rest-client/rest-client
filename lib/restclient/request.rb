@@ -340,7 +340,7 @@ module RestClient
       # RFC, but specified by the URL RFC 1738.)
       # https://tools.ietf.org/html/rfc3986#section-3.1
       url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
-      URI.parse(url)
+      URI.parse(URI.escape(url))
     end
 
     def parse_url_with_auth(url)
