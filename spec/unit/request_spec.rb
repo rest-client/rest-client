@@ -1074,7 +1074,7 @@ describe RestClient::Request, :include_helpers do
       tempfile.should_receive(:binmode)
       tempfile.stub(:open)
       tempfile.stub(:close)
-      Tempfile.should_receive(:new).with("rest-client").and_return(tempfile)
+      Tempfile.should_receive(:new).with("rest-client.").and_return(tempfile)
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       net_http_res.stub(:read_body).and_return("body")
