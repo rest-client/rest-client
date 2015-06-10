@@ -40,7 +40,7 @@ module RestClient
     attr_reader :method, :url, :headers, :cookies, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :before_execution_procs
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -186,6 +186,7 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+      @before_execution_procs = [] 
     end
 
     def execute & block
@@ -203,10 +204,19 @@ module RestClient
     def verify_ssl
       @ssl_opts.fetch(:verify_ssl)
     end
+
     SSLOptionList.each do |key|
       define_method('ssl_' + key) do
         @ssl_opts[key.to_sym]
       end
+    end
+
+    def add_before_execution_proc( & block )
+      @before_execution_procs << block
+    end
+
+    def reset_before_execution_procs
+      @before_execution_procs = []
     end
 
     # Extract the query parameters and append them to the url
@@ -476,6 +486,10 @@ module RestClient
       end
 
       RestClient.before_execution_procs.each do |before_proc|
+        before_proc.call(req, args)
+      end
+
+      @before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
       end
 
