@@ -51,6 +51,9 @@ This release is largely API compatible, but makes several breaking changes.
 - When following HTTP redirection, store a list of each previous response on
   the response object as `.history`. This makes it possible to access the
   original response headers and body before the redirection was followed.
+- Add `:before_execution_proc` option to `RestClient::Request`. This makes it
+  possible to add procs like `RestClient.add_before_execution_proc` to a single
+  request without global state.
 
 # 1.8.0
 
