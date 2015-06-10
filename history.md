@@ -1,3 +1,7 @@
+# 1.6.9
+
+- Move rdoc to a development dependency
+
 # 1.6.8
 
 - The 1.6.x series will be the last to support Ruby 1.8.7
