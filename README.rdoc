@@ -74,6 +74,10 @@ helpers are just thin wrappers around RestClient::Request.execute.
   RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
                               timeout: 10)
 
+  RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                              ssl_ca_file: 'myca.pem',
+                              ssl_ciphers: 'AESGCM:!aNULL')
+
 You can also use this to pass a payload for HTTP verbs like DELETE, where the
 RestClient.delete helper doesn't accept a payload.
 
@@ -332,7 +336,15 @@ extract and set headers for them as needed:
   )
   # ...response body
 
-== SSL Client Certificates
+== SSL/TLS support
+
+Various options are supported for configuring rest-client's TLS settings. By
+default, rest-client will verify certificates using the system's CA store on
+all platforms. (This is intended to be similar to how browsers behave.) You can
+specify an :ssl_ca_file, :ssl_ca_path, or :ssl_cert_store to customize the
+certificate authorities accepted.
+
+=== SSL Client Certificates
 
   RestClient::Resource.new(
     'https://example.com',
