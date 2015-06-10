@@ -23,13 +23,17 @@ This release is largely API compatible, but makes several breaking changes.
 - Fix some support for using IPv6 addresses in URLs (still affected by Ruby
   2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
   backported to 2.0 and 2.1)
-- `Response#to_i` will now behave like `String#to_i` instead of returning the
-  HTTP response code, which was very surprising behavior.
-- `Response#body` and `#to_s` will now return a true `String` object rather
-  than self. Previously there was no easy way to get the true `String` response
-  instead of the Frankenstein response string object with AbstractResponse
-  mixed in. Response objects also now implement `.inspect` to make this
-  distinction clearer.
+- `Response` objects are now a subclass of `String` rather than a `String` that
+  mixes in the response functionality. Most of the methods remain unchanged,
+  but this makes it much easier to understand what is happening when you look
+  at a RestClient response object. There are a few additional changes:
+  - Response objects now implement `.inspect` to make this distinction clearer.
+  - `Response#to_i` will now behave like `String#to_i` instead of returning the
+    HTTP response code, which was very surprising behavior.
+  - `Response#body` and `#to_s` will now return a true `String` object rather
+    than self. Previously there was no easy way to get the true `String` response
+    instead of the Frankenstein response string object with AbstractResponse
+    mixed in.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
@@ -51,6 +55,9 @@ This release is largely API compatible, but makes several breaking changes.
 - When following HTTP redirection, store a list of each previous response on
   the response object as `.history`. This makes it possible to access the
   original response headers and body before the redirection was followed.
+- Add `:before_execution_proc` option to `RestClient::Request`. This makes it
+  possible to add procs like `RestClient.add_before_execution_proc` to a single
+  request without global state.
 
 # 1.8.0
 

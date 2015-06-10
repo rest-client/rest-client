@@ -33,6 +33,9 @@ module RestClient
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
+  # * :before_execution_proc a Proc to call before executing the request. This
+  #      proc, like procs from RestClient.before_execution_procs, will be
+  #      called with the HTTP request and request params.
   class Request
 
     # TODO: rename timeout to read_timeout
@@ -186,6 +189,8 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+
+      @before_execution_proc = args[:before_execution_proc]
     end
 
     def execute & block
@@ -479,6 +484,10 @@ module RestClient
         before_proc.call(req, args)
       end
 
+      if @before_execution_proc
+        @before_execution_proc.call(req, args)
+      end
+
       log_request
 
 
@@ -546,7 +555,7 @@ module RestClient
         # Taken from Chef, which as in turn...
         # Stolen from http://www.ruby-forum.com/topic/166423
         # Kudos to _why!
-        @tf = Tempfile.new("rest-client")
+        @tf = Tempfile.new('rest-client.')
         @tf.binmode
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|
