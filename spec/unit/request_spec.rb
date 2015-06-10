@@ -461,15 +461,8 @@ describe RestClient::Request, :include_helpers do
       allow(ENV).to receive(:[]).with("NO_PROXY").and_return(nil)
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
       obj = req.net_http_object('host', 80)
-      # This seems like a jruby bug that http_proxy env is not respected
-      # TODO: report to jruby team / investigate in detail
-      if RUBY_ENGINE == 'jruby'
-        obj.proxy?.should be false
-        obj.proxy_address.should be nil
-      else
-        obj.proxy?.should be true
-        obj.proxy_address.should eq '127.0.0.1'
-      end
+      obj.proxy?.should be true
+      obj.proxy_address.should eq '127.0.0.1'
 
       # test original method .proxy?
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => nil)
