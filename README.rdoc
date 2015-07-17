@@ -72,7 +72,7 @@ their last argument and don't allow passing more complex options. But these
 helpers are just thin wrappers around RestClient::Request.execute.
 
   RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
-                              timeout: 10)
+                              timeout: 10, open_timeout: 10)
 
   RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
                               ssl_ca_file: 'myca.pem',
@@ -91,7 +91,7 @@ both the params hash and more complex options, use the special key
 release.
 
   RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
-                              timeout: 10, headers: {params: {foo: 'bar'}})
+                              timeout: 10, open_timeout: 10, headers: {params: {foo: 'bar'}})
 
   ➔ GET http://example.com/resource?foo=bar
 
