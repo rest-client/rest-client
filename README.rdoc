@@ -14,21 +14,18 @@ MRI Ruby 1.9.3 and newer are supported. Alternative interpreters compatible with
 1.9+ should work as well.
 
 Earlier Ruby versions such as 1.8.7 and 1.9.2 are no longer supported. These
-versions are no longer have any official support, and do not receive security
+versions no longer have any official support, and do not receive security
 updates.
 
-* http://www.ruby-lang.org/en/news/2013/06/30/we-retire-1-8-7/
-* https://www.ruby-lang.org/en/news/2013/12/17/maintenance-of-1-8-7-and-1-9-2/
-
-The rest-client gem depends on these other gems for installation and usage:
+The rest-client gem depends on these other gems for usage at runtime:
 
 * {mime-types}[http://rubygems.org/gems/mime-types]
 * {netrc}[http://rubygems.org/gems/netrc]
-* {rdoc}[http://rubygems.org/gems/rdoc]
+* {http-cookie}[https://rubygems.org/gems/http-cookie]
 
-If you want to hack on the code, you should also have {the Bundler
-gem}[http://bundler.io/] installed so it can manage all necessary development
-dependencies for you.
+There are also several development dependencies. It's recommended to use
+{bundler}[http://bundler.io/] to manage these dependencies for hacking on
+rest-client.
 
 == Usage: Raw URL
 
@@ -68,6 +65,36 @@ dependencies for you.
       }
     })
 
+== Passing advanced options
+
+The top level helper methods like RestClient.get accept a headers hash as
+their last argument and don't allow passing more complex options. But these
+helpers are just thin wrappers around RestClient::Request.execute.
+
+  RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                              timeout: 10)
+
+  RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                              ssl_ca_file: 'myca.pem',
+                              ssl_ciphers: 'AESGCM:!aNULL')
+
+You can also use this to pass a payload for HTTP verbs like DELETE, where the
+RestClient.delete helper doesn't accept a payload.
+
+  RestClient::Request.execute(method: :delete, url: 'http://example.com/resource',
+                              payload: 'foo', headers: {myheader: 'bar'})
+
+Due to unfortunate choices in the original API, the params used to populate the
+query string are actually taken out of the headers hash. So if you want to pass
+both the params hash and more complex options, use the special key
+<tt>:params</tt> in the headers hash. This design may change in a future major
+release.
+
+  RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                              timeout: 10, headers: {params: {foo: 'bar'}})
+
+  ➔ GET http://example.com/resource?foo=bar
+
 == Multipart
 
 Yeah, that's right!  This does multipart sends for you!
@@ -106,6 +133,7 @@ See RestClient::Resource docs for details.
 * for result codes 301, 302 or 307, the redirection will be followed if the request is a GET or a HEAD
 * for result code 303, the redirection will be followed and the request transformed into a GET
 * for other cases, a RestClient::Exception holding the Response will be raised; a specific exception class will be thrown for known error codes
+* call <tt>.response</tt> on the exception to get the server's response
 
    RestClient.get 'http://example.com/resource'
    ➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
@@ -118,6 +146,34 @@ See RestClient::Resource docs for details.
    ➔ 404 Resource Not Found | text/html 282 bytes
 
 == Result handling
+
+The result of a RestClient::Request is a RestClient::Response object.
+
+<b>New in 2.0:</b> RestClient::Response objects are now a subclass of String.
+Previously, they were a real String object with response functionality mixed
+in, which was very confusing to work with.
+
+Response objects have several useful methods. (See the class rdoc for more details.)
+
+* Response#code: The HTTP response code
+* Response#body: The response body as a string. (AKA .to_s)
+* Response#headers: A hash of HTTP response headers
+* Response#cookies: A hash of HTTP cookies set by the server
+* Response#cookie_jar: <em>New in 1.8</em> An HTTP::CookieJar of cookies
+* Response#request: The RestClient::Request object used to make the request
+* Response#history: If redirection was followed, a list of prior Response objects
+
+   >> RestClient.get('http://example.com')
+   => <RestClient::Response 200 "<!doctype h...">
+
+   >> begin
+   >>   RestClient.get('http://example.com/notfound')
+   >> rescue RestClient::ExceptionWithResponse => err
+   >>   err.response
+   >> end
+   => <RestClient::Response 404 "<!doctype h...">
+
+=== Response callbacks
 
 A block can be passed to the RestClient method. This block will then be called with the Response.
 Response.return! can be called to invoke the default response's behavior.
@@ -280,7 +336,15 @@ extract and set headers for them as needed:
   )
   # ...response body
 
-== SSL Client Certificates
+== SSL/TLS support
+
+Various options are supported for configuring rest-client's TLS settings. By
+default, rest-client will verify certificates using the system's CA store on
+all platforms. (This is intended to be similar to how browsers behave.) You can
+specify an :ssl_ca_file, :ssl_ca_path, or :ssl_cert_store to customize the
+certificate authorities accepted.
+
+=== SSL Client Certificates
 
   RestClient::Resource.new(
     'https://example.com',

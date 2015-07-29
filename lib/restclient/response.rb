@@ -2,7 +2,7 @@ module RestClient
 
   # A Response from RestClient, you can access the response body, the code or the headers.
   #
-  module Response
+  class Response < String
 
     include AbstractResponse
 
@@ -38,9 +38,8 @@ module RestClient
       "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
-    def self.create body, net_http_res, args, request
-      result = body || ''
-      result.extend Response
+    def self.create(body, net_http_res, args, request)
+      result = self.new(body || '')
 
       result.response_set_vars(net_http_res, args, request)
       fix_encoding(result)
@@ -57,7 +56,7 @@ module RestClient
       begin
         encoding = Encoding.find(charset) if charset
       rescue ArgumentError
-        RestClient.log "No such encoding: #{charset.inspect}"
+        RestClient.log << "No such encoding: #{charset.inspect}"
       end
 
       return unless encoding

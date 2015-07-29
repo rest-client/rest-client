@@ -33,6 +33,9 @@ module RestClient
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
+  # * :before_execution_proc a Proc to call before executing the request. This
+  #      proc, like procs from RestClient.before_execution_procs, will be
+  #      called with the HTTP request and request params.
   class Request
 
     # TODO: rename timeout to read_timeout
@@ -186,6 +189,8 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+
+      @before_execution_proc = args[:before_execution_proc]
     end
 
     def execute & block
@@ -273,29 +278,41 @@ module RestClient
     # The proxy URI for this request. If `:proxy` was provided on this request,
     # use it over `RestClient.proxy`.
     #
-    # @return [URI, nil]
+    # Return false if a proxy was explicitly set and is falsy.
+    #
+    # @return [URI, false, nil]
     #
     def proxy_uri
       if defined?(@proxy)
         if @proxy
           URI.parse(@proxy)
         else
-          nil
+          false
         end
-      elsif RestClient.proxy
-        URI.parse(RestClient.proxy)
+      elsif RestClient.proxy_set?
+        if RestClient.proxy
+          URI.parse(RestClient.proxy)
+        else
+          false
+        end
       else
         nil
       end
     end
 
-    def net_http_class
+    def net_http_object(hostname, port)
       p_uri = proxy_uri
 
-      if p_uri
-        Net::HTTP::Proxy(p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
+      if p_uri.nil?
+        # no proxy set
+        Net::HTTP.new(hostname, port)
+      elsif !p_uri
+        # proxy explicitly set to none
+        Net::HTTP.new(hostname, port, nil, nil, nil, nil)
       else
-        Net::HTTP
+        Net::HTTP.new(hostname, port,
+                      p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
+
       end
     end
 
@@ -409,7 +426,7 @@ module RestClient
 
       setup_credentials req
 
-      net = net_http_class.new(uri.hostname, uri.port)
+      net = net_http_object(uri.hostname, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
@@ -465,6 +482,10 @@ module RestClient
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
+      end
+
+      if @before_execution_proc
+        @before_execution_proc.call(req, args)
       end
 
       log_request
@@ -534,7 +555,7 @@ module RestClient
         # Taken from Chef, which as in turn...
         # Stolen from http://www.ruby-forum.com/topic/166423
         # Kudos to _why!
-        @tf = Tempfile.new("rest-client")
+        @tf = Tempfile.new('rest-client.')
         @tf.binmode
         size, total = 0, http_response.header['Content-Length'].to_i
         http_response.read_body do |chunk|

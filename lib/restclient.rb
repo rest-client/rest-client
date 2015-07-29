@@ -90,8 +90,23 @@ module RestClient
     Request.execute(:method => :options, :url => url, :headers => headers, &block)
   end
 
-  class << self
-    attr_accessor :proxy
+  # A global proxy URL to use for all requests. This can be overridden on a
+  # per-request basis by passing `:proxy` to RestClient::Request.
+  def self.proxy
+    @proxy
+  end
+  def self.proxy=(value)
+    @proxy = value
+    @proxy_set = true
+  end
+
+  # Return whether RestClient.proxy was set explicitly. We use this to
+  # differentiate between no value being set and a value explicitly set to nil.
+  #
+  # @return [Boolean]
+  #
+  def self.proxy_set?
+    !!@proxy_set
   end
 
   # Setup the log for RestClient calls.
@@ -151,6 +166,7 @@ module RestClient
   # Add a Proc to be called before each request in executed.
   # The proc parameters will be the http request and the request params.
   def self.add_before_execution_proc &proc
+    raise ArgumentError.new('block is required') unless proc
     @@before_execution_procs << proc
   end
 

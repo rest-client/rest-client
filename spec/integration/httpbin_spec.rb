@@ -10,8 +10,18 @@ describe RestClient::Request do
     WebMock.enable!
   end
 
+  def default_httpbin_url
+    # add a hack to work around java/jruby bug
+    # java.lang.RuntimeException: Could not generate DH keypair with backtrace
+    if ENV['TRAVIS_RUBY_VERSION'] == 'jruby-19mode'
+      'http://httpbin.org/'
+    else
+      'https://httpbin.org/'
+    end
+  end
+
   def httpbin(suffix='')
-    url = ENV.fetch('HTTPBIN_URL', 'https://httpbin.org/')
+    url = ENV.fetch('HTTPBIN_URL', default_httpbin_url)
     unless url.end_with?('/')
       url += '/'
     end

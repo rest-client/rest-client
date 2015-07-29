@@ -5,6 +5,7 @@ rvm:
   - "2.1" # latest 2.1.x
   - "2.2" # latest 2.2.x
   - "jruby-19mode"
+  - "jruby-head"
 script:
   bundle exec rake test
 branches:
