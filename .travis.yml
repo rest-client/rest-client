@@ -1,4 +1,7 @@
 language: ruby
+os:
+  - linux
+  - osx
 rvm:
   - "1.9.3"
   - "2.0.0"
