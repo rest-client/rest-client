@@ -173,8 +173,7 @@ module RestClient
       new_args[:max_redirects] = request.max_redirects - 1
 
       # TODO: figure out what to do with original :cookie, :cookies values
-      new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-        cookie_jar.cookies(new_args.fetch(:url)))
+      new_args[:cookies] = get_redirection_cookies(request, result, new_args)
 
 
       # prepare new request
@@ -185,6 +184,16 @@ module RestClient
 
       # execute redirected request
       new_req.execute(&block)
+    end
+
+    # Returns cookies which should be passed when following redirect
+    #
+    # @param request [RestClient::Request] Original request
+    # @param result [Net::HTTPResponse] Response
+    # @param args [Hash] Original arguments
+    # @return [Hash] Cookies to be passsed when following redirect
+    def get_redirection_cookies(request, result, args)
+      {}
     end
 
     def exception_with_response
