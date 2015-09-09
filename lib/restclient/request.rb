@@ -248,6 +248,7 @@ module RestClient
           end
         end
 
+        user_headers = user_headers.dup
         user_headers[:cookie] = @cookies.map { |key, val| "#{key}=#{val}" }.sort.join('; ')
       end
       headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
