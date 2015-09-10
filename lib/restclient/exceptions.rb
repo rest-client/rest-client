@@ -100,20 +100,16 @@ module RestClient
       @response.body if @response
     end
 
-    def inspect
-      "#{message}: #{http_body}"
-    end
-
     def to_s
-      inspect
+      message
     end
 
     def message
-      @message || self.class.default_message
+      @message || default_message
     end
 
-    def self.default_message
-      self.name
+    def default_message
+      self.class.name
     end
   end
 
@@ -124,7 +120,7 @@ module RestClient
   # The request failed with an error code not managed by the code
   class RequestFailed < ExceptionWithResponse
 
-    def message
+    def default_message
       "HTTP status code #{http_code}"
     end
 
@@ -141,11 +137,30 @@ module RestClient
   module Exceptions
     # Map http status codes to the corresponding exception class
     EXCEPTIONS_MAP = {}
+  end
+
+  # Create HTTP status exception classes
+  STATUSES.each_pair do |code, message|
+    klass = Class.new(RequestFailed) do
+      send(:define_method, :default_message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
+    end
+    klass_constant = const_set(message.delete(' \-\''), klass)
+    Exceptions::EXCEPTIONS_MAP[code] = klass_constant
+  end
+
+  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
+  ResourceNotFound = NotFound
+
+  module Exceptions
+    # We have to split the Exceptions module like we do here because the
+    # EXCEPTIONS_MAP is under Exceptions, but we depend on
+    # RestClient::RequestTimeout below.
 
     # Base class for request timeouts.
+    #
     # NB: Previous releases of rest-client would raise RequestTimeout both for
     # HTTP 408 responses and for actual connection timeouts.
-    class Timeout < RestClient::Exception
+    class Timeout < RestClient::RequestTimeout
       def initialize(message=nil, original_exception=nil)
         super(nil, nil)
         self.message = message if message
@@ -156,7 +171,7 @@ module RestClient
     # Timeout when connecting to a server. Typically wraps Net::OpenTimeout (in
     # ruby 2.0 or greater).
     class OpenTimeout < Timeout
-      def self.default_message
+      def default_message
         'Timed out connecting to server'
       end
     end
@@ -164,25 +179,12 @@ module RestClient
     # Timeout when reading from a server. Typically wraps Net::ReadTimeout (in
     # ruby 2.0 or greater).
     class ReadTimeout < Timeout
-      def self.default_message
+      def default_message
         'Timed out reading data from server'
       end
     end
   end
 
-  STATUSES.each_pair do |code, message|
-
-    # Compatibility
-    superclass = ([304, 401, 404].include? code) ? ExceptionWithResponse : RequestFailed
-    klass = Class.new(superclass) do
-      send(:define_method, :message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
-    end
-    klass_constant = const_set message.delete(' \-\''), klass
-    Exceptions::EXCEPTIONS_MAP[code] = klass_constant
-  end
-
-  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
-  ResourceNotFound = NotFound
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was

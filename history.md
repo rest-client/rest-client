@@ -9,11 +9,17 @@ This release is largely API compatible, but makes several breaking changes.
   For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
   encoded with `Encoding::EUC_JP`.
 - Change exceptions raised on request timeout. Instead of
-  RestClient::RequestTimeout (which is still used for HTTP 408), network
-  timeouts will now raise either RestClient::Exceptions::ReadTimeout or
-  RestClient::Exceptions::OpenTimeout, both of which inherit from
-  RestClient::Exceptions::Timeout. This class also makes the original wrapped
-  exception available as `#original_exception`.
+  `RestClient::RequestTimeout` (which is still used for HTTP 408), network
+  timeouts will now raise either `RestClient::Exceptions::ReadTimeout` or
+  `RestClient::Exceptions::OpenTimeout`, both of which inherit from
+  `RestClient::Exceptions::Timeout`. For backwards compatibility, this still
+  inherits from `RestClient::RequestTimeout` so existing uses will still work.
+  This may change in a future major release. These new timeout classes also
+  make the original wrapped exception available as `#original_exception`.
+- Unify request exceptions under `RestClient::RequestFailed`, which still
+  inherits from `ExceptionWithResponse`. Previously, HTTP 304, 401, and 404
+  inherited directly from `ExceptionWithResponse` rather than from
+  `RequestFailed`. Now _all_ HTTP status code exceptions inherit from both.
 - Rename `:timeout` to `:read_timeout`. When `:timeout` is passed, now set both
   `:read_timeout` and `:open_timeout`.
 - Change default HTTP Accept header to `*/*`

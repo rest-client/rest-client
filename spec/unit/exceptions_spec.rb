@@ -84,4 +84,19 @@ describe "backwards compatibility" do
   it 'aliases RestClient::NotFound as ResourceNotFound' do
     RestClient::ResourceNotFound.should eq RestClient::NotFound
   end
+
+  it 'subclasses NotFound from RequestFailed, ExceptionWithResponse' do
+    RestClient::NotFound.should be < RestClient::RequestFailed
+    RestClient::NotFound.should be < RestClient::ExceptionWithResponse
+  end
+
+  it 'subclasses timeout from RestClient::RequestTimeout, RequestFailed, EWR' do
+    RestClient::Exceptions::OpenTimeout.should be < RestClient::Exceptions::Timeout
+    RestClient::Exceptions::ReadTimeout.should be < RestClient::Exceptions::Timeout
+
+    RestClient::Exceptions::Timeout.should be < RestClient::RequestTimeout
+    RestClient::Exceptions::Timeout.should be < RestClient::RequestFailed
+    RestClient::Exceptions::Timeout.should be < RestClient::ExceptionWithResponse
+  end
+
 end

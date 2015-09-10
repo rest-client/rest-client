@@ -383,6 +383,19 @@ describe RestClient::Request, :include_helpers do
     lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout)
   end
 
+  it "uses correct error message for ReadTimeout",
+     :if => defined?(Net::ReadTimeout) do
+    @http.stub(:request).and_raise(Net::ReadTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout, 'Timed out reading data from server')
+  end
+
+  it "uses correct error message for OpenTimeout",
+     :if => defined?(Net::OpenTimeout) do
+    @http.stub(:request).and_raise(Net::OpenTimeout)
+    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout, 'Timed out connecting to server')
+  end
+
+
   it "class method execute wraps constructor" do
     req = double("rest request")
     RestClient::Request.should_receive(:new).with(1 => 2).and_return(req)
