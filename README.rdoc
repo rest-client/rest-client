@@ -304,6 +304,20 @@ use whatever proxy the system is configured to use:
 
   RestClient.proxy = ENV['http_proxy']
 
+<b>New in 2.0:</b> Specify a per-request proxy by passing the :proxy option to
+RestClient::Request. This will override any proxies set by environment variable
+or by the global RestClient.proxy value.
+
+  RestClient::Request.execute(method: :get, url: 'http://example.com',
+                              proxy: 'http://proxy.example.com')
+  # => single request proxied through the proxy
+
+This can be used to disable the use of a proxy for a particular request.
+
+  RestClient.proxy = "http://proxy.example.com/"
+  RestClient::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
+  # => single request sent without a proxy
+
 == Query parameters
 
 Request objects know about query parameters and will automatically add them to
@@ -341,6 +355,15 @@ extract and set headers for them as needed:
     {:cookies => {:session_id => "1234"}}
   )
   # ...response body
+
+=== Full cookie jar support (new in 1.8)
+
+The original cookie implementation was very naive and ignored most of the
+cookie RFC standards.
+<em>New in 1.8</em>:  An HTTP::CookieJar of cookies
+
+Response objects now carry a cookie_jar method that exposes an HTTP::CookieJar
+of cookies, which supports full standards compliant behavior.
 
 == SSL/TLS support
 
