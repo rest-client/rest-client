@@ -65,6 +65,14 @@ This release is largely API compatible, but makes several breaking changes.
   possible to add procs like `RestClient.add_before_execution_proc` to a single
   request without global state.
 
+# 2.0.0.rc1
+
+Changes in the release candidate that did not persist through the final 2.0.0
+release:
+- RestClient::Exceptions::Timeout was originally going to be a direct subclass
+  of RestClient::Exception in the release candidate. This exception tree was
+  made a subclass of RestClient::RequestTimeout prior to the final release.
+
 # 1.8.0
 
 - Security: implement standards compliant cookie handling by adding a
