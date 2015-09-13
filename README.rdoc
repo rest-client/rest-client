@@ -8,6 +8,12 @@ of specifying actions: get, put, post, delete.
 * Main page: https://github.com/rest-client/rest-client
 * Mailing list: rest.client@librelist.com (send a mail to subscribe).
 
+=== Mailing list changes
+
+The Librelist mailing list is currently *defunct*, as Librelist appears to be
+broken and not accepting new mail. We will choose a new email list provider
+soon.
+
 == Requirements
 
 MRI Ruby 1.9.3 and newer are supported. Alternative interpreters compatible with
