@@ -20,8 +20,8 @@ This release is largely API compatible, but makes several breaking changes.
   inherits from `ExceptionWithResponse`. Previously, HTTP 304, 401, and 404
   inherited directly from `ExceptionWithResponse` rather than from
   `RequestFailed`. Now _all_ HTTP status code exceptions inherit from both.
-- Rename `:timeout` to `:read_timeout`. When `:timeout` is passed, now set both
-  `:read_timeout` and `:open_timeout`.
+- Rename the `:timeout` request option to `:read_timeout`. When `:timeout` is
+  passed, now set both `:read_timeout` and `:open_timeout`.
 - Change default HTTP Accept header to `*/*`
 - Use a more descriptive User-Agent header by default
 - Drop RC4-MD5 from default cipher list
@@ -37,9 +37,9 @@ This release is largely API compatible, but makes several breaking changes.
   - `Response#to_i` will now behave like `String#to_i` instead of returning the
     HTTP response code, which was very surprising behavior.
   - `Response#body` and `#to_s` will now return a true `String` object rather
-    than self. Previously there was no easy way to get the true `String` response
-    instead of the Frankenstein response string object with AbstractResponse
-    mixed in.
+    than self. Previously there was no easy way to get the true `String`
+    response instead of the Frankenstein response string object with
+    AbstractResponse mixed in.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
@@ -64,6 +64,7 @@ This release is largely API compatible, but makes several breaking changes.
 - Add `:before_execution_proc` option to `RestClient::Request`. This makes it
   possible to add procs like `RestClient.add_before_execution_proc` to a single
   request without global state.
+- Run tests on Travis's beta OS X support.
 
 # 2.0.0.rc1
 
