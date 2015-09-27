@@ -14,3 +14,12 @@ script:
 branches:
   except:
     - "readme-edits"
+
+# These versions do not yet work on OS X on Travis
+# (last tested: 2015-09)
+matrix:
+  exclude:
+    - os: osx
+      rvm: 'jruby-19mode'
+    - os: osx
+      rvm: '2.2'
