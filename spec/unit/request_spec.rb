@@ -1128,4 +1128,25 @@ describe RestClient::Request, :include_helpers do
       @request.execute
     end
   end
+
+  describe 'constructor' do
+    it 'requires a method' do
+      lambda {
+        RestClient::Request.new :cookies => { 'foo' => 'bar' }
+      }.should raise_error(ArgumentError, /:method/)
+    end
+
+    it 'requires a URL' do
+      lambda {
+        RestClient::Request.new :method => 'GET'
+      }.should raise_error(ArgumentError, /:url/)
+    end
+
+    it 'forbids :cookies and :cookie_jar to be set' do
+      lambda {
+        RestClient::Request.new :method => 'GET', :url => 'http://example.com',
+                                :cookie_jar => HTTP::CookieJar.new, :headers => { :cookies => { 'foo' => 'bar' } }
+      }.should raise_error(ArgumentError, /:cookie_jar and :cookies/)
+    end
+  end
 end

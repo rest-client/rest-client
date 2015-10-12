@@ -124,7 +124,13 @@ module RestClient
       else
         raise ArgumentError, "must pass :url"
       end
+      @cookie_jar = @headers.delete(:cookie_jar) || args[:cookie_jar]
       @cookies = @headers.delete(:cookies) || args[:cookies] || {}
+
+      if @cookie_jar && !@cookies.empty?
+        raise ArgumentError, "can't pass :cookie_jar and :cookies together"
+      end
+
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
