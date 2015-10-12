@@ -127,7 +127,6 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "correctly formats cookies provided to the constructor" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
     @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
@@ -160,12 +159,23 @@ describe RestClient::Request, :include_helpers do
     # Cookie validity is something of a mess, but we should reject the worst of
     # the RFC 6265 (4.1.1) prohibited characters such as control characters.
 
-    ['foo,bar', 'foo;bar', "foo\nbar"].each do |cookie_value|
-      lambda {
-        RestClient::Request.new(:method => 'get', :url => 'example.com',
-                                :cookies => {'test' => cookie_value})
-      }.should raise_error(ArgumentError, /\AInvalid cookie value/)
-    end
+    lambda {
+      RestClient::Request.new(:method => 'get', :url => 'example.com',
+                              :cookies => {'test' => "foo\nbar"})
+    }.should raise_error(ArgumentError, /\AInvalid cookie value/)
+  end
+
+  it "accepts additional cookie attributes" do
+    @request = RestClient::Request.new(:method => 'get', :url => 'subdomain.example.com',
+                                       :cookies => {:test => 'baz; domain=.example.com; HttpOnly'})
+    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    @request.make_headers({}).should eq({
+      'Foo' => 'bar',
+      'Cookie' => 'test=baz'
+    })
+    @request.cookie_jar.cookies('http://example.com').length.should eq(1)
+    @request.cookie_jar.cookies('http://subdomain2.example.com').length.should eq(1)
+    @request.cookie_jar.cookies('http://example2.com').length.should eq(0)
   end
 
   it "uses netrc credentials" do
