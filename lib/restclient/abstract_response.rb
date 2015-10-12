@@ -44,21 +44,23 @@ module RestClient
     def cookies
       hash = {}
 
-      cookie_jar.cookies.each do |cookie|
+      cookie_jar.cookies(@request.url).each do |cookie|
         hash[cookie.name] = cookie.value
       end
 
       hash
     end
 
-    # Cookie jar extracted from response headers.
+    # Cookie jar with the request cookies, overwritten by cookies from response
+    # headers where there are collisions.
     #
     # @return [HTTP::CookieJar]
     #
     def cookie_jar
       return @cookie_jar if @cookie_jar
 
-      jar = HTTP::CookieJar.new
+      jar = @request.cookie_jar.dup
+
       headers.fetch(:set_cookie, []).each do |cookie|
         jar.parse(cookie, @request.url)
       end
@@ -169,13 +171,12 @@ module RestClient
       end
       new_args[:password] = request.password
       new_args[:user] = request.user
-      new_args[:headers] = request.headers
+      new_args[:headers] = request.headers.dup
       new_args[:max_redirects] = request.max_redirects - 1
+      new_args[:cookie_jar] = cookie_jar
 
-      # TODO: figure out what to do with original :cookie, :cookies values
-      new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-        cookie_jar.cookies(new_args.fetch(:url)))
-
+      new_args.delete(:cookies)
+      new_args[:headers].delete(:cookie)
 
       # prepare new request
       new_req = Request.new(new_args)
