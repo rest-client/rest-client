@@ -4,7 +4,7 @@ describe RestClient::Response, :include_helpers do
   before do
     @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
     @example_url = 'http://example.com'
-    @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
+    @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil, :cookie_jar => HTTP::CookieJar.new)
     @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
   end
 

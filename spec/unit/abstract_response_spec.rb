@@ -18,7 +18,7 @@ describe RestClient::AbstractResponse do
 
   before do
     @net_http_res = double('net http response')
-    @request = double('restclient request', :url => 'http://example.com')
+    @request = double('restclient request', :url => 'http://example.com', :cookie_jar => HTTP::CookieJar.new)
     @response = MyAbstractResponse.new(@net_http_res, {}, @request)
   end
 

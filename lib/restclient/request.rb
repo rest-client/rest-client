@@ -124,7 +124,13 @@ module RestClient
       else
         raise ArgumentError, "must pass :url"
       end
+      @cookie_jar = @headers.delete(:cookie_jar) || args[:cookie_jar]
       @cookies = @headers.delete(:cookies) || args[:cookies] || {}
+
+      if @cookie_jar && !@cookies.empty?
+        raise ArgumentError, "can't pass :cookie_jar and :cookies together"
+      end
+
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
@@ -233,24 +239,33 @@ module RestClient
       end
     end
 
-    def make_headers user_headers
-      unless @cookies.empty?
+    def cookie_jar
+      return @cookie_jar if @cookie_jar
 
-        # Validate that the cookie names and values look sane. If you really
-        # want to pass scary characters, just set the Cookie header directly.
-        # RFC6265 is actually much more restrictive than we are.
-        @cookies.each do |key, val|
-          unless valid_cookie_key?(key)
-            raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
-          end
-          unless valid_cookie_value?(val)
-            raise ArgumentError.new("Invalid cookie value: #{val.inspect}")
-          end
+      @cookie_jar = HTTP::CookieJar.new
+
+      return @cookie_jar unless parsed_url
+
+      (@cookies || {}).each do |key, value|
+        unless valid_cookie_key?(key)
+          raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
         end
 
-        user_headers = user_headers.dup
-        user_headers[:cookie] = @cookies.map { |key, val| "#{key}=#{val}" }.sort.join('; ')
+        unless valid_cookie_value?(value)
+          raise ArgumentError.new("Invalid cookie value: #{value.inspect}")
+        end
+
+        @cookie_jar.parse("#{key}=#{value}", parsed_url)
       end
+
+      @cookie_jar
+    end
+
+    def make_headers user_headers
+      unless cookie_jar.empty?
+        user_headers[:cookie] = HTTP::Cookie.cookie_value(cookie_jar.cookies(parsed_url))
+      end
+
       headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
       headers.merge!(@payload.headers) if @payload
       headers
@@ -271,9 +286,9 @@ module RestClient
     end
 
     # Validate cookie values. Rather than following RFC 6265, allow anything
-    # but control characters, comma, and semicolon.
+    # but control characters. Semicolon is allowed for passing options.
     def valid_cookie_value?(value)
-      ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
+      ! Regexp.new('[\x0-\x1f\x7f]').match(value)
     end
 
     # The proxy URI for this request. If `:proxy` was provided on this request,
@@ -682,6 +697,15 @@ module RestClient
     end
 
     private
+
+    def parsed_url
+      return @parsed_url if @parsed_url
+
+      begin
+        @parsed_url = parse_url(url)
+      rescue URI::InvalidURIError
+      end
+    end
 
     def parser
       URI.const_defined?(:Parser) ? URI::Parser.new : URI

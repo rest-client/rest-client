@@ -68,5 +68,16 @@ describe RestClient::Request do
         ex.response.cookies['foo'].should eq '"bar:baz"'
       }
     end
+
+    it 'keeps original cookies for the domain' do
+      response = execute_httpbin('cookies/set?foo=bar', method: :get, cookies: { baz: 'quux; Path=/' })
+      response.cookies['foo'].should eq 'bar'
+      response.cookies['baz'].should eq 'quux'
+    end
+
+    it 'overwrites original cookies with new cookies if present' do
+      response = execute_httpbin('cookies/set?foo=bar', method: :get, cookies: { foo: 'quux; Path=/' })
+      response.cookies['foo'].should eq 'bar'
+    end
   end
 end
