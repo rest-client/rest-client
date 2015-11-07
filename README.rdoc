@@ -10,16 +10,16 @@ of specifying actions: get, put, post, delete.
 
 === New mailing list
 
-We have a new email list for announcements hosted by Groups.io:
-https://groups.io/g/rest-client
+We have a new email list for announcements, hosted by Groups.io.
 
-You can subscribe on the web with a Groups.io account or simply send an email
-to rest-client+subscribe@groups.io.
+* Subscribe on the web: https://groups.io/g/rest-client
+
+* Subscribe by sending an email: mailto:rest-client+subscribe@groups.io
 
 The old Librelist mailing list is *defunct*, as Librelist appears to be broken
 and not accepting new mail. The old archives are still up, but have been
 imported into the new list archives as well.
-http://librelist.com/browser/rest.client/
+http://librelist.com/browser/rest.client
 
 == Requirements
 
