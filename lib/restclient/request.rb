@@ -40,7 +40,7 @@ module RestClient
 
     # TODO: rename timeout to read_timeout
 
-    attr_reader :method, :url, :headers, :cookies, :payload, :proxy,
+    attr_reader :method, :uri, :url, :headers, :cookies, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
@@ -124,6 +124,7 @@ module RestClient
       else
         raise ArgumentError, "must pass :url"
       end
+      parse_url_with_auth!(url)
       @cookies = @headers.delete(:cookies) || args[:cookies] || {}
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
@@ -171,17 +172,21 @@ module RestClient
         end
       end
 
-      # If there's no CA file, CA path, or cert store provided, use default
-      if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
-        @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
-      end
+      # Set some other default SSL options, but only if we have an HTTPS URI.
+      if use_ssl?
 
-      unless @ssl_opts.include?(:ciphers)
-        # If we're on a Ruby version that has insecure default ciphers,
-        # override it with our default list.
-        if WeakDefaultCiphers.include?(
-             OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
-          @ssl_opts[:ciphers] = DefaultCiphers
+        # If there's no CA file, CA path, or cert store provided, use default
+        if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
+          @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
+        end
+
+        unless @ssl_opts.include?(:ciphers)
+          # If we're on a Ruby version that has insecure default ciphers,
+          # override it with our default list.
+          if WeakDefaultCiphers.include?(
+               OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
+            @ssl_opts[:ciphers] = DefaultCiphers
+          end
         end
       end
 
@@ -194,8 +199,6 @@ module RestClient
     end
 
     def execute & block
-      uri = parse_url_with_auth(url)
-
       # With 2.0.0+, net/http accepts URI objects in requests and handles wrapping
       # IPv6 addresses in [] for use in the Host request header.
       request_uri = RUBY_VERSION >= "2.0.0" ? uri : uri.request_uri
@@ -212,6 +215,14 @@ module RestClient
       define_method('ssl_' + key) do
         @ssl_opts[key.to_sym]
       end
+    end
+
+    # Return true if the request URI will use HTTPS.
+    #
+    # @return [Boolean]
+    #
+    def use_ssl?
+      uri.is_a?(URI::HTTPS)
     end
 
     # Extract the query parameters and append them to the url
@@ -349,16 +360,6 @@ module RestClient
       URI.parse(url)
     end
 
-    def parse_url_with_auth(url)
-      uri = parse_url(url)
-      @user = CGI.unescape(uri.user) if uri.user
-      @password = CGI.unescape(uri.password) if uri.password
-      if !@user && !@password
-        @user, @password = Netrc.read[uri.hostname]
-      end
-      uri
-    end
-
     def process_payload(p=nil, parent_key=nil)
       unless p.is_a?(Hash)
         p
@@ -426,17 +427,15 @@ module RestClient
     def log_request
       return unless RestClient.log
 
-      out = []
-      sanitized_url = begin
-        uri = URI.parse(url)
-        uri.password = "REDACTED" if uri.password
-        uri.to_s
-      rescue URI::InvalidURIError
-        # An attacker may be able to manipulate the URL to be
-        # invalid, which could force discloure of a password if
-        # we show any of the un-parsed URL here.
-        "[invalid uri]"
+      if uri.password
+        sanitized_uri = uri.dup
+        sanitized_uri.password = "REDACTED"
+        sanitized_url = sanitized_uri.to_s
+      else
+        sanitized_url = uri.to_s
       end
+
+      out = []
 
       out << "RestClient.#{method} #{sanitized_url.inspect}"
       out << payload.short_inspect if payload
@@ -490,6 +489,26 @@ module RestClient
     end
 
     private
+
+    # Parse the @url string into a URI object using #parse_url and save it as
+    # @uri. Also save any basic auth user or password as @user and @password.
+    # If no auth info was passed, check for credentials in a Netrc file.
+    #
+    # @param [String] url A URL string.
+    #
+    # @return [URI]
+    #
+    # @raise URI::InvalidURIError on invalid URIs
+    #
+    def parse_url_with_auth!(url)
+      uri = parse_url(url)
+      @user = CGI.unescape(uri.user) if uri.user
+      @password = CGI.unescape(uri.password) if uri.password
+      if !@user && !@password
+        @user, @password = Netrc.read[uri.hostname]
+      end
+      @uri = uri
+    end
 
     def print_verify_callback_warnings
       warned = false
@@ -576,7 +595,6 @@ module RestClient
       end
 
       log_request
-
 
       net.start do |http|
         established_connection = true

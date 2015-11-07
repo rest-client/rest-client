@@ -100,34 +100,43 @@ describe RestClient::Request, :include_helpers do
       URI.should_receive(:parse).with('HTTPS://example.com/resource')
       @request.parse_url('HTTPS://example.com/resource')
     end
+
+    it 'raises with invalid URI' do
+      lambda {
+        @request.parse_url('http://a@b:c')
+      }.should raise_error(URI::InvalidURIError, /\Athe scheme http/)
+      lambda {
+        @request.parse_url('http://')
+      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
+    end
   end
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
       URI.stub(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))
-      @request.parse_url_with_auth('http://joe:pass1@example.com/resource')
+      @request.send(:parse_url_with_auth!, 'http://joe:pass1@example.com/resource')
       @request.user.should eq 'joe'
       @request.password.should eq 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
       URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1'))
-      @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
+      @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
       @request.user.should eq 'joe '
       @request.password.should eq 'pass1'
     end
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
-      URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
+      URI.stub(:parse).and_return(double('uri', user: nil, password: nil, hostname: 'example.com'))
       @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
-      @request.parse_url_with_auth('http://example.com/resource')
+      @request.send(:parse_url_with_auth!, 'http://example.com/resource')
       @request.user.should eq 'beth'
       @request.password.should eq 'pass2'
     end
   end
 
   it "correctly formats cookies provided to the constructor" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
+    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
     @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
@@ -171,7 +180,7 @@ describe RestClient::Request, :include_helpers do
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
-    @request.parse_url_with_auth('http://example.com/resource')
+    @request.send(:parse_url_with_auth!, 'http://example.com/resource')
     @request.user.should eq 'a'
     @request.password.should eq 'b'
   end
@@ -179,7 +188,7 @@ describe RestClient::Request, :include_helpers do
   it "uses credentials in the url in preference to netrc" do
     URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
-    @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
+    @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
     @request.user.should eq 'joe '
     @request.password.should eq 'pass1'
   end
@@ -254,11 +263,10 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
-    @request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
     klass = double("net:http class")
     @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
     klass.should_receive(:new).and_return('result')
-    @request.should_receive(:transmit).with(@uri, 'result', kind_of(RestClient::Payload::Base))
+    @request.should_receive(:transmit).with(@request.uri, 'result', kind_of(RestClient::Payload::Base))
     @request.execute
   end
 
@@ -564,12 +572,6 @@ describe RestClient::Request, :include_helpers do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
       log[0].should eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
-    end
-
-    it 'logs invalid URIs, even though they will fail elsewhere' do
-      log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://a@b:c', :headers => {:user_agent => 'rest-client'}).log_request
-      log[0].should eq %Q{RestClient.get "[invalid uri]", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
   end
 
@@ -1119,6 +1121,17 @@ describe RestClient::Request, :include_helpers do
       @request.net_http_request_class(:GET).stub(:new).and_return(@get)
       @http.should_receive(:request).with(@get, nil)
       @request.execute
+    end
+  end
+
+  describe 'constructor' do
+    it 'should reject invalid URIs' do
+      lambda {
+        RestClient::Request.new(method: :get, url: 'http://')
+      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
+      lambda {
+        RestClient::Request.new(method: :get, url: 'http://a@b:c')
+      }.should raise_error(URI::InvalidURIError, /\Athe scheme http/)
     end
   end
 end

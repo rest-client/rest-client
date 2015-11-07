@@ -65,6 +65,8 @@ This release is largely API compatible, but makes several breaking changes.
   possible to add procs like `RestClient.add_before_execution_proc` to a single
   request without global state.
 - Run tests on Travis's beta OS X support.
+- Make `Request#transmit` a private method, along with a few others.
+- Refactor URI parsing to happen earlier, in Request initialization.
 
 # 2.0.0.rc1
 
