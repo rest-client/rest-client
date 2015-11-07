@@ -405,6 +405,92 @@ module RestClient
       cert_store
     end
 
+    def self.decode content_encoding, body
+      if (!body) || body.empty?
+        body
+      elsif content_encoding == 'gzip'
+        Zlib::GzipReader.new(StringIO.new(body)).read
+      elsif content_encoding == 'deflate'
+        begin
+          Zlib::Inflate.new.inflate body
+        rescue Zlib::DataError
+          # No luck with Zlib decompression. Let's try with raw deflate,
+          # like some broken web servers do.
+          Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate body
+        end
+      else
+        body
+      end
+    end
+
+    def log_request
+      return unless RestClient.log
+
+      out = []
+      sanitized_url = begin
+        uri = URI.parse(url)
+        uri.password = "REDACTED" if uri.password
+        uri.to_s
+      rescue URI::InvalidURIError
+        # An attacker may be able to manipulate the URL to be
+        # invalid, which could force discloure of a password if
+        # we show any of the un-parsed URL here.
+        "[invalid uri]"
+      end
+
+      out << "RestClient.#{method} #{sanitized_url.inspect}"
+      out << payload.short_inspect if payload
+      out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
+      RestClient.log << out.join(', ') + "\n"
+    end
+
+    def log_response res
+      return unless RestClient.log
+
+      size = if @raw_response
+               File.size(@tf.path)
+             else
+               res.body.nil? ? 0 : res.body.size
+             end
+
+      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+    end
+
+    # Return a hash of headers whose keys are capitalized strings
+    def stringify_headers headers
+      headers.inject({}) do |result, (key, value)|
+        if key.is_a? Symbol
+          key = key.to_s.split(/_/).map(&:capitalize).join('-')
+        end
+        if 'CONTENT-TYPE' == key.upcase
+          result[key] = maybe_convert_extension(value.to_s)
+        elsif 'ACCEPT' == key.upcase
+          # Accept can be composed of several comma-separated values
+          if value.is_a? Array
+            target_values = value
+          else
+            target_values = value.to_s.split ','
+          end
+          result[key] = target_values.map { |ext|
+            maybe_convert_extension(ext.to_s.strip)
+          }.join(', ')
+        else
+          result[key] = value.to_s
+        end
+        result
+      end
+    end
+
+    def default_headers
+      {
+        :accept => '*/*',
+        :accept_encoding => 'gzip, deflate',
+        :user_agent => RestClient::Platform.default_user_agent,
+      }
+    end
+
+    private
+
     def print_verify_callback_warnings
       warned = false
       if RestClient::Platform.mac_mri?
@@ -596,92 +682,6 @@ module RestClient
       end
 
     end
-
-    def self.decode content_encoding, body
-      if (!body) || body.empty?
-        body
-      elsif content_encoding == 'gzip'
-        Zlib::GzipReader.new(StringIO.new(body)).read
-      elsif content_encoding == 'deflate'
-        begin
-          Zlib::Inflate.new.inflate body
-        rescue Zlib::DataError
-          # No luck with Zlib decompression. Let's try with raw deflate,
-          # like some broken web servers do.
-          Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate body
-        end
-      else
-        body
-      end
-    end
-
-    def log_request
-      return unless RestClient.log
-
-      out = []
-      sanitized_url = begin
-        uri = URI.parse(url)
-        uri.password = "REDACTED" if uri.password
-        uri.to_s
-      rescue URI::InvalidURIError
-        # An attacker may be able to manipulate the URL to be
-        # invalid, which could force discloure of a password if
-        # we show any of the un-parsed URL here.
-        "[invalid uri]"
-      end
-
-      out << "RestClient.#{method} #{sanitized_url.inspect}"
-      out << payload.short_inspect if payload
-      out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
-      RestClient.log << out.join(', ') + "\n"
-    end
-
-    def log_response res
-      return unless RestClient.log
-
-      size = if @raw_response
-               File.size(@tf.path)
-             else
-               res.body.nil? ? 0 : res.body.size
-             end
-
-      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
-    end
-
-    # Return a hash of headers whose keys are capitalized strings
-    def stringify_headers headers
-      headers.inject({}) do |result, (key, value)|
-        if key.is_a? Symbol
-          key = key.to_s.split(/_/).map(&:capitalize).join('-')
-        end
-        if 'CONTENT-TYPE' == key.upcase
-          result[key] = maybe_convert_extension(value.to_s)
-        elsif 'ACCEPT' == key.upcase
-          # Accept can be composed of several comma-separated values
-          if value.is_a? Array
-            target_values = value
-          else
-            target_values = value.to_s.split ','
-          end
-          result[key] = target_values.map { |ext|
-            maybe_convert_extension(ext.to_s.strip)
-          }.join(', ')
-        else
-          result[key] = value.to_s
-        end
-        result
-      end
-    end
-
-    def default_headers
-      {
-        :accept => '*/*',
-        :accept_encoding => 'gzip, deflate',
-        :user_agent => RestClient::Platform.default_user_agent,
-      }
-    end
-
-    private
 
     def parser
       URI.const_defined?(:Parser) ? URI::Parser.new : URI
