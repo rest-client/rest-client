@@ -104,23 +104,23 @@ describe RestClient::Request, :include_helpers do
     it 'raises with invalid URI' do
       lambda {
         @request.parse_url('http://a@b:c')
-      }.should raise_error(URI::InvalidURIError, /\Athe scheme http/)
+      }.should raise_error(URI::InvalidURIError)
       lambda {
-        @request.parse_url('http://')
-      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
+        @request.parse_url('http://::')
+      }.should raise_error(URI::InvalidURIError)
     end
   end
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
-      URI.stub(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))
+      URI.stub(:parse).and_return(double('uri', user: 'joe', password: 'pass1', hostname: 'example.com'))
       @request.send(:parse_url_with_auth!, 'http://joe:pass1@example.com/resource')
       @request.user.should eq 'joe'
       @request.password.should eq 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
-      URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1'))
+      URI.stub(:parse).and_return(double('uri', user: 'joe%20', password: 'pass1', hostname: 'example.com'))
       @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
       @request.user.should eq 'joe '
       @request.password.should eq 'pass1'
@@ -1126,13 +1126,18 @@ describe RestClient::Request, :include_helpers do
   end
 
   describe 'constructor' do
+    it 'should reject valid URIs with no hostname' do
+      URI.parse('http:///').hostname.should be_nil
+
+      lambda {
+        RestClient::Request.new(method: :get, url: 'http:///')
+      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
+    end
+
     it 'should reject invalid URIs' do
       lambda {
-        RestClient::Request.new(method: :get, url: 'http://')
-      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
-      lambda {
-        RestClient::Request.new(method: :get, url: 'http://a@b:c')
-      }.should raise_error(URI::InvalidURIError, /\Athe scheme http/)
+        RestClient::Request.new(method: :get, url: 'http://::')
+      }.should raise_error(URI::InvalidURIError)
     end
   end
 end

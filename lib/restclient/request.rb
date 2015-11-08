@@ -502,11 +502,17 @@ module RestClient
     #
     def parse_url_with_auth!(url)
       uri = parse_url(url)
+
+      if uri.hostname.nil?
+        raise URI::InvalidURIError.new("bad URI(no host provided): #{url}")
+      end
+
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
       if !@user && !@password
         @user, @password = Netrc.read[uri.hostname]
       end
+
       @uri = uri
     end
 
