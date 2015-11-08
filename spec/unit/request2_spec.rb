@@ -8,6 +8,9 @@ describe RestClient::Request do
 
     stub_request(:get, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar', 'params' => 'a'}).to_return(:body => 'foo', :status => 200)
     RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => :a}).body.should eq 'foo'
+
+    stub_request(:get, 'http://some/resource?z=x&a=b&c=d&').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
+    RestClient::Request.execute(:url => 'http://some/resource?z=x', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}).body.should eq 'foo'
   end
 
   it "can use a block to process response" do
