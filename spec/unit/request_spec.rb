@@ -56,8 +56,8 @@ describe RestClient::Request, :include_helpers do
     res.stub(:code).and_return("200")
     res.stub(:body).and_return('body')
     res.stub(:[]).with('content-encoding').and_return(nil)
-    @request.process_result(res).body.should eq 'body'
-    @request.process_result(res).to_s.should eq 'body'
+    @request.send(:process_result, res).body.should eq 'body'
+    @request.send(:process_result, res).to_s.should eq 'body'
   end
 
   it "doesn't classify successful requests as failed" do
@@ -66,7 +66,7 @@ describe RestClient::Request, :include_helpers do
       res.stub(:code).and_return(code.to_s)
       res.stub(:body).and_return("")
       res.stub(:[]).with('content-encoding').and_return(nil)
-      @request.process_result(res).should be_empty
+      @request.send(:process_result, res).should be_empty
     end
   end
 
@@ -100,34 +100,43 @@ describe RestClient::Request, :include_helpers do
       URI.should_receive(:parse).with('HTTPS://example.com/resource')
       @request.parse_url('HTTPS://example.com/resource')
     end
+
+    it 'raises with invalid URI' do
+      lambda {
+        @request.parse_url('http://a@b:c')
+      }.should raise_error(URI::InvalidURIError)
+      lambda {
+        @request.parse_url('http://::')
+      }.should raise_error(URI::InvalidURIError)
+    end
   end
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
-      URI.stub(:parse).and_return(double('uri', :user => 'joe', :password => 'pass1'))
-      @request.parse_url_with_auth('http://joe:pass1@example.com/resource')
+      URI.stub(:parse).and_return(double('uri', user: 'joe', password: 'pass1', hostname: 'example.com'))
+      @request.send(:parse_url_with_auth!, 'http://joe:pass1@example.com/resource')
       @request.user.should eq 'joe'
       @request.password.should eq 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
-      URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1'))
-      @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
+      URI.stub(:parse).and_return(double('uri', user: 'joe%20', password: 'pass1', hostname: 'example.com'))
+      @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
       @request.user.should eq 'joe '
       @request.password.should eq 'pass1'
     end
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
-      URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
+      URI.stub(:parse).and_return(double('uri', user: nil, password: nil, hostname: 'example.com'))
       @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
-      @request.parse_url_with_auth('http://example.com/resource')
+      @request.send(:parse_url_with_auth!, 'http://example.com/resource')
       @request.user.should eq 'beth'
       @request.password.should eq 'pass2'
     end
   end
 
   it "correctly formats cookies provided to the constructor" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil))
+    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
     @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
     @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
@@ -171,7 +180,7 @@ describe RestClient::Request, :include_helpers do
   it "uses netrc credentials" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
-    @request.parse_url_with_auth('http://example.com/resource')
+    @request.send(:parse_url_with_auth!, 'http://example.com/resource')
     @request.user.should eq 'a'
     @request.password.should eq 'b'
   end
@@ -179,7 +188,7 @@ describe RestClient::Request, :include_helpers do
   it "uses credentials in the url in preference to netrc" do
     URI.stub(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :hostname => 'example.com'))
     Netrc.stub(:read).and_return('example.com' => ['a', 'b'])
-    @request.parse_url_with_auth('http://joe%20:pass1@example.com/resource')
+    @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
     @request.user.should eq 'joe '
     @request.password.should eq 'pass1'
   end
@@ -254,11 +263,10 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
-    @request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
     klass = double("net:http class")
     @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
     klass.should_receive(:new).and_return('result')
-    @request.should_receive(:transmit).with(@uri, 'result', kind_of(RestClient::Payload::Base))
+    @request.should_receive(:transmit).with(@request.uri, 'result', kind_of(RestClient::Payload::Base))
     @request.execute
   end
 
@@ -277,10 +285,13 @@ describe RestClient::Request, :include_helpers do
     @request.execute
   end
 
+  # TODO: almost none of these tests should actually call transmit, which is
+  # part of the private API
+
   it "transmits the request with Net::HTTP" do
     @http.should_receive(:request).with('req', 'payload')
     @request.should_receive(:process_result)
-    @request.transmit(@uri, 'req', 'payload')
+    @request.send(:transmit, @uri, 'req', 'payload')
   end
 
   describe "payload" do
@@ -288,7 +299,7 @@ describe RestClient::Request, :include_helpers do
       @http.should_receive(:request).with('req', nil)
       @request.should_receive(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it "passes non-hash payloads straight through" do
@@ -323,14 +334,14 @@ describe RestClient::Request, :include_helpers do
       @request.stub(:password).and_return('mypass')
       @request.should_receive(:setup_credentials).with('req')
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it "does not attempt to send any credentials if user is nil" do
       @request.stub(:user).and_return(nil)
       req = double("request")
       req.should_not_receive(:basic_auth)
-      @request.setup_credentials(req)
+      @request.send(:setup_credentials, req)
     end
 
     it "setup credentials when there's a user" do
@@ -338,7 +349,7 @@ describe RestClient::Request, :include_helpers do
       @request.stub(:password).and_return('mypass')
       req = double("request")
       req.should_receive(:basic_auth).with('joe', 'mypass')
-      @request.setup_credentials(req)
+      @request.send(:setup_credentials, req)
     end
 
     it "does not attempt to send credentials if Authorization header is set" do
@@ -347,52 +358,52 @@ describe RestClient::Request, :include_helpers do
       @request.stub(:password).and_return('mypass')
       req = double("request")
       req.should_not_receive(:basic_auth)
-      @request.setup_credentials(req)
+      @request.send(:setup_credentials, req)
     end
   end
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
     @http.stub(:request).and_raise(EOFError)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::ServerBrokeConnection)
   end
 
   it "catches OpenSSL::SSL::SSLError and raise it back without more informative message" do
     @http.stub(:request).and_raise(OpenSSL::SSL::SSLError)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(OpenSSL::SSL::SSLError)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(OpenSSL::SSL::SSLError)
   end
 
   it "catches Timeout::Error and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Timeout::Error)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
   it "catches Errno::ETIMEDOUT and raise the more informative ReadTimeout" do
     @http.stub(:request).and_raise(Errno::ETIMEDOUT)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
   it "catches Net::ReadTimeout and raises RestClient's ReadTimeout",
      :if => defined?(Net::ReadTimeout) do
     @http.stub(:request).and_raise(Net::ReadTimeout)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
   it "catches Net::OpenTimeout and raises RestClient's OpenTimeout",
      :if => defined?(Net::OpenTimeout) do
     @http.stub(:request).and_raise(Net::OpenTimeout)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout)
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout)
   end
 
   it "uses correct error message for ReadTimeout",
      :if => defined?(Net::ReadTimeout) do
     @http.stub(:request).and_raise(Net::ReadTimeout)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout, 'Timed out reading data from server')
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::ReadTimeout, 'Timed out reading data from server')
   end
 
   it "uses correct error message for OpenTimeout",
      :if => defined?(Net::OpenTimeout) do
     @http.stub(:request).and_raise(Net::OpenTimeout)
-    lambda { @request.transmit(@uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout, 'Timed out connecting to server')
+    lambda { @request.send(:transmit, @uri, 'req', nil) }.should raise_error(RestClient::Exceptions::OpenTimeout, 'Timed out connecting to server')
   end
 
 
@@ -406,24 +417,24 @@ describe RestClient::Request, :include_helpers do
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
       res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::Unauthorized)
+      lambda { @request.send(:process_result, res) }.should raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
       res = response_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::ResourceNotFound)
+      lambda { @request.send(:process_result, res) }.should raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
       res = response_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
-      lambda { @request.process_result(res) }.should raise_error(RestClient::InternalServerError)
+      lambda { @request.send(:process_result, res) }.should raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
       res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      @request.process_result(res){|response, request| "foo"}.should eq "foo"
+      @request.send(:process_result, res){|response, request| "foo"}.should eq "foo"
     end
   end
 
@@ -472,6 +483,7 @@ describe RestClient::Request, :include_helpers do
       allow(ENV).to receive(:[]).with("http_proxy").and_return("http://127.0.0.1")
       allow(ENV).to receive(:[]).with("no_proxy").and_return(nil)
       allow(ENV).to receive(:[]).with("NO_PROXY").and_return(nil)
+      allow(ENV).to receive(:[]).with("NETRC").and_return(nil)
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
       obj = req.net_http_object('host', 80)
       obj.proxy?.should be true
@@ -562,12 +574,6 @@ describe RestClient::Request, :include_helpers do
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
       log[0].should eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
-
-    it 'logs invalid URIs, even though they will fail elsewhere' do
-      log = RestClient.log = []
-      RestClient::Request.new(:method => :get, :url => 'http://a@b:c', :headers => {:user_agent => 'rest-client'}).log_request
-      log[0].should eq %Q{RestClient.get "[invalid uri]", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
-    end
   end
 
   it "strips the charset from the response content type" do
@@ -588,7 +594,7 @@ describe RestClient::Request, :include_helpers do
       @net.should_not_receive(:read_timeout=)
       @net.should_not_receive(:open_timeout=)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it 'sets read_timeout' do
@@ -599,7 +605,7 @@ describe RestClient::Request, :include_helpers do
 
       @net.should_receive(:read_timeout=).with(123)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it "sets open_timeout" do
@@ -610,7 +616,7 @@ describe RestClient::Request, :include_helpers do
 
       @net.should_receive(:open_timeout=).with(123)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it 'sets both timeouts with :timeout' do
@@ -622,7 +628,7 @@ describe RestClient::Request, :include_helpers do
       @net.should_receive(:open_timeout=).with(123)
       @net.should_receive(:read_timeout=).with(123)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it 'supersedes :timeout with open/read_timeout' do
@@ -634,7 +640,7 @@ describe RestClient::Request, :include_helpers do
       @net.should_receive(:open_timeout=).with(34)
       @net.should_receive(:read_timeout=).with(56)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
 
@@ -647,7 +653,7 @@ describe RestClient::Request, :include_helpers do
       @net.should_receive(:read_timeout=).with(nil)
       @net.should_receive(:open_timeout=).with(nil)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
 
     it 'deprecated: warns when disabling timeout by setting it to -1' do
@@ -659,7 +665,7 @@ describe RestClient::Request, :include_helpers do
       @net.should_receive(:read_timeout=).with(nil)
 
       fake_stderr {
-        @request.transmit(@uri, 'req', nil)
+        @request.send(:transmit, @uri, 'req', nil)
       }.should match(/^Deprecated: .*timeout.* nil instead of -1$/)
     end
 
@@ -675,7 +681,7 @@ describe RestClient::Request, :include_helpers do
       @request.should_receive(:warn)
       @net.should_receive(:open_timeout=).with(nil)
 
-      @request.transmit(@uri, 'req', nil)
+      @request.send(:transmit, @uri, 'req', nil)
     end
   end
 
@@ -686,7 +692,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should default to verifying ssl certificates" do
@@ -704,7 +710,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is true" do
@@ -713,7 +719,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_PEER if verify_ssl is true" do
@@ -722,7 +728,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_PEER if verify_ssl is not given" do
@@ -731,7 +737,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set net.verify_mode to the passed value if verify_ssl is an OpenSSL constant" do
@@ -744,7 +750,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should default to not having an ssl_client_cert" do
@@ -762,7 +768,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_version if not provided" do
@@ -775,7 +781,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set the ssl_ciphers if provided" do
@@ -790,7 +796,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_ciphers if set to nil" do
@@ -804,7 +810,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should override ssl_ciphers with better defaults with weak default ciphers" do
@@ -829,7 +835,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not override ssl_ciphers with better defaults with different default ciphers" do
@@ -854,7 +860,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set the ssl_client_cert if provided" do
@@ -868,7 +874,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_client_cert if it is not provided" do
@@ -881,7 +887,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should default to not having an ssl_client_key" do
@@ -899,7 +905,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_client_key if it is not provided" do
@@ -912,7 +918,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should default to not having an ssl_ca_file" do
@@ -931,7 +937,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_ca_file if it is not provided" do
@@ -944,7 +950,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should default to not having an ssl_ca_path" do
@@ -963,7 +969,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_ca_path if it is not provided" do
@@ -976,7 +982,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set the ssl_cert_store if provided" do
@@ -995,7 +1001,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should by default set the ssl_cert_store if no CA info is provided" do
@@ -1010,7 +1016,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_cert_store if it is set falsy" do
@@ -1024,7 +1030,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should not set the ssl_verify_callback by default" do
@@ -1037,7 +1043,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     it "should set the ssl_verify_callback if passed" do
@@ -1059,7 +1065,7 @@ describe RestClient::Request, :include_helpers do
       @http.stub(:request)
       @request.stub(:process_result)
       @request.stub(:response_log)
-      @request.transmit(@uri, 'req', 'payload')
+      @request.send(:transmit, @uri, 'req', 'payload')
     end
 
     # </ssl>
@@ -1073,8 +1079,8 @@ describe RestClient::Request, :include_helpers do
     )
     net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
     net_http_res.stub(:read_body).and_return(nil)
-    @http.should_receive(:request).and_return(@request.fetch_body(net_http_res))
-    response = @request.transmit(@uri, 'req', 'payload')
+    @http.should_receive(:request).and_return(@request.send(:fetch_body, net_http_res))
+    response = @request.send(:transmit, @uri, 'req', 'payload')
     response.should_not be_nil
     response.code.should eq 204
   end
@@ -1091,7 +1097,7 @@ describe RestClient::Request, :include_helpers do
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       net_http_res.stub(:read_body).and_return("body")
-      @request.fetch_body(net_http_res)
+      @request.send(:fetch_body, net_http_res)
     end
   end
 
@@ -1101,7 +1107,7 @@ describe RestClient::Request, :include_helpers do
       @request = RestClient::Request.new(method: :get, url: 'example.com', :payload => payload)
       @request.should_receive(:process_result)
       @http.should_receive(:request).with('req', payload)
-      @request.transmit(@uri, 'req', payload)
+      @request.send(:transmit, @uri, 'req', payload)
     end
 
     it 'should accept streaming IO payloads' do
@@ -1116,6 +1122,22 @@ describe RestClient::Request, :include_helpers do
       @request.net_http_request_class(:GET).stub(:new).and_return(@get)
       @http.should_receive(:request).with(@get, nil)
       @request.execute
+    end
+  end
+
+  describe 'constructor' do
+    it 'should reject valid URIs with no hostname' do
+      URI.parse('http:///').hostname.should be_nil
+
+      lambda {
+        RestClient::Request.new(method: :get, url: 'http:///')
+      }.should raise_error(URI::InvalidURIError, /\Abad URI/)
+    end
+
+    it 'should reject invalid URIs' do
+      lambda {
+        RestClient::Request.new(method: :get, url: 'http://::')
+      }.should raise_error(URI::InvalidURIError)
     end
   end
 end

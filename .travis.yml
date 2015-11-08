@@ -23,3 +23,5 @@ matrix:
       rvm: 'jruby-19mode'
     - os: osx
       rvm: '2.2'
+
+sudo: false
