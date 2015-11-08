@@ -1140,4 +1140,23 @@ describe RestClient::Request, :include_helpers do
       }.should raise_error(URI::InvalidURIError)
     end
   end
+
+  describe 'process_url_params' do
+    it 'should handle basic URL params' do
+      @request.process_url_params('https://example.com/foo', params: {key1: 123, key2: 'abc'}).
+        should eq 'https://example.com/foo?key1=123&key2=abc'
+
+      @request.process_url_params('https://example.com/foo', params: {'key1' => 123}).
+        should eq 'https://example.com/foo?key1=123'
+
+      @request.process_url_params('https://example.com/path',
+                                  params: {foo: 'one two', bar: 'three + four == seven'}).
+        should eq 'https://example.com/path?foo=one+two&bar=three+%2B+four+%3D%3D+seven'
+    end
+
+    it 'should combine with & when URL params already exist' do
+      @request.process_url_params('https://example.com/path?foo=1', params: {bar: 2}).
+        should eq 'https://example.com/path?foo=1&bar=2'
+    end
+  end
 end

@@ -2,12 +2,20 @@ require_relative '_lib'
 
 describe RestClient::Request do
 
-  it "manage params for get requests" do
-    stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
-    RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}).body.should eq 'foo'
+  context 'params for GET requests' do
+    it "manage params for get requests" do
+      stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}).body.should eq 'foo'
 
-    stub_request(:get, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar', 'params' => 'a'}).to_return(:body => 'foo', :status => 200)
-    RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => :a}).body.should eq 'foo'
+      stub_request(:get, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
+      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => :a}).body.should eq 'foo'
+    end
+
+    it 'adds GET params when params are present in URL' do
+      stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
+      RestClient::Request.execute(:url => 'http://some/resource?a=b', :method => :get, :headers => {:foo => :bar, :params => {:c => 'd'}}).body.should eq 'foo'
+    end
+
   end
 
   it "can use a block to process response" do
