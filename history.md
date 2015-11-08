@@ -67,6 +67,7 @@ This release is largely API compatible, but makes several breaking changes.
 - Run tests on Travis's beta OS X support.
 - Make `Request#transmit` a private method, along with a few others.
 - Refactor URI parsing to happen earlier, in Request initialization.
+- When adding URL params, handle URLs that already contain params.
 
 # 2.0.0.rc1
 
