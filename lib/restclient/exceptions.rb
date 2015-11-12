@@ -1,5 +1,19 @@
 module RestClient
 
+  # Hash of HTTP status code => message.
+  #
+  # 1xx: Informational - Request received, continuing process
+  # 2xx: Success - The action was successfully received, understood, and
+  #      accepted
+  # 3xx: Redirection - Further action must be taken in order to complete the
+  #      request
+  # 4xx: Client Error - The request contains bad syntax or cannot be fulfilled
+  # 5xx: Server Error - The server failed to fulfill an apparently valid
+  #      request
+  #
+  # @see
+  #   http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+  #
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',
               102 => 'Processing', #WebDAV
@@ -12,6 +26,8 @@ module RestClient
               205 => 'Reset Content',
               206 => 'Partial Content',
               207 => 'Multi-Status', #WebDAV
+              208 => 'Already Reported', # RFC5842
+              226 => 'IM Used', # RFC3229
 
               300 => 'Multiple Choices',
               301 => 'Moved Permanently',
@@ -21,6 +37,7 @@ module RestClient
               305 => 'Use Proxy', # http/1.1
               306 => 'Switch Proxy', # no longer used
               307 => 'Temporary Redirect', # http/1.1
+              308 => 'Permanent Redirect', # RFC7538
 
               400 => 'Bad Request',
               401 => 'Unauthorized',
@@ -35,10 +52,10 @@ module RestClient
               410 => 'Gone',
               411 => 'Length Required',
               412 => 'Precondition Failed',
-              413 => 'Request Entity Too Large',
-              414 => 'Request-URI Too Long',
+              413 => 'Payload Too Large', # RFC7231 (renamed, see below)
+              414 => 'URI Too Long', # RFC7231 (renamed, see below)
               415 => 'Unsupported Media Type',
-              416 => 'Requested Range Not Satisfiable',
+              416 => 'Range Not Satisfiable', # RFC7233 (renamed, see below)
               417 => 'Expectation Failed',
               418 => 'I\'m A Teapot', #RFC2324
               421 => 'Too Many Connections From This IP',
@@ -61,10 +78,27 @@ module RestClient
               505 => 'HTTP Version Not Supported',
               506 => 'Variant Also Negotiates',
               507 => 'Insufficient Storage', #WebDAV
+              508 => 'Loop Detected', # RFC5842
               509 => 'Bandwidth Limit Exceeded', #Apache
               510 => 'Not Extended',
               511 => 'Network Authentication Required', # RFC6585
   }
+
+  STATUSES_COMPATIBILITY = {
+    # The RFCs all specify "Not Found", but "Resource Not Found" was used in
+    # earlier RestClient releases.
+    404 => ['ResourceNotFound'],
+
+    # HTTP 413 was renamed to "Payload Too Large" in RFC7231.
+    413 => ['RequestEntityTooLarge'],
+
+    # HTTP 414 was renamed to "URI Too Long" in RFC7231.
+    414 => ['RequestURITooLong'],
+
+    # HTTP 416 was renamed to "Range Not Satisfiable" in RFC7233.
+    416 => ['RequestedRangeNotSatisfiable'],
+  }
+
 
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
@@ -148,8 +182,13 @@ module RestClient
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
-  # Backwards compatibility. "Not Found" is the actual text in the RFCs.
-  ResourceNotFound = NotFound
+  # Create HTTP status exception classes used for backwards compatibility
+  STATUSES_COMPATIBILITY.each_pair do |code, compat_list|
+    klass = Exceptions::EXCEPTIONS_MAP.fetch(code)
+    compat_list.each do |old_name|
+      const_set(old_name, klass)
+    end
+  end
 
   module Exceptions
     # We have to split the Exceptions module like we do here because the
