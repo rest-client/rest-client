@@ -68,6 +68,7 @@ This release is largely API compatible, but makes several breaking changes.
 - Make `Request#transmit` a private method, along with a few others.
 - Refactor URI parsing to happen earlier, in Request initialization.
 - When adding URL params, handle URLs that already contain params.
+- Add a few more exception classes for obscure HTTP status codes.
 
 # 2.0.0.rc1
 
