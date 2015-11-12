@@ -38,8 +38,6 @@ module RestClient
   #      called with the HTTP request and request params.
   class Request
 
-    # TODO: rename timeout to read_timeout
-
     attr_reader :method, :uri, :url, :headers, :cookies, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
@@ -495,8 +493,8 @@ module RestClient
 
     private
 
-    # Parse the @url string into a URI object using #parse_url and save it as
-    # @uri. Also save any basic auth user or password as @user and @password.
+    # Parse the `@url` string into a URI object using #parse_url and save it as
+    # `@uri`. Also save any basic auth user or password as @user and @password.
     # If no auth info was passed, check for credentials in a Netrc file.
     #
     # @param [String] url A URL string.
