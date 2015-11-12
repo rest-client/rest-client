@@ -110,6 +110,7 @@ module RestClient
       end
 
       def inspect
+        # TODO: make this not pretend to be a string (ugh)
         result = to_s.inspect
         @stream.seek(0)
         result
