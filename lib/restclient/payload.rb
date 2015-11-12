@@ -139,25 +139,13 @@ module RestClient
 
     class UrlEncoded < Base
       def build_stream(params = nil)
-        @stream = StringIO.new(flatten_params(params).collect do |entry|
-          "#{entry[0]}=#{handle_key(entry[1])}"
-        end.join("&"))
+        @stream = StringIO.new(Utils.encode_query_string(params))
         @stream.seek(0)
-      end
-
-      # for UrlEncoded escape the keys
-      #
-      # TODO: unify with Utils.encode_query_string
-      def handle_key key
-        Parser.escape(key.to_s, Escape)
       end
 
       def headers
         super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
-
-      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Multipart < Base
