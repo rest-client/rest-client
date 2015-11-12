@@ -238,7 +238,8 @@ module RestClient
       end
 
       unless url_params.empty?
-        query_string = url_params.collect { |k, v| "#{k.to_s}=#{CGI::escape(v.to_s)}" }.join('&')
+        query_string = RestClient::Utils.encode_query_string(url_params)
+
         if url.include?('?')
           url + '&' + query_string
         else

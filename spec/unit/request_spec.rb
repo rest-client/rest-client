@@ -1158,5 +1158,17 @@ describe RestClient::Request, :include_helpers do
       @request.process_url_params('https://example.com/path?foo=1', params: {bar: 2}).
         should eq 'https://example.com/path?foo=1&bar=2'
     end
+
+    it 'should handle complex nested URL params per Rack / Rails conventions' do
+      @request.process_url_params('https://example.com/', params: {
+        foo: [1,2,3],
+        null: nil,
+        false: false,
+        math: '2+2=4',
+        nested: {'key + escaped' => 'value + escaped', other: [], arr: [1,2]},
+      }).should eq 'https://example.com/?foo[]=1&foo[]=2&foo[]=3&null&false=false&math=2%2B2%3D4' \
+                   '&nested[key+%2B+escaped]=value+%2B+escaped&nested[other]' \
+                   '&nested[arr][]=1&nested[arr][]=2'
+    end
   end
 end

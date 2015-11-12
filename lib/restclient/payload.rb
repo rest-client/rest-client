@@ -146,6 +146,8 @@ module RestClient
       end
 
       # for UrlEncoded escape the keys
+      #
+      # TODO: unify with Utils.encode_query_string
       def handle_key key
         Parser.escape(key.to_s, Escape)
       end

@@ -110,6 +110,7 @@ module RestClient
     # @see See also Object#to_query in ActiveSupport
     # @see http://php.net/manual/en/function.http-build-query.php
     #   http_build_query in PHP
+    # @see See also Rack::Utils.build_nested_query in Rack
     #
     # Notable differences from the ActiveSupport implementation:
     #
@@ -175,5 +176,8 @@ module RestClient
         "#{parent_key}=#{CGI.escape(object.to_s)}"
       end
     end
+
+    # TODO: figure out whether escape should be CGI.escape or
+    # URI.encode_www_form_component
   end
 end
