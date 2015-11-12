@@ -17,8 +17,8 @@ describe RestClient::Payload do
     end
 
     it "should escape parameters" do
-      RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'}).to_s.
-        should eq "foo%20=bar"
+      RestClient::Payload::UrlEncoded.new({'foo + bar' => 'baz'}).to_s.
+        should eq "foo+%2B+bar=baz"
     end
 
     it "should properly handle hashes as parameter" do
@@ -30,17 +30,17 @@ describe RestClient::Payload do
 
     it "should handle many attributes inside a hash" do
       parameters = RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz', :baz => 'qux'}}).to_s
-      parameters.should include("foo[bar]=baz", "foo[baz]=qux")
+      parameters.should eq 'foo[bar]=baz&foo[baz]=qux'
     end
 
-    it "should handle attributes inside a an array inside an hash" do
+    it "should handle attributes inside an array inside an hash" do
       parameters = RestClient::Payload::UrlEncoded.new({"foo" => [{"bar" => 'baz'}, {"bar" => 'qux'}]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+      parameters.should eq 'foo[][bar]=baz&foo[][bar]=qux'
     end
 
-    it "should handle attributes inside a an array inside an array inside an hash" do
-      parameters = RestClient::Payload::UrlEncoded.new({"foo" => [[{"bar" => 'baz'}, {"bar" => 'qux'}]]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+    it "should handle arrays inside a hash inside a hash" do
+      parameters = RestClient::Payload::UrlEncoded.new({"foo" => {'even' => [0, 2], 'odd' => [1, 3]}}).to_s
+      parameters.should eq 'foo[even][]=0&foo[even][]=2&foo[odd][]=1&foo[odd][]=3'
     end
 
     it "should form properly use symbols as parameters" do
