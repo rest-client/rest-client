@@ -1,6 +1,10 @@
 = REST Client -- simple DSL for accessing HTTP and REST resources
 
-Build status: {<img src="https://travis-ci.org/rest-client/rest-client.svg?branch=master" alt="Build Status" />}[https://travis-ci.org/rest-client/rest-client]
+{<img src="https://badge.fury.io/rb/rest-client.svg" alt="Gem Version" />}[https://rubygems.org/gems/rest-client]
+{<img src="https://travis-ci.org/rest-client/rest-client.svg?branch=master" alt="Build Status" />}[https://travis-ci.org/rest-client/rest-client]
+{<img src="https://codeclimate.com/github/rest-client/rest-client.svg" alt="Code Climate" />}[https://codeclimate.com/github/rest-client/rest-client]
+{<img src="http://inch-ci.org/github/rest-client/rest-client.svg?branch=master" alt="Inline docs" />}[http://www.rubydoc.info/github/rest-client/rest-client/master]
+
 
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
