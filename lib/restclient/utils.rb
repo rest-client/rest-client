@@ -157,7 +157,7 @@ module RestClient
         end
 
         return object.map { |k, v|
-          k = CGI.escape(k.to_s)
+          k = escape(k.to_s)
           encode_query_string(v, parent_key ? "#{parent_key}[#{k}]" : k)
         }.join('&')
 
@@ -173,11 +173,22 @@ module RestClient
         parent_key.to_s
 
       else
-        "#{parent_key}=#{CGI.escape(object.to_s)}"
+        "#{parent_key}=#{escape(object.to_s)}"
       end
     end
 
-    # TODO: figure out whether escape should be CGI.escape or
-    # URI.encode_www_form_component
+    # Encode string for safe transport by URI or form encoding. This uses a CGI
+    # style escape, which transforms ` ` into `+` and various special
+    # characters into percent encoded forms.
+    #
+    # This calls URI.encode_www_form_component for the implementation. The only
+    # difference between this and CGI.escape is that it does not escape `*`.
+    # http://stackoverflow.com/questions/25085992/
+    #
+    # @see URI.encode_www_form_component
+    #
+    def self.escape(string)
+      URI.encode_www_form_component(string)
+    end
   end
 end
