@@ -1,5 +1,7 @@
 require 'tempfile'
+require 'securerandom'
 require 'stringio'
+
 require 'mime/types'
 
 module RestClient
@@ -153,7 +155,7 @@ module RestClient
       EOL = "\r\n"
 
       def build_stream(params)
-        b = "--#{boundary}"
+        b = '--' + boundary
 
         @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
         @stream.binmode
@@ -209,7 +211,15 @@ module RestClient
       end
 
       def boundary
-        @boundary ||= rand(1_000_000).to_s
+        return @boundary if @boundary
+
+        # Use the same algorithm used by WebKit: generate 16 random
+        # alphanumeric characters, replacing `+` `/` with `A` `B` (included in
+        # the list twice) to round out the set of 64.
+        s = SecureRandom.base64(12)
+        s.tr!('+/', 'AB')
+
+        @boundary = '----RubyFormBoundary' + s
       end
 
       # for Multipart do not escape the keys

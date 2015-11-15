@@ -167,6 +167,13 @@ Content-Type: text/plain\r
       EOS
     end
 
+    it 'should correctly format hex boundary' do
+      SecureRandom.stub(:base64).with(12).and_return('TGs89+ttw/xna6TV')
+      f = File.new(File.dirname(__FILE__) + '/master_shake.jpg')
+      m = RestClient::Payload::Multipart.new({:foo => f})
+      m.boundary.should eq('-' * 4 + 'RubyFormBoundary' + 'TGs89AttwBxna6TV')
+    end
+
   end
 
   context "streamed payloads" do
