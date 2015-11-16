@@ -119,6 +119,12 @@ module RestClient
         (size > 500 ? "#{size} byte(s) length" : inspect)
       end
 
+      def handle_key key
+        Parser.escape(key.to_s, Escape)
+      end
+
+      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
+      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Streamed < Base
@@ -145,17 +151,9 @@ module RestClient
         @stream.seek(0)
       end
 
-      # for UrlEncoded escape the keys
-      def handle_key key
-        Parser.escape(key.to_s, Escape)
-      end
-
       def headers
         super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
-
-      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Multipart < Base
@@ -199,9 +197,10 @@ module RestClient
 
       def create_file_field(s, k, v)
         begin
+          filename = v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)
           s.write("Content-Disposition: form-data;")
           s.write(" name=\"#{k}\";") unless (k.nil? || k=='')
-          s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
+          s.write(" filename=\"#{handle_filename(filename)}\"#{EOL}")
           s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
           s.write(EOL)
           while (data = v.read(8124))
@@ -221,7 +220,8 @@ module RestClient
         @boundary ||= rand(1_000_000).to_s
       end
 
-      # for Multipart do not escape the keys
+      # for Multipart do not escape the keys, but escape filenames
+      alias :handle_filename :handle_key
       def handle_key key
         key
       end
