@@ -3,6 +3,14 @@
 require_relative '_lib'
 
 describe RestClient::Payload do
+  context "Base Payload" do
+    it "should reset stream after to_s" do
+      payload = RestClient::Payload::Base.new('foobar')
+      payload.to_s.should eq 'foobar'
+      payload.to_s.should eq 'foobar'
+    end
+  end
+
   context "A regular Payload" do
     it "should use standard enctype as default content-type" do
       RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
