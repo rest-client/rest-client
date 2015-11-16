@@ -115,13 +115,12 @@ module RestClient
         @stream.close unless @stream.closed?
       end
 
-      def inspect
-        # TODO: make this not pretend to be a string (ugh)
+      def to_s_inspect
         to_s.inspect
       end
 
       def short_inspect
-        (size > 500 ? "#{size} byte(s) length" : inspect)
+        (size > 500 ? "#{size} byte(s) length" : to_s_inspect)
       end
 
     end
