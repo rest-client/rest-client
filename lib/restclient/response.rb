@@ -49,21 +49,29 @@ module RestClient
 
     private
 
+    # Automatically set the encoding of the response object based on the
+    # presence of a Content-Type... charset header.
+    #
+    # If a charset is found and represents a valid encoding, call
+    # force_encoding on the response to alter it to the correct representation.
+    #
+    # @param [Response] response
+    #
+    # @return [Encoding,nil]
+    #
     def self.fix_encoding(response)
       charset = RestClient::Utils.get_encoding_from_headers(response.headers)
-      encoding = nil
+      return unless charset
 
-      begin
-        encoding = Encoding.find(charset) if charset
-      rescue ArgumentError
+      encoding = RestClient::Utils.find_encoding(charset)
+
+      if encoding
+        response.force_encoding(encoding)
+      elsif RestClient.log
         RestClient.log << "No such encoding: #{charset.inspect}"
       end
 
-      return unless encoding
-
-      response.force_encoding(encoding)
-
-      response
+      encoding
     end
 
     def body_truncated(length)

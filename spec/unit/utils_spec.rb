@@ -33,6 +33,52 @@ describe RestClient::Utils do
     end
   end
 
+  describe '.find_encoding' do
+    it 'finds various normal encoding names' do
+      {
+        'utf-8' => Encoding::UTF_8,
+        'big5' => Encoding::Big5,
+        'euc-kr' => Encoding::EUC_KR,
+        'WINDOWS-1252' => Encoding::Windows_1252,
+        'windows-31j' => Encoding::Windows_31J,
+      }.each_pair do |name, enc|
+        RestClient::Utils.find_encoding(name).should eq enc
+      end
+    end
+
+    it 'returns nil on failures' do
+      %w{nonexistent utf-99}.each do |name|
+        RestClient::Utils.find_encoding(name).should be_nil
+      end
+    end
+
+    it 'uses URI.get_encoding if available', if: RUBY_VERSION >= '2.1' do
+      {
+        'utf8' => Encoding::UTF_8,
+        'utf-16' => Encoding::UTF_16LE,
+        'latin1' => Encoding::Windows_1252,
+        'iso-8859-1' => Encoding::Windows_1252,
+        'shift_jis' => Encoding::Windows_31J,
+        'euc-jp' => Encoding::CP51932,
+      }.each_pair do |name, enc|
+        RestClient::Utils.find_encoding(name).should eq enc
+      end
+    end
+
+    it 'uses Encoding.find if URI.get_encoding unavailable', if: RUBY_VERSION < '2.1' do
+      {
+        'utf8' => nil,
+        'utf-16' => Encoding::UTF_16,
+        'latin1' => nil,
+        'iso-8859-1' => Encoding::ISO_8859_1,
+        'shift_jis' => Encoding::Shift_JIS,
+        'euc-jp' => Encoding::EUC_JP,
+      }.each_pair do |name, enc|
+        RestClient::Utils.find_encoding(name).should eq enc
+      end
+    end
+  end
+
   describe '.cgi_parse_header' do
     it 'parses headers' do
       RestClient::Utils.cgi_parse_header('text/plain').
