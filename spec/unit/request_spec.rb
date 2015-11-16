@@ -294,6 +294,9 @@ describe RestClient::Request, :include_helpers do
     @request.send(:transmit, @uri, 'req', 'payload')
   end
 
+  # TODO: most of these payload tests are historical relics that actually
+  # belong in payload_spec.rb. Or we need new tests that actually cover the way
+  # that Request#initialize or Request#execute uses the payload.
   describe "payload" do
     it "sends nil payloads" do
       @http.should_receive(:request).with('req', nil)
@@ -303,15 +306,15 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "passes non-hash payloads straight through" do
-      @request.process_payload("x").should eq "x"
+      RestClient::Payload.generate("x").to_s.should eq "x"
     end
 
     it "converts a hash payload to urlencoded data" do
-      @request.process_payload(:a => 'b c+d').should eq "a=b%20c%2Bd"
+      RestClient::Payload.generate(:a => 'b c+d').to_s.should eq "a=b+c%2Bd"
     end
 
     it "accepts nested hashes in payload" do
-      payload = @request.process_payload(:user => { :name => 'joe', :location => { :country => 'USA', :state => 'CA' }})
+      payload = RestClient::Payload.generate(:user => { :name => 'joe', :location => { :country => 'USA', :state => 'CA' }}).to_s
       payload.should include('user[name]=joe')
       payload.should include('user[location][country]=USA')
       payload.should include('user[location][state]=CA')
@@ -319,8 +322,8 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "set urlencoded content_type header on hash payloads" do
-    @request.process_payload(:a => 1)
-    @request.headers[:content_type].should eq 'application/x-www-form-urlencoded'
+    req = RestClient::Request.new(method: :post, url: 'http://some/resource', payload: {a: 1})
+    req.processed_headers.fetch('Content-Type').should eq 'application/x-www-form-urlencoded'
   end
 
   describe "credentials" do

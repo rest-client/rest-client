@@ -366,23 +366,6 @@ module RestClient
       URI.parse(url)
     end
 
-    def process_payload(p=nil, parent_key=nil)
-      unless p.is_a?(Hash)
-        p
-      else
-        @headers[:content_type] ||= 'application/x-www-form-urlencoded'
-        p.keys.map do |k|
-          key = parent_key ? "#{parent_key}[#{k}]" : k
-          if p[k].is_a? Hash
-            process_payload(p[k], key)
-          else
-            value = parser.escape(p[k].to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
-            "#{key}=#{value}"
-          end
-        end.join("&")
-      end
-    end
-
     # Return a certificate store that can be used to validate certificates with
     # the system certificate authorities. This will probably not do anything on
     # OS X, which monkey patches OpenSSL in terrible ways to insert its own

@@ -245,8 +245,4 @@ Content-Type: text/plain\r
       RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
     end
   end
-
-  class HashMapForTesting < Hash
-    alias :read :[]
-  end
 end
