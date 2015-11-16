@@ -25,28 +25,20 @@ module RestClient
     end
 
     def has_file?(params)
-      params.any? do |_, v|
-        case v
-        when Hash
-          has_file?(v)
-        when Array
-          has_file_array?(v)
-        else
-          v.respond_to?(:path) && v.respond_to?(:read)
-        end
+      unless params.is_a?(Hash)
+        raise ArgumentError.new("Must pass Hash, not #{params.inspect}")
       end
+      _has_file?(params)
     end
 
-    def has_file_array?(params)
-      params.any? do |v|
-        case v
-        when Hash
-          has_file?(v)
-        when Array
-          has_file_array?(v)
-        else
-          v.respond_to?(:path) && v.respond_to?(:read)
-        end
+    def _has_file?(obj)
+      case obj
+      when Hash
+        obj.any? {|_, v| _has_file?(v) }
+      when Array
+        obj.any? {|v| _has_file?(v) }
+      else
+        obj.respond_to?(:path) && obj.respond_to?(:read)
       end
     end
 
