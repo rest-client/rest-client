@@ -11,10 +11,14 @@ module RestClient
     # Strings will effectively end up using `Encoding.default_external` when
     # this method returns nil.
     #
-    # @param headers [Hash]
+    # @param headers [Hash<Symbol,String>]
     #
     # @return [String, nil] encoding Return the string encoding or nil if no
     #   header is found.
+    #
+    # @example
+    #   >> get_encoding_from_headers({:content_type => 'text/plain; charset=UTF-8'})
+    #   => "UTF-8"
     #
     def self.get_encoding_from_headers(headers)
       type_header = headers[:content_type]
@@ -54,7 +58,7 @@ module RestClient
       nil
     end
 
-    # Parse a Content-type like header.
+    # Parse a Content-Type like header.
     #
     # Return the main content-type and a hash of options.
     #
