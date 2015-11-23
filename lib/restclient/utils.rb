@@ -104,7 +104,7 @@ module RestClient
     # simple flat hashes, you may want to use `URI.encode_www_form` instead,
     # which implements HTML5-compliant URL encoded form data.
     #
-    # @param [Object] object The object to serialize
+    # @param [Hash,ParamsArray] object The object to serialize
     # @param [String] parent_key The parent hash key of this object
     #
     # @return [String] A string appropriate for use as an HTTP query string
@@ -122,6 +122,10 @@ module RestClient
     #   omitted entirely from the output. Rather than disappearing, they will
     #   appear to be nil instead.
     #
+    # It's most common to pass a Hash as the object to serialize, but you can
+    # also use a ParamsArray if you want to be able to pass the same key with
+    # multiple values and not use the rack/rails array convention.
+    #
     # @since 2.0.0
     #
     # @example Simple hashes
@@ -136,22 +140,41 @@ module RestClient
     #   >> encode_query_string({outer: {foo: 123, bar: 456}})
     #   => 'outer[foo]=123&outer[bar]=456'
     #
+    # @example Deeply nesting
+    #   >> encode_query_string({coords: [{x: 1, y: 0}, {x: 2}, {x: 3}]})
+    #   => 'coords[][x]=1&coords[][y]=0&coords[][x]=2&coords[][x]=3'
+    #
     # @example Null and empty values
-    #   >> encode_query-string({string: '', empty: nil, list: [], hash: {}})
+    #   >> encode_query_string({string: '', empty: nil, list: [], hash: {}})
     #   => 'string=&empty&list&hash'
     #
     # @example Nested nulls
-    #   >> encode_query-string({foo: {string: '', empty: nil}})
+    #   >> encode_query_string({foo: {string: '', empty: nil}})
     #   => 'foo[string]=&foo[empty]'
     #
+    # @example Multiple fields with the same name using ParamsArray
+    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]])
+    #   => 'foo=1&foo=2&foo=3'
+    #
+    # @example Nested ParamsArray
+    #   >> encode_query_string({foo: RestClient::ParamsArray.new([[:a, 1], [:a, 2]])})
+    #   => 'foo[a]=1&foo[a]=2'
+    #
+    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, {a: 1}], [:foo, {a: 2}]]))
+    #   => 'foo[a]=1&foo[a]=2'
+    #
     def self.encode_query_string(object, parent_key=nil)
-      if !parent_key && !object.is_a?(Hash)
-        raise ArgumentError.new('top level query param must be a Hash, got: ' +
-                                object.inspect)
+      if !parent_key
+        case object
+        when Hash, ParamsArray
+        else
+          raise ArgumentError.new('top level query param must be a Hash or ' +
+                                  'ParamsArray, got: ' + object.inspect)
+        end
       end
 
       case object
-      when Hash
+      when Hash, ParamsArray
         if object.empty?
           if parent_key
             return encode_query_string(nil, parent_key)
