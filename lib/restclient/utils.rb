@@ -105,9 +105,10 @@ module RestClient
     # which implements HTML5-compliant URL encoded form data.
     #
     # @param [Hash,ParamsArray] object The object to serialize
-    # @param [String] parent_key The parent hash key of this object
     #
     # @return [String] A string appropriate for use as an HTTP query string
+    #
+    # @see {flatten_params}
     #
     # @see URI.encode_www_form
     #
@@ -163,48 +164,7 @@ module RestClient
     #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, {a: 1}], [:foo, {a: 2}]]))
     #   => 'foo[a]=1&foo[a]=2'
     #
-    def self.encode_query_string(object, parent_key=nil)
-      if !parent_key
-        case object
-        when Hash, ParamsArray
-        else
-          raise ArgumentError.new('top level query param must be a Hash or ' +
-                                  'ParamsArray, got: ' + object.inspect)
-        end
-      end
-
-      case object
-      when Hash, ParamsArray
-        if object.empty?
-          if parent_key
-            return encode_query_string(nil, parent_key)
-          else
-            return ''
-          end
-        end
-
-        return object.map { |k, v|
-          k = escape(k.to_s)
-          encode_query_string(v, parent_key ? "#{parent_key}[#{k}]" : k)
-        }.join('&')
-
-      when Array
-        if object.empty?
-          return encode_query_string(nil, parent_key)
-        end
-
-        prefix = "#{parent_key}[]"
-        return object.map {|v| encode_query_string(v, prefix) }.join('&')
-
-      when nil
-        parent_key.to_s
-
-      else
-        "#{parent_key}=#{escape(object.to_s)}"
-      end
-    end
-
-    def self.encode_query_string2(object)
+    def self.encode_query_string(object)
       flatten_params(object, true).map {|k, v| v.nil? ? k : "#{k}=#{v}" }.join('&')
     end
 
