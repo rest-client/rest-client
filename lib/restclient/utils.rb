@@ -204,6 +204,60 @@ module RestClient
       end
     end
 
+    def self.encode_query_string2(object)
+      flatten_params(object, true).map {|k, v| v.nil? ? k : "#{k}=#{v}" }.join('&')
+    end
+
+    # Transform deeply nested param containers into a flat array of [key,
+    # value] pairs.
+    #
+    # @example
+    #   >> flatten_params({key1: {key2: 123}})
+    #   => [["key1[key2]", 123]]
+    #
+    # @example
+    #   >> flatten_params({key1: {key2: 123, arr: [1,2,3]}})
+    #   => [["key1[key2]", 123], ["key1[arr][]", 1], ["key1[arr][]", 2], ["key1[arr][]", 3]]
+    #
+    # @param object [Hash, ParamsArray] The container to flatten
+    # @param uri_escape [Boolean] Whether to URI escape keys and values
+    # @param parent_key [String] Should not be passed (used for recursion)
+    #
+    def self.flatten_params(object, uri_escape=false, parent_key=nil)
+      unless object.is_a?(Hash) || object.is_a?(ParamsArray) ||
+             (parent_key && object.is_a?(Array))
+        raise ArgumentError.new('expected Hash or ParamsArray, got: ' + object.inspect)
+      end
+
+      # transform empty collections into nil, where possible
+      if object.empty? && parent_key
+        return [[parent_key, nil]]
+      end
+
+      # This is essentially .map(), but we need to do += for nested containers
+      object.reduce([]) { |result, item|
+        if object.is_a?(Array)
+          # item is already the value
+          k = nil
+          v = item
+        else
+          # item is a key, value pair
+          k, v = item
+          k = escape(k.to_s) if uri_escape
+        end
+
+        processed_key = parent_key ? "#{parent_key}[#{k}]" : k
+
+        case v
+        when Array, Hash, ParamsArray
+          result.concat flatten_params(v, uri_escape, processed_key)
+        else
+          v = escape(v.to_s) if uri_escape && v
+          result << [processed_key, v]
+        end
+      }
+    end
+
     # Encode string for safe transport by URI or form encoding. This uses a CGI
     # style escape, which transforms ` ` into `+` and various special
     # characters into percent encoded forms.
