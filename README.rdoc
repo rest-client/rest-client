@@ -20,6 +20,8 @@ We have a new email list for announcements, hosted by Groups.io.
 
 * Subscribe by sending an email: mailto:rest-client+subscribe@groups.io
 
+* Open discussion subgroup: https://groups.io/g/rest-client+discuss
+
 The old Librelist mailing list is *defunct*, as Librelist appears to be broken
 and not accepting new mail. The old archives are still up, but have been
 imported into the new list archives as well.
