@@ -33,7 +33,7 @@ module RestClient
 
     def _has_file?(obj)
       case obj
-      when Hash
+      when Hash, ParamsArray
         obj.any? {|_, v| _has_file?(v) }
       when Array
         obj.any? {|v| _has_file?(v) }
@@ -186,6 +186,13 @@ module RestClient
       end
 
       # for Multipart do not escape the keys
+      #
+      # Ostensibly multipart keys MAY be percent encoded per RFC 7578, but in
+      # practice no major browser that I'm aware of uses percent encoding.
+      #
+      # Further discussion of multipart encoding:
+      # https://github.com/rest-client/rest-client/pull/403#issuecomment-156976930
+      #
       def handle_key key
         key
       end

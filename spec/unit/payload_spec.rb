@@ -225,6 +225,13 @@ Content-Type: text/plain\r
       RestClient::Payload.generate({"foo" => "bar", :multipart => true}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
+    it "should handle deeply nested multipart" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      params = {foo: RestClient::ParamsArray.new({nested: f})}
+      RestClient::Payload.generate(params).should be_kind_of(RestClient::Payload::Multipart)
+    end
+
+
     it "should return data if no of the above" do
       RestClient::Payload.generate("data").should be_kind_of(RestClient::Payload::Base)
     end
