@@ -30,7 +30,7 @@ module RestClient
         when Array
           has_file_array?(v)
         else
-          v.respond_to?(:path) && v.respond_to?(:read)
+          v.respond_to?(:read)
         end
       end
     end
@@ -43,7 +43,7 @@ module RestClient
         when Array
           has_file_array?(v)
         else
-          v.respond_to?(:path) && v.respond_to?(:read)
+          v.respond_to?(:read)
         end
       end
     end
@@ -177,7 +177,7 @@ module RestClient
         last_index = x.length - 1
         x.each_with_index do |a, index|
           k, v = * a
-          if v.respond_to?(:read) && v.respond_to?(:path)
+          if v.respond_to?(:read)
             create_file_field(@stream, k, v)
           else
             create_regular_field(@stream, k, v)
@@ -201,8 +201,8 @@ module RestClient
         begin
           s.write("Content-Disposition: form-data;")
           s.write(" name=\"#{k}\";") unless (k.nil? || k=='')
-          s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
-          s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
+          s.write(" filename=\"#{filename_for(v)}\"#{EOL}")
+          s.write("Content-Type: #{mime_for(v) || "text/plain"}#{EOL}")
           s.write(EOL)
           while (data = v.read(8124))
             s.write(data)
@@ -212,9 +212,23 @@ module RestClient
         end
       end
 
-      def mime_for(path)
-        mime = MIME::Types.type_for path
-        mime.empty? ? 'text/plain' : mime[0].content_type
+      def filename_for(io)
+        if io.respond_to?(:original_filename)
+          io.original_filename
+        elsif io.respond_to?(:path)
+          File.basename(io.path)
+        else
+          "rest-client"
+        end
+      end
+
+      def mime_for(io)
+        if io.respond_to?(:content_type)
+          io.content_type
+        elsif io.respond_to?(:path)
+          mime = MIME::Types.type_for(io.path)
+          mime[0].content_type unless mime.empty?
+        end
       end
 
       def boundary

@@ -1,3 +1,6 @@
+require "stringio"
+require "forwardable"
+
 module Helpers
   def response_double(opts={})
     double('response', {:to_hash => {}}.merge(opts))
@@ -11,4 +14,13 @@ module Helpers
   ensure
     $stderr = original_stderr
   end
+end
+
+class FakeIO
+  def initialize(content)
+    @io = StringIO.new(content)
+  end
+
+  extend Forwardable
+  delegate [:read, :size, :rewind, :eof?, :close] => :@io
 end

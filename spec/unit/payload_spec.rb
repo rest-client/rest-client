@@ -167,6 +167,18 @@ Content-Type: text/plain\r
       EOS
     end
 
+    it "should accept an IO-like object" do
+      io = FakeIO.new("content")
+      m = RestClient::Payload::Multipart.new({:foo => io})
+      m.to_s.should eq <<-EOS
+--#{m.boundary}\r
+Content-Disposition: form-data; name="foo"; filename="rest-client"\r
+Content-Type: text/plain\r
+\r
+content\r
+--#{m.boundary}--\r
+      EOS
+    end
   end
 
   context "streamed payloads" do
