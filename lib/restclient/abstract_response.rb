@@ -70,6 +70,7 @@ module RestClient
     # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
     def return!(&block)
       if (200..207).include? code
+        @request.finished_at = Time.now if @request.started_at
         self
       elsif [301, 302, 307].include? code
         unless [:get, :head].include? args[:method]
@@ -107,6 +108,10 @@ module RestClient
       new_args.delete(:payload)
 
       _follow_redirection(new_args, &block)
+    end
+
+    def time
+      @time ||= request.finished_at - request.started_at if request.started_at
     end
 
     # Convert headers hash into canonical form.
@@ -157,7 +162,8 @@ module RestClient
 
       # parse location header and merge into existing URL
       url = headers[:location]
-
+      new_args[:started_at] = request.started_at
+      new_args[:count_time] = false
       # handle relative redirects
       unless url.start_with?('http')
         url = URI.parse(request.url).merge(url).to_s
