@@ -177,6 +177,7 @@ Response objects have several useful methods. (See the class rdoc for more detai
 * Response#code: The HTTP response code
 * Response#body: The response body as a string. (AKA .to_s)
 * Response#headers: A hash of HTTP response headers
+* Response#raw_headers: A hash of HTTP response headers as unprocessed arrays
 * Response#cookies: A hash of HTTP cookies set by the server
 * Response#cookie_jar: <em>New in 1.8</em> An HTTP::CookieJar of cookies
 * Response#request: The RestClient::Request object used to make the request
