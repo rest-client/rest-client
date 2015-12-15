@@ -122,10 +122,10 @@ Yeah, that's right!  This does multipart sends for you!
 
 This does two things for you:
 
-* Auto-detects that you have a File value sends it as multipart
-* Auto-detects the mime of the file and sets it in the HEAD of the payload for each entry
+* Auto-detects that you have an IO-like value sends it as multipart
+* Auto-detects the mime of the IO and sets it in the HEAD of the payload for each entry
 
-If you are sending params that do not contain a File object but the payload needs to be multipart then:
+If you are sending params that do not contain a IO-like object but the payload needs to be multipart then:
 
   RestClient.post '/data', {:foo => 'bar', :multipart => true}
 
