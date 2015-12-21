@@ -304,6 +304,12 @@ Either produces logs like this:
 Note that these logs are valid Ruby, so you can paste them into the restclient
 shell or a script to replay your sequence of rest calls.
 
+=== Logging in a Rails application
+
+Create a file in `config/initializers`:
+
+  RestClient.log = 'log/a_log_file.log'
+
 == Proxy
 
 All calls to RestClient, including Resources, will use the proxy specified by
