@@ -41,10 +41,10 @@ module RestClient
     attr_reader :method, :uri, :url, :headers, :cookies, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :started_at
 
     # An array of previous redirection responses
-    attr_accessor :redirection_history
+    attr_accessor :redirection_history, :finished_at
 
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -115,6 +115,8 @@ module RestClient
     end
 
     def initialize args
+      @started_at = Time.now if args[:count_time]
+      @started_at = args[:started_at] if args[:started_at]
       @method = args[:method] or raise ArgumentError, "must pass :method"
       @headers = (args[:headers] || {}).dup
       if args[:url]
@@ -707,7 +709,6 @@ module RestClient
       else
         response.return!(&block)
       end
-
     end
 
     def parser
