@@ -29,7 +29,7 @@ module RestClient
     #
     #
     def initialize(array)
-      @array = process_input(array.dup)
+      @array = process_input(array)
     end
 
     def each(*args, &blk)
