@@ -154,7 +154,7 @@ module RestClient
     #   => 'foo[string]=&foo[empty]'
     #
     # @example Multiple fields with the same name using ParamsArray
-    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]])
+    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]]))
     #   => 'foo=1&foo=2&foo=3'
     #
     # @example Nested ParamsArray
