@@ -85,6 +85,12 @@ describe "backwards compatibility" do
     RestClient::ResourceNotFound.should eq RestClient::NotFound
   end
 
+  it 'aliases old names for HTTP 413, 414, 416' do
+    RestClient::RequestEntityTooLarge.should eq RestClient::PayloadTooLarge
+    RestClient::RequestURITooLong.should eq RestClient::URITooLong
+    RestClient::RequestedRangeNotSatisfiable.should eq RestClient::RangeNotSatisfiable
+  end
+
   it 'subclasses NotFound from RequestFailed, ExceptionWithResponse' do
     RestClient::NotFound.should be < RestClient::RequestFailed
     RestClient::NotFound.should be < RestClient::ExceptionWithResponse
