@@ -106,7 +106,7 @@ module RestClient
   # @return [Boolean]
   #
   def self.proxy_set?
-    !!@proxy_set
+    !!(@proxy_set ||= false)
   end
 
   # Setup the log for RestClient calls.
