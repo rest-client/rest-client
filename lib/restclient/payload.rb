@@ -62,7 +62,11 @@ module RestClient
         @stream.read(*args)
       end
 
-      alias :to_s :read
+      def to_s
+        result = read
+        @stream.seek(0)
+        result
+      end
 
       # Flatten parameters by converting hashes of hashes to flat hashes
       # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
@@ -110,9 +114,7 @@ module RestClient
       end
 
       def inspect
-        result = to_s.inspect
-        @stream.seek(0)
-        result
+        to_s.inspect
       end
 
       def short_inspect
