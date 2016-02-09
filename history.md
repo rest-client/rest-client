@@ -2,7 +2,7 @@
 
 This release is largely API compatible, but makes several breaking changes.
 
-- Drop support for Ruby 1.9.2
+- Drop support for Ruby 1.9
 - Respect Content-Type charset header provided by server. Previously,
   rest-client would not override the string encoding chosen by Net::HTTP. Now
   responses that specify a charset will yield a body string in that encoding.
