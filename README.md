@@ -28,10 +28,10 @@ http://librelist.com/browser/rest.client
 
 ## Requirements
 
-MRI Ruby 1.9.3 and newer are supported. Alternative interpreters compatible with
-1.9+ should work as well.
+MRI Ruby 2.0 and newer are supported. Alternative interpreters compatible with
+2.0+ should work as well.
 
-Earlier Ruby versions such as 1.8.7 and 1.9.2 are no longer supported. These
+Earlier Ruby versions such as 1.8.7, 1.9.2, and 1.9.3 are no longer supported. These
 versions no longer have any official support, and do not receive security
 updates.
 
