@@ -7,7 +7,7 @@ rvm:
   - "2.1" # latest 2.1.x
   - "2.2" # latest 2.2.x
   - "2.3.0" # latest 2.3.x
-  - "jruby-9.0" # jruby 2.2.x
+  - "jruby-9.0.1.0"
   - "jruby-head"
 script:
   bundle exec rake test
@@ -21,5 +21,7 @@ matrix:
   exclude:
     - os: osx
       rvm: '2.2'
+    - os: osx
+      rvm: '2.3.0'
 
 sudo: false
