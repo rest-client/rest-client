@@ -20,7 +20,7 @@ branches:
 matrix:
   exclude:
     - os: osx
-      rvm: '2.3'
+      rvm: '2.3.0'
     - os: osx
       rvm: '2.2'
     - os: osx
