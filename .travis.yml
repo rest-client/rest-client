@@ -16,12 +16,12 @@ branches:
     - "readme-edits"
 
 # These versions do not yet work on OS X on Travis
-# (last tested: 2015-09)
+# (last tested: 2016-02)
 matrix:
   exclude:
     - os: osx
-      rvm: '2.2'
-    - os: osx
       rvm: '2.3.0'
+    - os: osx
+      rvm: 'jruby-9.0.1.0'
 
 sudo: false
