@@ -13,12 +13,17 @@ module RestClient
 
     include AbstractResponse
 
-    attr_reader :file
+    attr_reader :file, :request
 
-    def initialize tempfile, net_http_res, args
+    def inspect
+      "<RestClient::RawResponse @code=#{code.inspect}, @file=#{file.inspect}, @request=#{request.inspect}>"
+    end
+
+    def initialize(tempfile, net_http_res, args, request)
       @net_http_res = net_http_res
       @args = args
       @file = tempfile
+      @request = request
     end
 
     def to_s

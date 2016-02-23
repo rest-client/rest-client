@@ -1,3 +1,113 @@
+# 2.0.0
+
+This release is largely API compatible, but makes several breaking changes.
+
+- Drop support for Ruby 1.9.2
+- Respect Content-Type charset header provided by server. Previously,
+  rest-client would not override the string encoding chosen by Net::HTTP. Now
+  responses that specify a charset will yield a body string in that encoding.
+  For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
+  encoded with `Encoding::EUC_JP`.
+- Change exceptions raised on request timeout. Instead of
+  `RestClient::RequestTimeout` (which is still used for HTTP 408), network
+  timeouts will now raise either `RestClient::Exceptions::ReadTimeout` or
+  `RestClient::Exceptions::OpenTimeout`, both of which inherit from
+  `RestClient::Exceptions::Timeout`. For backwards compatibility, this still
+  inherits from `RestClient::RequestTimeout` so existing uses will still work.
+  This may change in a future major release. These new timeout classes also
+  make the original wrapped exception available as `#original_exception`.
+- Unify request exceptions under `RestClient::RequestFailed`, which still
+  inherits from `ExceptionWithResponse`. Previously, HTTP 304, 401, and 404
+  inherited directly from `ExceptionWithResponse` rather than from
+  `RequestFailed`. Now _all_ HTTP status code exceptions inherit from both.
+- Rename the `:timeout` request option to `:read_timeout`. When `:timeout` is
+  passed, now set both `:read_timeout` and `:open_timeout`.
+- Change default HTTP Accept header to `*/*`
+- Use a more descriptive User-Agent header by default
+- Drop RC4-MD5 from default cipher list
+- Only prepend http:// to URIs without a scheme
+- Fix some support for using IPv6 addresses in URLs (still affected by Ruby
+  2.0+ bug https://bugs.ruby-lang.org/issues/9129, with the fix expected to be
+  backported to 2.0 and 2.1)
+- `Response` objects are now a subclass of `String` rather than a `String` that
+  mixes in the response functionality. Most of the methods remain unchanged,
+  but this makes it much easier to understand what is happening when you look
+  at a RestClient response object. There are a few additional changes:
+  - Response objects now implement `.inspect` to make this distinction clearer.
+  - `Response#to_i` will now behave like `String#to_i` instead of returning the
+    HTTP response code, which was very surprising behavior.
+  - `Response#body` and `#to_s` will now return a true `String` object rather
+    than self. Previously there was no easy way to get the true `String`
+    response instead of the Frankenstein response string object with
+    AbstractResponse mixed in.
+- Handle multiple HTTP response headers with the same name (except for
+  Set-Cookie, which is special) by joining the values with a comma space,
+  compliant with RFC 7230
+- Don't set basic auth header if explicit `Authorization` header is specified
+- Add `:proxy` option to requests, which can be used for thread-safe
+  per-request proxy configuration, overriding `RestClient.proxy`
+- Allow overriding `ENV['http_proxy']` to disable proxies by setting
+  `RestClient.proxy` to a falsey value. Previously there was no way in Ruby 2.x
+  to turn off a proxy specified in the environment without changing `ENV`.
+- Add actual support for streaming request payloads. Previously rest-client
+  would call `.to_s` even on RestClient::Payload::Streamed objects. Instead,
+  treat any object that responds to `.read` as a streaming payload and pass it
+  through to `.body_stream=` on the Net:HTTP object. This massively reduces the
+  memory required for large file uploads.
+- Remove `RestClient::MaxRedirectsReached` in favor of the normal
+  `ExceptionWithResponse` subclasses. This makes the response accessible on the
+  exception object as `.response`, making it possible for callers to tell what
+  has actually happened when the redirect limit is reached.
+- When following HTTP redirection, store a list of each previous response on
+  the response object as `.history`. This makes it possible to access the
+  original response headers and body before the redirection was followed.
+- Add `:before_execution_proc` option to `RestClient::Request`. This makes it
+  possible to add procs like `RestClient.add_before_execution_proc` to a single
+  request without global state.
+- Run tests on Travis's beta OS X support.
+- Make `Request#transmit` a private method, along with a few others.
+- Refactor URI parsing to happen earlier, in Request initialization.
+- When adding URL params, handle URLs that already contain params.
+- Add a few more exception classes for obscure HTTP status codes.
+
+# 2.0.0.rc1
+
+Changes in the release candidate that did not persist through the final 2.0.0
+release:
+- RestClient::Exceptions::Timeout was originally going to be a direct subclass
+  of RestClient::Exception in the release candidate. This exception tree was
+  made a subclass of RestClient::RequestTimeout prior to the final release.
+
+# 1.8.0
+
+- Security: implement standards compliant cookie handling by adding a
+  dependency on http-cookie. This breaks compatibility, but was necessary to
+  address a session fixation / cookie disclosure vulnerability.
+  (#369 / CVE-2015-1820)
+
+  Previously, any Set-Cookie headers found in an HTTP 30x response would be
+  sent to the redirection target, regardless of domain. Responses now expose a
+  cookie jar and respect standards compliant domain / path flags in Set-Cookie
+  headers.
+
+# 1.7.3
+
+- Security: redact password in URI from logs (#349 / OSVDB-117461)
+- Drop monkey patch on MIME::Types (added `type_for_extension` method, use
+  the public interface instead.
+
+# 1.7.2
+
+- Ignore duplicate certificates in CA store on Windows
+
+# 1.7.1
+
+- Relax mime-types dependency to continue supporting mime-types 1.x series.
+  There seem to be a large number of popular gems that have depended on
+  mime-types '~> 1.16' until very recently.
+- Improve urlencode performance
+- Clean up a number of style points
+
 # 1.7.0
 
 - This release drops support for Ruby 1.8.7 and breaks compatibility in a few

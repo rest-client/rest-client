@@ -17,14 +17,15 @@ Gem::Specification.new do |s|
   s.summary = 'Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.'
 
   s.add_development_dependency('webmock', '~> 1.4')
-  s.add_development_dependency('rspec', '~> 2.4')
-  s.add_development_dependency('pry')
-  s.add_development_dependency('pry-doc')
+  s.add_development_dependency('rspec', '~> 2.99')
+  s.add_development_dependency('pry', '~> 0')
+  s.add_development_dependency('pry-doc', '~> 0')
   s.add_development_dependency('rdoc', '>= 2.4.2', '< 5.0')
+  s.add_development_dependency('rubocop', '~> 0')
 
-  s.add_dependency('mime-types', '~> 2.0')
-  s.add_dependency('netrc', '~> 0.7')
+  s.add_dependency('http-cookie', '>= 1.0.2', '< 2.0')
+  s.add_dependency('mime-types', '>= 1.16', '< 3.0')
+  s.add_dependency('netrc', '~> 0.8')
 
-  s.required_ruby_version = '>= 1.9.2'
+  s.required_ruby_version = '>= 1.9.3'
 end
-

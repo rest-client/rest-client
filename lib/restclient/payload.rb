@@ -25,12 +25,12 @@ module RestClient
     def has_file?(params)
       params.any? do |_, v|
         case v
-          when Hash
-            has_file?(v)
-          when Array
-            has_file_array?(v)
-          else
-            v.respond_to?(:path) && v.respond_to?(:read)
+        when Hash
+          has_file?(v)
+        when Array
+          has_file_array?(v)
+        else
+          v.respond_to?(:path) && v.respond_to?(:read)
         end
       end
     end
@@ -38,12 +38,12 @@ module RestClient
     def has_file_array?(params)
       params.any? do |v|
         case v
-          when Hash
-            has_file?(v)
-          when Array
-            has_file_array?(v)
-          else
-            v.respond_to?(:path) && v.respond_to?(:read)
+        when Hash
+          has_file?(v)
+        when Array
+          has_file_array?(v)
+        else
+          v.respond_to?(:path) && v.respond_to?(:read)
         end
       end
     end
@@ -58,8 +58,8 @@ module RestClient
         @stream.seek(0)
       end
 
-      def read(bytes=nil)
-        @stream.read(bytes)
+      def read(*args)
+        @stream.read(*args)
       end
 
       alias :to_s :read
@@ -151,17 +151,15 @@ module RestClient
 
       # for UrlEncoded escape the keys
       def handle_key key
-        parser.escape(key.to_s, Regexp.new("[^#{URI::PATTERN::UNRESERVED}]"))
+        Parser.escape(key.to_s, Escape)
       end
 
       def headers
         super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
 
-      private
-        def parser
-          URI.const_defined?(:Parser) ? URI::Parser.new : URI
-        end
+      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
+      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Multipart < Base
@@ -210,7 +208,7 @@ module RestClient
           s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
           s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
           s.write(EOL)
-          while data = v.read(8124)
+          while (data = v.read(8124))
             s.write(data)
           end
         ensure

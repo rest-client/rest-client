@@ -1,5 +1,6 @@
 module RestClient
-  VERSION = '1.7.0.rc1' unless defined?(self::VERSION)
+  VERSION_INFO = [2, 0, 0, 'rc2'] unless defined?(self::VERSION_INFO)
+  VERSION = VERSION_INFO.map(&:to_s).join('.') unless defined?(self::VERSION)
 
   def self.version
     VERSION

@@ -1,10 +1,11 @@
-require 'spec_helper'
+require_relative '_lib'
 
 describe RestClient::RawResponse do
   before do
     @tf = double("Tempfile", :read => "the answer is 42", :open => true)
     @net_http_res = double('net http response')
-    @response = RestClient::RawResponse.new(@tf, @net_http_res, {})
+    @request = double('http request')
+    @response = RestClient::RawResponse.new(@tf, @net_http_res, {}, @request)
   end
 
   it "behaves like string" do

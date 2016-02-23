@@ -34,6 +34,22 @@ RSpec::Core::RakeTask.new('rcov') do |t|
   t.rcov_opts = ['--exclude', 'examples']
 end
 
+desc 'Regenerate authors file'
+task :authors do
+  Dir.chdir(File.dirname(__FILE__)) do
+    File.open('AUTHORS', 'w') do |f|
+      f.write( <<-EOM
+The Ruby REST Client would not be what it is today without the help of
+the following kind souls:
+
+      EOM
+      )
+    end
+
+    sh 'git shortlog -s | cut -f 2 >> AUTHORS'
+  end
+end
+
 task :default do
   sh 'rake -T'
 end
@@ -81,7 +97,7 @@ namespace :windows do
             if ok
               FileUtils.mkdir_p(pkg_dir)
               FileUtils.mv(File.join(base, gem_filename), pkg_dir)
-              Bundler.ui.confirm("rest-client #{RestClient::VERSION} " +
+              Bundler.ui.confirm("rest-client #{RestClient::VERSION} " \
                                  "built to pkg/#{gem_filename}")
             else
               abort "Command `gem build` failed: #{res}"
@@ -114,4 +130,3 @@ Rake::RDocTask.new do |t|
   t.rdoc_files.include('README.rdoc')
   t.rdoc_files.include('lib/*.rb')
 end
-

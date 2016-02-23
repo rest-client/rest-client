@@ -1,6 +1,6 @@
 #!/usr/bin/env ruby
 
-$:.unshift File.dirname(__FILE__) + "/../lib"
+$LOAD_PATH.unshift File.dirname(__FILE__) + "/../lib"
 
 require 'rubygems'
 require 'restclient'
@@ -26,10 +26,10 @@ end
 
 config = YAML.load(File.read(ENV['HOME'] + "/.restclient")) rescue {}
 
-@url, @username, @password = if c = config[@url]
-  [c['url'], c['username'], c['password']]
+if (c = config[@url])
+  @url, @username, @password = [c['url'], c['username'], c['password']]
 else
-  [@url, * ARGV]
+  @url, @username, @password = [@url, * ARGV]
 end
 
 usage("invalid url '#{@url}") unless @url =~ /^https?/
@@ -56,11 +56,9 @@ if @verb
 end
 
 POSSIBLE_VERBS.each do |m|
-  eval <<-end_eval
-def  #{m}(path, *args, &b)
-	r[path].#{m}(*args, &b)
-end
-  end_eval
+  define_method(m.to_sym) do |path, *args, &b|
+    r[path].public_send(m.to_sym, *args, &b)
+  end
 end
 
 def method_missing(s, * args, & b)
@@ -79,11 +77,12 @@ end
 require 'irb'
 require 'irb/completion'
 
-if File.exists? ".irbrc"
+if File.exist? ".irbrc"
   ENV['IRBRC'] = ".irbrc"
 end
 
-if File.exists?(File.expand_path(rcfile = "~/.restclientrc"))
+rcfile = File.expand_path("~/.restclientrc")
+if File.exist?(rcfile)
   load(rcfile)
 end
 

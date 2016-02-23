@@ -1,5 +1,19 @@
 module RestClient
 
+  # Hash of HTTP status code => message.
+  #
+  # 1xx: Informational - Request received, continuing process
+  # 2xx: Success - The action was successfully received, understood, and
+  #      accepted
+  # 3xx: Redirection - Further action must be taken in order to complete the
+  #      request
+  # 4xx: Client Error - The request contains bad syntax or cannot be fulfilled
+  # 5xx: Server Error - The server failed to fulfill an apparently valid
+  #      request
+  #
+  # @see
+  #   http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+  #
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',
               102 => 'Processing', #WebDAV
@@ -12,6 +26,8 @@ module RestClient
               205 => 'Reset Content',
               206 => 'Partial Content',
               207 => 'Multi-Status', #WebDAV
+              208 => 'Already Reported', # RFC5842
+              226 => 'IM Used', # RFC3229
 
               300 => 'Multiple Choices',
               301 => 'Moved Permanently',
@@ -21,12 +37,13 @@ module RestClient
               305 => 'Use Proxy', # http/1.1
               306 => 'Switch Proxy', # no longer used
               307 => 'Temporary Redirect', # http/1.1
+              308 => 'Permanent Redirect', # RFC7538
 
               400 => 'Bad Request',
               401 => 'Unauthorized',
               402 => 'Payment Required',
               403 => 'Forbidden',
-              404 => 'Resource Not Found',
+              404 => 'Not Found',
               405 => 'Method Not Allowed',
               406 => 'Not Acceptable',
               407 => 'Proxy Authentication Required',
@@ -35,10 +52,10 @@ module RestClient
               410 => 'Gone',
               411 => 'Length Required',
               412 => 'Precondition Failed',
-              413 => 'Request Entity Too Large',
-              414 => 'Request-URI Too Long',
+              413 => 'Payload Too Large', # RFC7231 (renamed, see below)
+              414 => 'URI Too Long', # RFC7231 (renamed, see below)
               415 => 'Unsupported Media Type',
-              416 => 'Requested Range Not Satisfiable',
+              416 => 'Range Not Satisfiable', # RFC7233 (renamed, see below)
               417 => 'Expectation Failed',
               418 => 'I\'m A Teapot', #RFC2324
               421 => 'Too Many Connections From This IP',
@@ -61,22 +78,27 @@ module RestClient
               505 => 'HTTP Version Not Supported',
               506 => 'Variant Also Negotiates',
               507 => 'Insufficient Storage', #WebDAV
+              508 => 'Loop Detected', # RFC5842
               509 => 'Bandwidth Limit Exceeded', #Apache
               510 => 'Not Extended',
               511 => 'Network Authentication Required', # RFC6585
   }
 
-  # Compatibility : make the Response act like a Net::HTTPResponse when needed
-  module ResponseForException
-    def method_missing symbol, *args
-      if net_http_res.respond_to? symbol
-        warn "[warning] The response contained in an RestClient::Exception is now a RestClient::Response instead of a Net::HTTPResponse, please update your code"
-        net_http_res.send symbol, *args
-      else
-        super
-      end
-    end
-  end
+  STATUSES_COMPATIBILITY = {
+    # The RFCs all specify "Not Found", but "Resource Not Found" was used in
+    # earlier RestClient releases.
+    404 => ['ResourceNotFound'],
+
+    # HTTP 413 was renamed to "Payload Too Large" in RFC7231.
+    413 => ['RequestEntityTooLarge'],
+
+    # HTTP 414 was renamed to "URI Too Long" in RFC7231.
+    414 => ['RequestURITooLong'],
+
+    # HTTP 416 was renamed to "Range Not Satisfiable" in RFC7233.
+    416 => ['RequestedRangeNotSatisfiable'],
+  }
+
 
   # This is the base RestClient exception class. Rescue it if you want to
   # catch any exception that your request might raise
@@ -86,15 +108,13 @@ module RestClient
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
     attr_accessor :response
-    attr_writer   :message
+    attr_accessor :original_exception
+    attr_writer :message
 
     def initialize response = nil, initial_response_code = nil
       @response = response
       @message = nil
       @initial_response_code = initial_response_code
-
-      # compatibility: this make the exception behave like a Net::HTTPResponse
-      response.extend ResponseForException if response
     end
 
     def http_code
@@ -106,22 +126,25 @@ module RestClient
       end
     end
 
+    def http_headers
+      @response.headers if @response
+    end
+
     def http_body
       @response.body if @response
     end
 
-    def inspect
-      "#{message}: #{http_body}"
-    end
-
     def to_s
-      inspect
+      message
     end
 
     def message
-      @message || self.class.name
+      @message || default_message
     end
 
+    def default_message
+      self.class.name
+    end
   end
 
   # Compatibility
@@ -131,7 +154,7 @@ module RestClient
   # The request failed with an error code not managed by the code
   class RequestFailed < ExceptionWithResponse
 
-    def message
+    def default_message
       "HTTP status code #{http_code}"
     end
 
@@ -140,42 +163,67 @@ module RestClient
     end
   end
 
-  # We will a create an exception for each status code, see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  # RestClient exception classes. TODO: move all exceptions into this module.
+  #
+  # We will a create an exception for each status code, see
+  # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
+  #
   module Exceptions
     # Map http status codes to the corresponding exception class
     EXCEPTIONS_MAP = {}
   end
 
+  # Create HTTP status exception classes
   STATUSES.each_pair do |code, message|
-
-    # Compatibility
-    superclass = ([304, 401, 404].include? code) ? ExceptionWithResponse : RequestFailed
-    klass = Class.new(superclass) do
-      send(:define_method, :message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
+    klass = Class.new(RequestFailed) do
+      send(:define_method, :default_message) {"#{http_code ? "#{http_code} " : ''}#{message}"}
     end
-    klass_constant = const_set message.delete(' \-\''), klass
+    klass_constant = const_set(message.delete(' \-\''), klass)
     Exceptions::EXCEPTIONS_MAP[code] = klass_constant
   end
 
-  # A redirect was encountered; caught by execute to retry with the new url.
-  class Redirect < Exception
-
-    def message
-      'Redirect'
-    end
-
-    attr_accessor :url
-
-    def initialize(url)
-      @url = url
+  # Create HTTP status exception classes used for backwards compatibility
+  STATUSES_COMPATIBILITY.each_pair do |code, compat_list|
+    klass = Exceptions::EXCEPTIONS_MAP.fetch(code)
+    compat_list.each do |old_name|
+      const_set(old_name, klass)
     end
   end
 
-  class MaxRedirectsReached < Exception
-    def message
-      'Maximum number of redirect reached'
+  module Exceptions
+    # We have to split the Exceptions module like we do here because the
+    # EXCEPTIONS_MAP is under Exceptions, but we depend on
+    # RestClient::RequestTimeout below.
+
+    # Base class for request timeouts.
+    #
+    # NB: Previous releases of rest-client would raise RequestTimeout both for
+    # HTTP 408 responses and for actual connection timeouts.
+    class Timeout < RestClient::RequestTimeout
+      def initialize(message=nil, original_exception=nil)
+        super(nil, nil)
+        self.message = message if message
+        self.original_exception = original_exception if original_exception
+      end
+    end
+
+    # Timeout when connecting to a server. Typically wraps Net::OpenTimeout (in
+    # ruby 2.0 or greater).
+    class OpenTimeout < Timeout
+      def default_message
+        'Timed out connecting to server'
+      end
+    end
+
+    # Timeout when reading from a server. Typically wraps Net::ReadTimeout (in
+    # ruby 2.0 or greater).
+    class ReadTimeout < Timeout
+      def default_message
+        'Timed out reading data from server'
+      end
     end
   end
+
 
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
@@ -193,11 +241,4 @@ module RestClient
       self.message = message
     end
   end
-end
-
-# backwards compatibility
-class RestClient::Request
-  Redirect = RestClient::Redirect
-  Unauthorized = RestClient::Unauthorized
-  RequestFailed = RestClient::RequestFailed
 end
