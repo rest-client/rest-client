@@ -16,7 +16,10 @@ module RestClient
   # * :url
   # Optional parameters (have a look at ssl and/or uri for some explanations):
   # * :headers a hash containing the request headers
-  # * :cookies will replace possible cookies in the :headers
+  # * :cookies -- set cookies for the request.
+  # => Note that if :headers specifies :cookies then the value in headers takes precedence
+  # * :allow_invalid_cookies -- if true then ignore cookie validation.
+  # => By default, cookies are validated according to RFC 6265, section 4.1.1
   # * :user and :password for basic auth, will be replaced by a user/password available in the :url
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
@@ -124,6 +127,7 @@ module RestClient
       end
       parse_url_with_auth!(url)
       @cookies = @headers.delete(:cookies) || args[:cookies] || {}
+      @allow_invalid_cookies = args[:allow_invalid_cookies] || false
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
@@ -250,15 +254,19 @@ module RestClient
     def make_headers user_headers
       unless @cookies.empty?
 
-        # Validate that the cookie names and values look sane. If you really
-        # want to pass scary characters, just set the Cookie header directly.
-        # RFC6265 is actually much more restrictive than we are.
-        @cookies.each do |key, val|
-          unless valid_cookie_key?(key)
-            raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
-          end
-          unless valid_cookie_value?(val)
-            raise ArgumentError.new("Invalid cookie value: #{val.inspect}")
+        # By default, validate that the cookie names and values do not contain prohibited
+        # characters, in accordance with RFC 6265.
+        # See #valid_cookie_key? and #valid_cookie_value? for specific regexes.
+        # If you want to pass prohibited characters, pass :allow_invalid_cookies => true
+        # into ::initialize
+        unless @allow_invalid_cookies
+          @cookies.each do |key, val|
+            unless valid_cookie_key?(key)
+              raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
+            end
+            unless valid_cookie_value?(val)
+              raise ArgumentError.new("Invalid cookie value: #{val.inspect}")
+            end
           end
         end
 
@@ -270,24 +278,25 @@ module RestClient
       headers
     end
 
-    # Do some sanity checks on cookie keys.
-    #
-    # Properly it should be a valid TOKEN per RFC 2616, but lots of servers are
-    # more liberal.
+    # Validate whether the cookie name contains invalid characters.
     #
     # Disallow the empty string as well as keys containing control characters,
     # equals sign, semicolon, comma, or space.
-    #
-    def valid_cookie_key?(string)
-      return false if string.empty?
+    # Properly it should be a valid TOKEN per RFC 2616, but lots of servers are
+    # more liberal.
+    # 
+    # @param cookie_name [String]
+    # @returns [Boolean]
+    def valid_cookie_key?(cookie_name)
+      return false if "#{cookie_name}".empty?
 
-      ! Regexp.new('[\x0-\x1f\x7f=;, ]').match(string)
+      ! Regexp.new('[\x0-\x1f\x7f=;, ]').match("#{cookie_name}")
     end
 
     # Validate cookie values. Rather than following RFC 6265, allow anything
     # but control characters, comma, and semicolon.
     def valid_cookie_value?(value)
-      ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
+      ! Regexp.new('[\x0-\x1f\x7f,;]').match("#{value}")
     end
 
     # The proxy URI for this request. If `:proxy` was provided on this request,

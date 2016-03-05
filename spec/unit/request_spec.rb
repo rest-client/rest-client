@@ -128,52 +128,96 @@ describe RestClient::Request, :include_helpers do
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
       URI.stub(:parse).and_return(double('uri', user: nil, password: nil, hostname: 'example.com'))
-      @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
-      @request.send(:parse_url_with_auth!, 'http://example.com/resource')
-      @request.user.should eq 'beth'
-      @request.password.should eq 'pass2'
+      request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
+      request.send(:parse_url_with_auth!, 'http://example.com/resource')
+      request.user.should eq 'beth'
+      request.password.should eq 'pass2'
     end
   end
 
   it "correctly formats cookies provided to the constructor" do
     URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
-    @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
-    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
-    @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
+    request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => 1, :user_id => "someone" })
+    request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
+  end
+
+  it 'Numeric cookie values can pass validition' do
+    request = RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                       :cookies => {1234 => 9876})
+    headers = request.make_headers({})
+    headers.keys.should eq %w{ Accept Accept-Encoding User-Agent Cookie}
+    headers['Cookie'].should eq '1234=9876'
   end
 
   it "does not escape or unescape cookies" do
     cookie = 'Foo%20:Bar%0A~'
-    @request = RestClient::Request.new(:method => 'get', :url => 'example.com',
+    request = RestClient::Request.new(:method => 'get', :url => 'example.com',
                                        :cookies => {:test => cookie})
-    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
-    @request.make_headers({}).should eq({
+    request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    request.make_headers({}).should eq({
       'Foo' => 'bar',
       'Cookie' => "test=#{cookie}"
     })
   end
 
-  it "rejects cookie names containing invalid characters" do
-    # Cookie validity is something of a mess, but we should reject the worst of
-    # the RFC 6265 (4.1.1) prohibited characters such as control characters.
-
-    ['', 'foo=bar', 'foo;bar', "foo\nbar"].each do |cookie_name|
-      lambda {
-        RestClient::Request.new(:method => 'get', :url => 'example.com',
-                                :cookies => {cookie_name => 'value'})
-      }.should raise_error(ArgumentError, /\AInvalid cookie name/)
+  context 'With :allow_invalid_cookies' do
+    before do
+      @invalid_cookie_names = ['', 'foo=bar', 'foo;bar', "foo\nbar"]
+      @invalid_cookie_values = ['foo,bar', 'foo;bar', "foo\nbar"]
     end
-  end
 
-  it "rejects cookie values containing invalid characters" do
-    # Cookie validity is something of a mess, but we should reject the worst of
-    # the RFC 6265 (4.1.1) prohibited characters such as control characters.
+    context 'set to false (the default)' do
+      it "rejects cookie names containing invalid characters" do
+        # Cookie validity is something of a mess, but we should reject the worst of
+        # the RFC 6265 (4.1.1) prohibited characters such as control characters.
 
-    ['foo,bar', 'foo;bar', "foo\nbar"].each do |cookie_value|
-      lambda {
-        RestClient::Request.new(:method => 'get', :url => 'example.com',
-                                :cookies => {'test' => cookie_value})
-      }.should raise_error(ArgumentError, /\AInvalid cookie value/)
+        @invalid_cookie_names.each do |cookie_name|
+          lambda {
+            RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                    :cookies => {cookie_name => 'value'})
+          }.should raise_error(ArgumentError, /\AInvalid cookie name/)
+        end
+      end
+
+      it "rejects cookie values containing invalid characters" do
+        # Cookie validity is something of a mess, but we should reject the worst of
+        # the RFC 6265 (4.1.1) prohibited characters such as control characters.
+
+        @invalid_cookie_values.each do |cookie_value|
+          lambda {
+            RestClient::Request.new(:method => 'get', :url => 'example.com',
+                                    :cookies => {'test' => cookie_value})
+          }.should raise_error(ArgumentError, /\AInvalid cookie value/)
+        end
+      end
+    end
+
+    context 'set to true' do
+      it 'Permits cookie names containing invalid characters' do
+        @invalid_cookie_names.each do |cookie_name|
+          request = RestClient::Request.new(:method                 => 'get', 
+                                            :url                    => 'example.com',
+                                            :allow_invalid_cookies  => true,
+                                            :cookies => {cookie_name => 'value'})
+
+          headers = request.make_headers({})
+          headers.keys.should eq %w{ Accept Accept-Encoding User-Agent Cookie}
+          headers['Cookie'].should eq "#{cookie_name}=value"
+        end
+      end
+
+      it 'Permits cookie values containing invalid characters' do
+        @invalid_cookie_values.each do |cookie_value|
+          request = RestClient::Request.new(:method                 => 'get', 
+                                            :url                    => 'example.com',
+                                            :allow_invalid_cookies  => true,
+                                            :cookies => {:test_cookie => cookie_value})
+          headers = request.make_headers({})
+          headers.keys.should eq %w{ Accept Accept-Encoding User-Agent Cookie}
+          headers['Cookie'].should eq "test_cookie=#{cookie_value}"
+        end
+      end
     end
   end
 
