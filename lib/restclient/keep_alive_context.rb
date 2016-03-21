@@ -17,18 +17,19 @@ module RestClient
 
        request = Request.new(args.merge(http_object: http_object, keep_alive: true))
        response = request.execute(& block)
-       host_hash[identifier] = request.http_object
+       host_hash[identifier] = request.http_object if request.http_object
        response
      end
 
      def finish
-       host_hash.each do |key, http_object|
+       host_hash.each do |_, http_object|
          http_object.finish if http_object
        end
+       host_hash.clear
      end
 
      def self.start
-       KeepAliveContext context = KeepAliveContext.new
+       context = RestClient::KeepAliveContext.new
        if block_given?
          begin
            return yield(context)
