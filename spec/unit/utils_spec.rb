@@ -68,4 +68,45 @@ describe RestClient::Utils do
         ['form-data', {'name' => 'files', 'filename' => 'fo"o;bar'}]
     end
   end
+
+  describe '.parse_url' do
+    it "parses a url into a URI object" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      RestClient::Utils.parse_url('http://example.com/resource')
+    end
+
+    it "adds http:// to the front of resources specified in the syntax example.com/resource" do
+      URI.should_receive(:parse).with('http://example.com/resource')
+      RestClient::Utils.parse_url('example.com/resource')
+    end
+
+    it 'adds http:// to resources containing a colon' do
+      URI.should_receive(:parse).with('http://example.com:1234')
+      RestClient::Utils.parse_url('example.com:1234')
+    end
+
+    it 'does not add http:// to the front of https resources' do
+      URI.should_receive(:parse).with('https://example.com/resource')
+      RestClient::Utils.parse_url('https://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTP resources' do
+      URI.should_receive(:parse).with('HTTP://example.com/resource')
+      RestClient::Utils.parse_url('HTTP://example.com/resource')
+    end
+
+    it 'does not add http:// to the front of capital HTTPS resources' do
+      URI.should_receive(:parse).with('HTTPS://example.com/resource')
+      RestClient::Utils.parse_url('HTTPS://example.com/resource')
+    end
+
+    it 'raises with invalid URI' do
+      lambda {
+        RestClient::Utils.parse_url('http://a@b:c')
+      }.should raise_error(URI::InvalidURIError)
+      lambda {
+        RestClient::Utils.parse_url('http://::')
+      }.should raise_error(URI::InvalidURIError)
+    end
+  end
 end
