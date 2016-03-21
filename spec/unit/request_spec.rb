@@ -10,11 +10,13 @@ describe RestClient::Request, :include_helpers do
     @uri.stub(:port).and_return(80)
 
     @net = double("net::http base")
-    @http = double("net::http connection")
+    @http = @net # double("net::http connection")
 
     Net::HTTP.stub(:new).and_return(@net)
+    @http.stub(:finish)
+    @http.stub(:started?)
 
-    @net.stub(:start).and_yield(@http)
+    @net.stub(:start) # .and_yield(@http)
     @net.stub(:use_ssl=)
     @net.stub(:verify_mode=)
     @net.stub(:verify_callback=)
@@ -70,46 +72,7 @@ describe RestClient::Request, :include_helpers do
     end
   end
 
-  describe '.parse_url' do
-    it "parses a url into a URI object" do
-      URI.should_receive(:parse).with('http://example.com/resource')
-      @request.parse_url('http://example.com/resource')
-    end
 
-    it "adds http:// to the front of resources specified in the syntax example.com/resource" do
-      URI.should_receive(:parse).with('http://example.com/resource')
-      @request.parse_url('example.com/resource')
-    end
-
-    it 'adds http:// to resources containing a colon' do
-      URI.should_receive(:parse).with('http://example.com:1234')
-      @request.parse_url('example.com:1234')
-    end
-
-    it 'does not add http:// to the front of https resources' do
-      URI.should_receive(:parse).with('https://example.com/resource')
-      @request.parse_url('https://example.com/resource')
-    end
-
-    it 'does not add http:// to the front of capital HTTP resources' do
-      URI.should_receive(:parse).with('HTTP://example.com/resource')
-      @request.parse_url('HTTP://example.com/resource')
-    end
-
-    it 'does not add http:// to the front of capital HTTPS resources' do
-      URI.should_receive(:parse).with('HTTPS://example.com/resource')
-      @request.parse_url('HTTPS://example.com/resource')
-    end
-
-    it 'raises with invalid URI' do
-      lambda {
-        @request.parse_url('http://a@b:c')
-      }.should raise_error(URI::InvalidURIError)
-      lambda {
-        @request.parse_url('http://::')
-      }.should raise_error(URI::InvalidURIError)
-    end
-  end
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
@@ -1157,6 +1120,47 @@ describe RestClient::Request, :include_helpers do
     it 'should combine with & when URL params already exist' do
       @request.process_url_params('https://example.com/path?foo=1', params: {bar: 2}).
         should eq 'https://example.com/path?foo=1&bar=2'
+    end
+  end
+
+  describe 'keep_alive_context' do
+    it 'should call finish on http object if not in keep_alive mode' do
+      @http.should_receive :request
+      @http.should_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(true)
+      @request.execute
+    end
+
+    it 'should not call finish on http object if not in keep_alive mode but is not connected' do
+      @http.should_receive :request
+      @http.should_not_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(false)
+      @request.execute
+    end
+
+    it 'should not call finish on http object if in keep_alive mode' do
+      @http.should_receive :request
+      @http.should_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(true)
+      @http.stub(:keep_alive).and_return(true)
+      @request.execute
+    end
+
+
+    it 'should not call finish on http object if in keep_alive mode but is not connected' do
+      @http.should_receive :request
+      @http.should_not_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(false)
+      @http.stub(:keep_alive).and_return(true)
+      @request.execute
     end
   end
 end

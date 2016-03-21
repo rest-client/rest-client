@@ -89,5 +89,24 @@ module RestClient
 
       [key, pdict]
     end
+
+    # Parse a string into a URI object. If the string has no HTTP-like scheme
+    # (i.e. scheme followed by '//'), a scheme of 'http' will be added. This
+    # mimics the behavior of browsers and user agents like cURL.
+    #
+    # @param url [String] A URL string.
+    #
+    # @return [URI]
+    #
+    # @raise URI::InvalidURIError on invalid URIs
+    #
+    def self.parse_url(url)
+      # Prepend http:// unless the string already contains an RFC 3986 scheme
+      # followed by two forward slashes. (The slashes are not part of the URI
+      # RFC, but specified by the URL RFC 1738.)
+      # https://tools.ietf.org/html/rfc3986#section-3.1
+      url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
+      URI.parse(url)
+    end
   end
 end

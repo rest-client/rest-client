@@ -41,7 +41,7 @@ module RestClient
     attr_reader :method, :uri, :url, :headers, :cookies, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :keep_alive, :http_object
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -194,6 +194,9 @@ module RestClient
       @args = args
 
       @before_execution_proc = args[:before_execution_proc]
+
+      @keep_alive = args[:keep_alive]
+      @http_object = args[:http_object]
     end
 
     def execute & block
@@ -344,25 +347,6 @@ module RestClient
       end
     end
 
-    # Parse a string into a URI object. If the string has no HTTP-like scheme
-    # (i.e. scheme followed by '//'), a scheme of 'http' will be added. This
-    # mimics the behavior of browsers and user agents like cURL.
-    #
-    # @param url [String] A URL string.
-    #
-    # @return [URI]
-    #
-    # @raise URI::InvalidURIError on invalid URIs
-    #
-    def parse_url(url)
-      # Prepend http:// unless the string already contains an RFC 3986 scheme
-      # followed by two forward slashes. (The slashes are not part of the URI
-      # RFC, but specified by the URL RFC 1738.)
-      # https://tools.ietf.org/html/rfc3986#section-3.1
-      url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
-      URI.parse(url)
-    end
-
     def process_payload(p=nil, parent_key=nil)
       unless p.is_a?(Hash)
         p
@@ -504,7 +488,7 @@ module RestClient
     # @raise URI::InvalidURIError on invalid URIs
     #
     def parse_url_with_auth!(url)
-      uri = parse_url(url)
+      uri = Utils.parse_url(url)
 
       if uri.hostname.nil?
         raise URI::InvalidURIError.new("bad URI(no host provided): #{url}")
@@ -533,12 +517,7 @@ module RestClient
       warned
     end
 
-    def transmit uri, req, payload, & block
-
-      # We set this to true in the net/http block so that we can distinguish
-      # read_timeout from open_timeout. This isn't needed in Ruby >= 2.0.
-      established_connection = false
-
+    def setup_http_object(uri, req)
       setup_credentials req
 
       net = net_http_object(uri.hostname, uri.port)
@@ -594,6 +573,14 @@ module RestClient
         end
         net.open_timeout = @open_timeout
       end
+      net
+    end
+
+    def transmit uri, req, payload, & block
+
+      # We set this to true in the net/http block so that we can distinguish
+      # read_timeout from open_timeout. This isn't needed in Ruby >= 2.0.
+      established_connection = false
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
@@ -605,18 +592,21 @@ module RestClient
 
       log_request
 
-      net.start do |http|
-        established_connection = true
+      unless @http_object
+        @http_object = setup_http_object(uri, req)
+        @http_object.start
+      end
 
-        if @block_response
-          net_http_do_request(http, req, payload, &@block_response)
-        else
-          res = net_http_do_request(http, req, payload) { |http_response|
-            fetch_body(http_response)
-          }
-          log_response res
-          process_result res, & block
-        end
+      established_connection = true
+
+      if @block_response
+        net_http_do_request(@http_object, req, payload, &@block_response)
+      else
+        res = net_http_do_request(@http_object, req, payload) { |http_response|
+          fetch_body(http_response)
+        }
+        log_response res
+        process_result res, & block
       end
     rescue EOFError
       raise RestClient::ServerBrokeConnection
@@ -658,6 +648,8 @@ module RestClient
       else
         raise error
       end
+    ensure
+      @http_object.finish if !keep_alive and @http_object.started?
     end
 
     def setup_credentials(req)

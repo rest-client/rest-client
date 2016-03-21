@@ -124,4 +124,23 @@ describe RestClient::Request do
     end
   end
 
+  describe "keep alive context" do
+    it "should keep http object in the context " do
+
+      Net::HTTP.any_instance.should_receive(:connect).and_call_original
+
+      context = RestClient::KeepAliveContext.new
+      context.execute(
+          :method => :get,
+          :url => 'https://www.mozilla.org/en-US/'
+      )
+      context.execute(
+          :method => :get,
+          :url => 'https://www.mozilla.org/en-US/'
+      )
+
+      context.host_hash.should have_key 'https://www.mozilla.org:443'
+    end
+  end
+
 end
