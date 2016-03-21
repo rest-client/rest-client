@@ -8,23 +8,22 @@ module RestClient
 
      def execute(args, & block)
        unless args[:url]
-         raise ArgumentError, "must pass :url"
+         raise ArgumentError, "must pass url"
        end
        uri = Utils.parse_url(args[:url])
 
        identifier = "#{uri.scheme}://#{uri.hostname}:#{uri.port}"
-       http_object = @host_hash[identifier]
+       http_object = host_hash[identifier]
 
        request = Request.new(args.merge(http_object: http_object, keep_alive: true))
        response = request.execute(& block)
-       @host_hash[identifier] = request.http_object
+       host_hash[identifier] = request.http_object
        response
      end
 
      def finish
-       @host_hash.each do |key, http_object|
+       host_hash.each do |key, http_object|
          http_object.finish if http_object
-         puts key
        end
      end
 

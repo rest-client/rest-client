@@ -1122,4 +1122,45 @@ describe RestClient::Request, :include_helpers do
         should eq 'https://example.com/path?foo=1&bar=2'
     end
   end
+
+  describe 'keep_alive_context' do
+    it 'should call finish on http object if not in keep_alive mode' do
+      @http.should_receive :request
+      @http.should_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(true)
+      @request.execute
+    end
+
+    it 'should not call finish on http object if not in keep_alive mode but is not connected' do
+      @http.should_receive :request
+      @http.should_not_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(false)
+      @request.execute
+    end
+
+    it 'should not call finish on http object if in keep_alive mode' do
+      @http.should_receive :request
+      @http.should_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(true)
+      @http.stub(:keep_alive).and_return(true)
+      @request.execute
+    end
+
+
+    it 'should not call finish on http object if in keep_alive mode but is not connected' do
+      @http.should_receive :request
+      @http.should_not_receive :finish
+      @request.should_receive(:process_result)
+      @request.should_receive(:log_response)
+      @http.stub(:started?).and_return(false)
+      @http.stub(:keep_alive).and_return(true)
+      @request.execute
+    end
+  end
 end

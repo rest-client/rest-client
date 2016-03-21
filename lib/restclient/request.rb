@@ -649,7 +649,7 @@ module RestClient
         raise error
       end
     ensure
-      @http_object.finish if !@keep_alive and @http_object.started?
+      @http_object.finish if !keep_alive and @http_object.started?
     end
 
     def setup_credentials(req)
