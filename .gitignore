@@ -5,3 +5,6 @@
 /doc
 /pkg
 /rdoc
+.ruby-version
+.ruby-gemset
+.rvmrc
