@@ -415,6 +415,28 @@ describe RestClient::Request do
       log[0].should eq "# => 200 OK | text/html 0 bytes\n"
     end
 
+    context "log_response_body_for_content_types is set to ['application/json', 'text/plain']" do
+      before(:each) { RestClient.log_response_body_for_content_types = ['application/json', 'text/plain'] }
+      let!(:log) { RestClient.log = [] }
+
+      it "logs a response with Content-Type=application/json" do
+        res = double('result', :code => '200', :class => Net::HTTPOK, :body => %Q{{"some": "json"}})
+        res.stub(:[]).with('Content-type').and_return('application/json; charset=utf-8')
+        @request.log_response res
+        log.size.should eq 2
+        log[0].should eq "# => 200 OK | application/json 16 bytes\n"
+        log[1].should eq %Q{# => {"some": "json"}}
+      end
+
+      it "does not log a response with Content-Type=text/html" do
+        res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+        res.stub(:[]).with('Content-type').and_return('text/html; charset=utf-8')
+        @request.log_response res
+        log.size.should eq 1
+        log[0].should eq "# => 200 OK | text/html 0 bytes\n"
+      end
+    end
+
     context "log_verbosity is set to :verbose" do
       before(:each) { RestClient.log_verbosity = :verbose }
       let!(:log) { RestClient.log = [] }
