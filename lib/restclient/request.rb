@@ -534,8 +534,12 @@ module RestClient
                res.body.nil? ? 0 : res.body.size
              end
 
-      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
-      RestClient.log << "# => #{res.body || 'nil'}"  if RestClient.log_verbosity == :verbose
+      readable_status = res.class.to_s.gsub(/^Net::HTTP/, '')
+      content_type_without_charset = (res['Content-type'] || '').gsub(/;.*$/, '')
+      RestClient.log << "# => #{res.code} #{readable_status} | #{content_type_without_charset} #{size} bytes\n"
+      if RestClient.log_verbosity == :verbose || RestClient.log_response_body_for_content_types.include?(content_type_without_charset)
+        RestClient.log << "# => #{res.body || 'nil'}"
+      end
     end
 
     # Return a hash of headers whose keys are capitalized strings
