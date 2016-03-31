@@ -30,6 +30,9 @@ module RestClient
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
+  # * :before_execution_proc a Proc to call before executing the request. This
+  #      proc, like procs from RestClient.before_execution_procs, will be
+  #      called with the HTTP request and request params.
   class Request
 
     attr_reader :method, :url, :headers, :cookies,
@@ -169,6 +172,8 @@ module RestClient
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
+
+      @before_execution_proc = args[:before_execution_proc]
     end
 
     def execute & block
@@ -405,6 +410,10 @@ module RestClient
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
+      end
+
+      if @before_execution_proc
+        @before_execution_proc.call(req, args)
       end
 
       log_request
