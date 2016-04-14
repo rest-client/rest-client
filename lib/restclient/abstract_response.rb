@@ -156,7 +156,7 @@ module RestClient
     def _follow_redirection(new_args, &block)
 
       # parse location header and merge into existing URL
-      url = headers[:location]
+      url = headers[:location].to_s
 
       # handle relative redirects
       unless url.start_with?('http')
@@ -175,7 +175,6 @@ module RestClient
       # TODO: figure out what to do with original :cookie, :cookies values
       new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
         cookie_jar.cookies(new_args.fetch(:url)))
-
 
       # prepare new request
       new_req = Request.new(new_args)
