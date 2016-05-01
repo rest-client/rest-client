@@ -38,5 +38,6 @@ matrix:
       rvm: 'jruby-head'
     - os: linux
       rvm: 'jruby-head'
+  fast_finish: true
 
 sudo: false
