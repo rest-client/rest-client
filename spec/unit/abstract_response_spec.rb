@@ -104,5 +104,12 @@ describe RestClient::AbstractResponse, :include_helpers do
       @response.should_receive(:follow_redirection).and_return('fake-redirection')
       @response.return!.should eq 'fake-redirection'
     end
+
+    it "should gracefully handle 302 redirect with no location header" do
+    @net_http_res = response_double(code: 302, location: nil)
+    @request = request_double()
+    @response = MyAbstractResponse.new(@net_http_res, @request)
+      lambda { @response.return! }.should raise_error RestClient::Found
+    end
   end
 end

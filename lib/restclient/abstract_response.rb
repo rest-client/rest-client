@@ -167,6 +167,11 @@ module RestClient
       # parse location header and merge into existing URL
       url = headers[:location]
 
+      # cannot follow redirection if there is no location header
+      unless url
+        raise exception_with_response
+      end
+
       # handle relative redirects
       unless url.start_with?('http')
         url = URI.parse(request.url).merge(url).to_s
