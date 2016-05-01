@@ -72,7 +72,7 @@ module RestClient
       if (200..207).include? code
         self
       elsif [301, 302, 307].include? code
-        unless [:get, :head].include? args[:method]
+        unless [:get, :head, "GET", "HEAD"].include? args[:method]
           raise exception_with_response
         else
           follow_redirection(&block)
