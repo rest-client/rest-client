@@ -57,13 +57,17 @@ This release is largely API compatible, but makes several breaking changes.
   treat any object that responds to `.read` as a streaming payload and pass it
   through to `.body_stream=` on the Net:HTTP object. This massively reduces the
   memory required for large file uploads.
-- Remove `RestClient::MaxRedirectsReached` in favor of the normal
-  `ExceptionWithResponse` subclasses. This makes the response accessible on the
-  exception object as `.response`, making it possible for callers to tell what
-  has actually happened when the redirect limit is reached.
-- When following HTTP redirection, store a list of each previous response on
-  the response object as `.history`. This makes it possible to access the
-  original response headers and body before the redirection was followed.
+- Changes to redirection behavior:
+  - Remove `RestClient::MaxRedirectsReached` in favor of the normal
+    `ExceptionWithResponse` subclasses. This makes the response accessible on
+    the exception object as `.response`, making it possible for callers to tell
+    what has actually happened when the redirect limit is reached.
+  - When following HTTP redirection, store a list of each previous response on
+    the response object as `.history`. This makes it possible to access the
+    original response headers and body before the redirection was followed.
+  - Follow redirection consistently, regardless of whether the HTTP method was
+    passed as a symbol or string. Under the hood rest-client now normalizes the
+    HTTP request method to a lowercase string.
 - Add `:before_execution_proc` option to `RestClient::Request`. This makes it
   possible to add procs like `RestClient.add_before_execution_proc` to a single
   request without global state.
