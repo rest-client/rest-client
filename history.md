@@ -40,6 +40,9 @@ This release is largely API compatible, but makes several breaking changes.
     than self. Previously there was no easy way to get the true `String`
     response instead of the Frankenstein response string object with
     AbstractResponse mixed in.
+  - Response objects no longer accept an extra request args hash, but instead
+    access request args directly from the request object, which reduces
+    confusion and duplication.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
