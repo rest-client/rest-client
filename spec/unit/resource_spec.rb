@@ -46,10 +46,10 @@ describe RestClient::Resource do
     @resource = RestClient::Resource.new('http://some/resource')
   end
 
-  it "is backwards compatible with previous constructor" do
-    @resource = RestClient::Resource.new('http://some/resource', 'user', 'pass')
-    @resource.user.should eq 'user'
-    @resource.password.should eq 'pass'
+  it "is NOT backwards compatible with previous constructor" do
+    lambda {
+      @resource = RestClient::Resource.new('http://some/resource', 'user', 'pass')
+    }.should raise_error(ArgumentError)
   end
 
   it "concatenates urls, inserting a slash when it needs one" do

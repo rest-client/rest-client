@@ -36,14 +36,10 @@ module RestClient
   class Resource
     attr_reader :url, :options, :block
 
-    def initialize(url, options={}, backwards_compatibility=nil, &block)
+    def initialize(url, options={}, &block)
       @url = url
       @block = block
-      if options.class == Hash
-        @options = options
-      else # compatibility with previous versions
-        @options = { :user => options, :password => backwards_compatibility }
-      end
+      @options = options
     end
 
     def get(additional_headers={}, &block)

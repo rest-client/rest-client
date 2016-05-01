@@ -77,6 +77,9 @@ This release is largely API compatible, but makes several breaking changes.
 - Refactor URI parsing to happen earlier, in Request initialization.
 - When adding URL params, handle URLs that already contain params.
 - Add a few more exception classes for obscure HTTP status codes.
+- Drop ancient backwards compatibility for old Resource initializer.
+  No longer supported: `RestClient::Resource.new(url, username, pass)`
+  Instead use: `RestClient::Resource.new(url, user: username, password: pass)`
 
 # 2.0.0.rc1
 
