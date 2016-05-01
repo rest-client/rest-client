@@ -199,8 +199,7 @@ module RestClient
     def execute & block
       # With 2.0.0+, net/http accepts URI objects in requests and handles wrapping
       # IPv6 addresses in [] for use in the Host request header.
-      request_uri = RUBY_VERSION >= "2.0.0" ? uri : uri.request_uri
-      transmit uri, net_http_request_class(method).new(request_uri, processed_headers), payload, & block
+      transmit uri, net_http_request_class(method).new(uri, processed_headers), payload, & block
     ensure
       payload.close if payload
     end
