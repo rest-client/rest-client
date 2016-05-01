@@ -29,6 +29,36 @@ module RestClient
       nil
     end
 
+    # Return the Encoding for a String encoding name.
+    #
+    # In ruby 2.1+ use URI.get_encoding() in order to support the encoding
+    # names and aliases specified by HTML5. Otherwise call Encoding.find().
+    #
+    # Note that the HTML5 specification indicates that certain valid encodings
+    # be treated as other similar encodings. For example, `ISO-8859-1` is
+    # rendered as `Windows-1252` even though it differs in certain control
+    # characters.
+    #
+    # @param [String] name A string encoding name, such as "utf-8"
+    # @return [Encoding, nil]
+    #
+    # @see Encoding.find
+    # @see URI.get_encoding
+    # @see https://encoding.spec.whatwg.org/#concept-encoding-get
+    #
+    def self.find_encoding(name)
+      if URI.respond_to?(:get_encoding)
+        return URI.get_encoding(name)
+      end
+
+      begin
+        Encoding.find(name)
+      rescue ArgumentError => e
+        raise unless e.message.include?('unknown encoding name')
+        nil
+      end
+    end
+
     # Parse semi-colon separated, potentially quoted header string iteratively.
     #
     # @private

@@ -61,7 +61,7 @@ describe RestClient do
       body = "\xfe".force_encoding('ASCII-8BIT')
       stub_request(:get, "www.example.com").to_return(
         :body => body, :status => 200, :headers => {
-          'Content-Type' => 'application/octet-stream; charset=binary'
+          'Content-Type' => 'application/octet-stream'
       })
       response = RestClient.get "www.example.com"
       response.encoding.should eq Encoding::BINARY
@@ -71,7 +71,7 @@ describe RestClient do
       response.valid_encoding?.should eq true
     end
 
-    it 'handles euc-jp' do
+    it 'handles CP51932 / EUC-JP' do
       body = "\xA4\xA2\xA4\xA4\xA4\xA6\xA4\xA8\xA4\xAA".
         force_encoding(Encoding::BINARY)
       body_utf8 = 'あいうえお'
@@ -82,11 +82,47 @@ describe RestClient do
           'Content-Type' => 'text/plain; charset=EUC-JP'
       })
       response = RestClient.get 'www.example.com'
-      response.encoding.should eq Encoding::EUC_JP
+
+      # URI.get_encoding turns EUC-JP into CP51932, though I'm not sure why.
+      [Encoding::EUC_JP, Encoding::CP51932].should include(response.encoding)
+
       response.valid_encoding?.should eq true
       response.length.should eq 5
       response.encode('utf-8').should eq body_utf8
     end
+
+    it 'handles big5 traditional chinese' do
+      body = "\xB5e\xAE\xD1"
+      body_utf8 = '畫書'
+      body_utf8.encoding.should eq Encoding::UTF_8
+
+      stub_request(:get, 'www.example.com').to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=Big5'
+      })
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding::Big5
+      response.valid_encoding?.should eq true
+      response.length.should eq 2
+      response.encode('utf-8').should eq body_utf8
+    end
+
+    it 'handles gbk simplified chinese' do
+      body = "\xBB\xAD\xCA\xE9"
+      body_utf8 = '画书'
+      body_utf8.encoding.should eq Encoding::UTF_8
+
+      stub_request(:get, 'www.example.com').to_return(
+        :body => body, :status => 200, :headers => {
+          'Content-Type' => 'text/plain; charset=GBK'
+      })
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding::GBK
+      response.valid_encoding?.should eq true
+      response.length.should eq 2
+      response.encode('utf-8').should eq body_utf8
+    end
+
 
     it 'defaults to Encoding.default_external' do
       stub_request(:get, 'www.example.com').to_return(
