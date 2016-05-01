@@ -115,7 +115,12 @@ module RestClient
     end
 
     def initialize args
-      @method = args[:method] or raise ArgumentError, "must pass :method"
+      if args[:method]
+        args[:method] = args[:method].downcase.to_sym
+        @method = args[:method]
+      else
+        raise ArgumentError, "must pass :method"
+      end
       @headers = (args[:headers] || {}).dup
       if args[:url]
         @url = process_url_params(args[:url], headers)
