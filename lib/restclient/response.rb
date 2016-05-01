@@ -38,10 +38,10 @@ module RestClient
       "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
-    def self.create(body, net_http_res, args, request)
+    def self.create(body, net_http_res, request)
       result = self.new(body || '')
 
-      result.response_set_vars(net_http_res, args, request)
+      result.response_set_vars(net_http_res, request)
       fix_encoding(result)
 
       result

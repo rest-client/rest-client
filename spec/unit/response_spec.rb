@@ -4,8 +4,8 @@ describe RestClient::Response, :include_helpers do
   before do
     @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
     @example_url = 'http://example.com'
-    @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
-    @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
+    @request = request_double(url: @example_url, method: 'get')
+    @response = RestClient::Response.create('abc', @net_http_res, @request)
   end
 
   it "behaves like string" do
@@ -17,7 +17,7 @@ describe RestClient::Response, :include_helpers do
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
-    RestClient::Response.create(nil, @net_http_res, {}, @request).to_s.should eq ""
+    RestClient::Response.create(nil, @net_http_res, @request).to_s.should eq ""
   end
 
   describe 'header processing' do
@@ -29,8 +29,8 @@ describe RestClient::Response, :include_helpers do
     it 'handles multiple headers by joining with comma' do
       @net_http_res = double('net http response', :to_hash => {'My-Header' => ['foo', 'bar']}, :code => 200)
       @example_url = 'http://example.com'
-      @request = double('http request', :user => nil, :password => nil, :url => @example_url, :redirection_history => nil)
-      @response = RestClient::Response.create('abc', @net_http_res, {}, @request)
+      @request = request_double(url: @example_url, method: 'get')
+      @response = RestClient::Response.create('abc', @net_http_res, @request)
 
       @response.raw_headers['My-Header'].should eq ['foo', 'bar']
       @response.headers[:my_header].should eq 'foo, bar'
@@ -42,14 +42,14 @@ describe RestClient::Response, :include_helpers do
       header_val = "main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT".freeze
 
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => [header_val]})
-      response = RestClient::Response.create('abc', net_http_res, {}, @request)
+      response = RestClient::Response.create('abc', net_http_res, @request)
       response.headers[:set_cookie].should eq [header_val]
       response.cookies.should eq({ "main_page" => "main_page_no_rewrite" })
     end
 
     it "should correctly deal with multiple cookies [multiple Set-Cookie headers]" do
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
-      response = RestClient::Response.create('abc', net_http_res, {}, @request)
+      response = RestClient::Response.create('abc', net_http_res, @request)
       response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]
       response.cookies.should eq({
         "main_page" => "main_page_no_rewrite",
@@ -60,7 +60,7 @@ describe RestClient::Response, :include_helpers do
 
     it "should correctly deal with multiple cookies [one Set-Cookie header with multiple cookies]" do
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT, remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT, user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
-      response = RestClient::Response.create('abc', net_http_res, {}, @request)
+      response = RestClient::Response.create('abc', net_http_res, @request)
       response.cookies.should eq({
         "main_page" => "main_page_no_rewrite",
         "remember_me" => "",
@@ -73,7 +73,7 @@ describe RestClient::Response, :include_helpers do
     it "should return itself for normal codes" do
       (200..206).each do |code|
         net_http_res = response_double(:code => '200')
-        resp = RestClient::Response.create('abc', net_http_res, {}, @request)
+        resp = RestClient::Response.create('abc', net_http_res, @request)
         resp.return!
       end
     end
@@ -82,7 +82,7 @@ describe RestClient::Response, :include_helpers do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
         unless (200..207).include? code
           net_http_res = response_double(:code => code.to_i)
-          resp = RestClient::Response.create('abc', net_http_res, {}, @request)
+          resp = RestClient::Response.create('abc', net_http_res, @request)
           lambda { resp.return! }.should raise_error
         end
       end
@@ -128,8 +128,9 @@ describe RestClient::Response, :include_helpers do
 
     it "doesn't follow a 301 when the request is a post" do
       net_http_res = response_double(:code => 301)
+
       response = RestClient::Response.create('abc', net_http_res,
-                                             {:method => :post}, @request)
+                                             request_double(method: 'post'))
       lambda {
         response.return!
       }.should raise_error(RestClient::MovedPermanently)
@@ -138,7 +139,7 @@ describe RestClient::Response, :include_helpers do
     it "doesn't follow a 302 when the request is a post" do
       net_http_res = response_double(:code => 302)
       response = RestClient::Response.create('abc', net_http_res,
-                                             {:method => :post}, @request)
+                                             request_double(method: 'post'))
       lambda {
         response.return!
       }.should raise_error(RestClient::Found)
@@ -147,7 +148,8 @@ describe RestClient::Response, :include_helpers do
     it "doesn't follow a 307 when the request is a post" do
       net_http_res = response_double(:code => 307)
       response = RestClient::Response.create('abc', net_http_res,
-                                             {:method => :post}, @request)
+                                             request_double(method: 'post'))
+      response.should_not_receive(:follow_redirection)
       lambda {
         response.return!
       }.should raise_error(RestClient::TemporaryRedirect)
@@ -156,7 +158,7 @@ describe RestClient::Response, :include_helpers do
     it "doesn't follow a redirection when the request is a put" do
       net_http_res = response_double(:code => 301)
       response = RestClient::Response.create('abc', net_http_res,
-                                             {:method => :put}, @request)
+                                             request_double(method: 'put'))
       lambda {
         response.return!
       }.should raise_error(RestClient::MovedPermanently)
