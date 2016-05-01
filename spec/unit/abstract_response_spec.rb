@@ -1,6 +1,6 @@
 require_relative '_lib'
 
-describe RestClient::AbstractResponse do
+describe RestClient::AbstractResponse, :include_helpers do
 
   class MyAbstractResponse
 
@@ -8,9 +8,8 @@ describe RestClient::AbstractResponse do
 
     attr_accessor :size
 
-    def initialize net_http_res, args, request
+    def initialize net_http_res, request
       @net_http_res = net_http_res
-      @args = args
       @request = request
     end
 
@@ -18,8 +17,8 @@ describe RestClient::AbstractResponse do
 
   before do
     @net_http_res = double('net http response')
-    @request = double('restclient request', :url => 'http://example.com')
-    @response = MyAbstractResponse.new(@net_http_res, {}, @request)
+    @request = double('restclient request', url: 'http://example.com', method: 'get')
+    @response = MyAbstractResponse.new(@net_http_res, @request)
   end
 
   it "fetches the numeric response code" do
@@ -95,8 +94,22 @@ describe RestClient::AbstractResponse do
 
     it "should raise an error on a redirection after non-GET/HEAD requests" do
       @net_http_res.should_receive(:code).and_return('301')
-      @response.args.merge(:method => :put)
+      @request.should_receive(:method).and_return('put')
+      @response.should_not_receive(:follow_redirection)
       lambda { @response.return! }.should raise_error RestClient::RequestFailed
+    end
+
+    it "should follow 302 redirect" do
+      @net_http_res.should_receive(:code).and_return('302')
+      @response.should_receive(:follow_redirection).and_return('fake-redirection')
+      @response.return!.should eq 'fake-redirection'
+    end
+
+    it "should gracefully handle 302 redirect with no location header" do
+    @net_http_res = response_double(code: 302, location: nil)
+    @request = request_double()
+    @response = MyAbstractResponse.new(@net_http_res, @request)
+      lambda { @response.return! }.should raise_error RestClient::Found
     end
   end
 end

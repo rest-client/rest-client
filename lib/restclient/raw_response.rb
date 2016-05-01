@@ -19,9 +19,8 @@ module RestClient
       "<RestClient::RawResponse @code=#{code.inspect}, @file=#{file.inspect}, @request=#{request.inspect}>"
     end
 
-    def initialize(tempfile, net_http_res, args, request)
+    def initialize(tempfile, net_http_res, request)
       @net_http_res = net_http_res
-      @args = args
       @file = tempfile
       @request = request
     end

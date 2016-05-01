@@ -11,4 +11,9 @@ module Helpers
   ensure
     $stderr = original_stderr
   end
+
+  def request_double(url: 'http://example.com', method: 'get')
+    double('request', url: url, method: method, user: nil, password: nil,
+           redirection_history: nil, args: {url: url, method: method})
+  end
 end

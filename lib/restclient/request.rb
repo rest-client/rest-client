@@ -115,7 +115,7 @@ module RestClient
     end
 
     def initialize args
-      @method = args[:method] or raise ArgumentError, "must pass :method"
+      @method = normalize_method(args[:method])
       @headers = (args[:headers] || {}).dup
       if args[:url]
         @url = process_url_params(args[:url], headers)
@@ -331,7 +331,7 @@ module RestClient
     end
 
     def net_http_request_class(method)
-      Net::HTTP.const_get(method.to_s.capitalize)
+      Net::HTTP.const_get(method.capitalize, false)
     end
 
     def net_http_do_request(http, req, body=nil, &block)
@@ -532,6 +532,22 @@ module RestClient
       warned
     end
 
+    # Parse a method and return a normalized string version.
+    #
+    # Raise ArgumentError if the method is falsy, but otherwise do no
+    # validation.
+    #
+    # @param method [String, Symbol]
+    #
+    # @return [String]
+    #
+    # @see net_http_request_class
+    #
+    def normalize_method(method)
+      raise ArgumentError.new('must pass :method') unless method
+      method.to_s.downcase
+    end
+
     def transmit uri, req, payload, & block
 
       # We set this to true in the net/http block so that we can distinguish
@@ -695,10 +711,10 @@ module RestClient
     def process_result res, & block
       if @raw_response
         # We don't decode raw requests
-        response = RawResponse.new(@tf, res, args, self)
+        response = RawResponse.new(@tf, res, self)
       else
         decoded = Request.decode(res['content-encoding'], res.body)
-        response = Response.create(decoded, res, args, self)
+        response = Response.create(decoded, res, self)
       end
 
       if block_given?

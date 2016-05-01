@@ -5,7 +5,7 @@ module RestClient
 
   module AbstractResponse
 
-    attr_reader :net_http_res, :args, :request
+    attr_reader :net_http_res, :request
 
     def inspect
       raise NotImplementedError.new('must override in subclass')
@@ -31,9 +31,8 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
-    def response_set_vars(net_http_res, args, request)
+    def response_set_vars(net_http_res, request)
       @net_http_res = net_http_res
-      @args = args
       @request = request
 
       # prime redirection history
@@ -67,17 +66,27 @@ module RestClient
     end
 
     # Return the default behavior corresponding to the response code:
-    # the response itself for code in 200..206, redirection for 301, 302 and 307 in get and head cases, redirection for 303 and an exception in other cases
+    #
+    # For 20x status codes: return the response itself
+    #
+    # For 30x status codes:
+    #   301, 302, 307: redirect GET / HEAD if there is a Location header
+    #   303: redirect, changing method to GET, if there is a Location header
+    #
+    # For all other responses, raise a response exception
+    #
     def return!(&block)
-      if (200..207).include? code
+      case code
+      when 200..207
         self
-      elsif [301, 302, 307].include? code
-        unless [:get, :head].include? args[:method]
-          raise exception_with_response
-        else
+      when 301, 302, 307
+        case request.method
+        when 'get', 'head'
           follow_redirection(&block)
+        else
+          raise exception_with_response
         end
-      elsif code == 303
+      when 303
         follow_get_redirection(&block)
       else
         raise exception_with_response
@@ -96,13 +105,13 @@ module RestClient
     # Follow a redirection response by making a new HTTP request to the
     # redirection target.
     def follow_redirection(&block)
-      _follow_redirection(@args.dup, &block)
+      _follow_redirection(request.args.dup, &block)
     end
 
     # Follow a redirection response, but change the HTTP method to GET and drop
     # the payload from the original request.
     def follow_get_redirection(&block)
-      new_args = @args.dup
+      new_args = request.args.dup
       new_args[:method] = :get
       new_args.delete(:payload)
 
@@ -157,6 +166,11 @@ module RestClient
 
       # parse location header and merge into existing URL
       url = headers[:location]
+
+      # cannot follow redirection if there is no location header
+      unless url
+        raise exception_with_response
+      end
 
       # handle relative redirects
       unless url.start_with?('http')
