@@ -1,3 +1,5 @@
+# Available ruby versions: http://rubies.travis-ci.org/
+
 language: ruby
 os:
   - linux
@@ -6,8 +8,9 @@ rvm:
   - "2.0.0"
   - "2.1" # latest 2.1.x
   - "2.2" # latest 2.2.x
-  - "2.3.0" # latest 2.3.x
-  - "jruby-9.0.1.0"
+  - "2.3.1" # TODO: switch to "2.3" once travis fixes it
+  - "ruby-head"
+  - "jruby-9.0.5.0"
   - "jruby-head"
 script:
   bundle exec rake test
@@ -15,15 +18,25 @@ branches:
   except:
     - "readme-edits"
 
-# These versions do not yet work on OS X on Travis
-# (last tested: 2016-02)
+# Travis OS X support is pretty janky. These are some hacks to include tests
+# only on versions that actually work.
+# (last tested: 2016-04)
 matrix:
   exclude:
     - os: osx
-      rvm: '2.3.0'
-    - os: osx
       rvm: '2.2'
     - os: osx
-      rvm: 'jruby-9.0.1.0'
+      rvm: '2.3.1' # No 2.3.x at all
+  include:
+    - os: osx
+      rvm: '2.2.2' # Travis OS X doesn't have 2.2 aliases
+  allow_failures:
+    - rvm: 'ruby-head'
+    - os: osx
+      rvm: 'jruby-9.0.5.0'
+    - os: osx
+      rvm: 'jruby-head'
+    - os: linux
+      rvm: 'jruby-head'
 
 sudo: false
