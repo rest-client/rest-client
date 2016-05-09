@@ -33,14 +33,19 @@ describe RestClient::Payload do
       parameters.should include("foo[bar]=baz", "foo[baz]=qux")
     end
 
-    it "should handle attributes inside a an array inside an hash" do
-      parameters = RestClient::Payload::UrlEncoded.new({"foo" => [{"bar" => 'baz'}, {"bar" => 'qux'}]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+    it "should handle many attributes inside a hash with an array" do
+      parameters = RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz', :baz => ['qux', '123']}}).to_s
+      parameters.should include("foo[bar]=baz", "foo[baz][]=qux", "foo[baz][]=123")
     end
 
-    it "should handle attributes inside a an array inside an array inside an hash" do
-      parameters = RestClient::Payload::UrlEncoded.new({"foo" => [[{"bar" => 'baz'}, {"bar" => 'qux'}]]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+    it "should handle attributes inside a an array inside an hash" do
+      parameters = RestClient::Payload::UrlEncoded.new({"foo" => [{"bar" => 'baz'}, {"bar" => 'qux'}]}).to_s
+      parameters.should include("foo[][bar]=baz", "foo[][bar]=qux")
+    end
+
+    it "should handle attributes inside a an array" do
+      parameters = RestClient::Payload::UrlEncoded.new({"foo" => ['baz', 'qux']}).to_s
+      parameters.should include("foo[]=baz", "foo[]=qux")
     end
 
     it "should form properly use symbols as parameters" do
