@@ -1173,5 +1173,11 @@ describe RestClient::Request, :include_helpers do
                    '&nested[key+%2B+escaped]=value+%2B+escaped&nested[other]' \
                    '&nested[arr][]=1&nested[arr][]=2'
     end
+
+    it 'should handle ParamsArray objects' do
+      @request.process_url_params('https://example.com/',
+        params: RestClient::ParamsArray.new([[:foo, 1], [:foo, 2]])
+      ).should eq 'https://example.com/?foo=1&foo=2'
+    end
   end
 end

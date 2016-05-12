@@ -224,18 +224,38 @@ module RestClient
     end
 
     # Extract the query parameters and append them to the url
-    def process_url_params url, headers
-      url_params = {}
+    #
+    # Look through the headers hash for a :params option (case-insensitive,
+    # may be string or symbol). If present and the value is a Hash or
+    # RestClient::ParamsArray, *delete* the key/value pair from the headers
+    # hash and encode the value into a query string. Append this query string
+    # to the URL and return the resulting URL.
+    #
+    # @param [String] url
+    # @param [Hash] headers An options/headers hash to process. Mutation
+    #   warning: the params key may be removed if present!
+    #
+    # @return [String] resulting url with query string
+    #
+    def process_url_params(url, headers)
+      url_params = nil
+
+      # find and extract/remove "params" key if the value is a Hash/ParamsArray
       headers.delete_if do |key, value|
-        if 'params' == key.to_s.downcase && value.is_a?(Hash)
-          url_params.merge! value
+        if key.to_s.downcase == 'params' &&
+            (value.is_a?(Hash) || value.is_a?(RestClient::ParamsArray))
+          if url_params
+            raise ArgumentError.new("Multiple 'params' options passed")
+          end
+          url_params = value
           true
         else
           false
         end
       end
 
-      unless url_params.empty?
+      # build resulting URL with query string
+      if url_params && !url_params.empty?
         query_string = RestClient::Utils.encode_query_string(url_params)
 
         if url.include?('?')
