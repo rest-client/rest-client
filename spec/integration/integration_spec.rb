@@ -98,6 +98,16 @@ describe RestClient do
       response.encoding.should eq Encoding.default_external
     end
 
+    it 'handles invalid encoding' do
+      stub_request(:get, 'www.example.com').to_return(
+        body: 'abc', status: 200, headers: {
+          'Content-Type' => 'text; charset=plain'
+        })
+
+      response = RestClient.get 'www.example.com'
+      response.encoding.should eq Encoding.default_external
+    end
+
     it 'leaves images as binary' do
       gif = Base64.strict_decode64('R0lGODlhAQABAAAAADs=')
 
