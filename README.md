@@ -375,12 +375,94 @@ RestClient::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
 
 ## Query parameters
 
-Request objects know about query parameters and will automatically add them to
-the URL for GET, HEAD and DELETE requests, escaping the keys and values as needed:
+Rest-client can render a hash as HTTP query parameters for GET/HEAD/DELETE
+requests or as HTTP post data in `x-www-form-urlencoded` format for POST
+requests.
 
+__New in 2.0:__ Even though there is no standard specifying how this should
+work, rest-client follows a similar convention to the one used by Rack / Rails
+servers for handling arrays, nested hashes, and null values.
+
+The implementation in
+[./lib/rest-client/utils.rb](RestClient::Utils.encode_query_string)
+closely follows
+[Rack::Utils.build_nested_query](http://www.rubydoc.info/gems/rack/Rack/Utils#build_nested_query-class_method),
+but treats empty arrays and hashes as `nil`. (Rack drops them entirely, which
+is confusing behavior.)
+
+If you don't like this behavior and want more control, just serialize params
+yourself (e.g. with `URI.encode_www_form`) and pass them as a string.
+
+Basic GET params:
 ```ruby
-RestClient.get 'http://example.com/resource', :params => {:foo => 'bar', :baz => 'qux'}
-# will GET http://example.com/resource?foo=bar&baz=qux
+RestClient.get('https://httpbin.org/get', params: {foo: 'bar', baz: 'qux'})
+# GET "https://httpbin.org/get?foo=bar&baz=qux"
+```
+
+Basic `x-www-form-urlencoded` POST params:
+```ruby
+>> r = RestClient.post('https://httpbin.org/post', {foo: 'bar', baz: 'qux'})
+# POST "https://httpbin.org/post", data: "foo=bar&baz=qux"
+=> <RestClient::Response 200 "{\n  \"args\":...">
+>> JSON.parse(r.body)
+=> {"args"=>{},
+    "data"=>"",
+    "files"=>{},
+    "form"=>{"baz"=>"qux", "foo"=>"bar"},
+    "headers"=>
+    {"Accept"=>"*/*",
+        "Accept-Encoding"=>"gzip, deflate",
+        "Content-Length"=>"15",
+        "Content-Type"=>"application/x-www-form-urlencoded",
+        "Host"=>"httpbin.org"},
+    "json"=>nil,
+    "url"=>"https://httpbin.org/post"}
+```
+
+Advanced GET params (arrays):
+```ruby
+>> r = RestClient.get('https://http-params.herokuapp.com/get', params: {foo: [1,2,3]})
+# GET "https://http-params.herokuapp.com/get?foo[]=1&foo[]=2&foo[]=3"
+=> <RestClient::Response 200 "Method: GET...">
+>> puts r.body
+query_string: "foo[]=1&foo[]=2&foo[]=3"
+decoded:      "foo[]=1&foo[]=2&foo[]=3"
+
+GET:
+  {"foo"=>["1", "2", "3"]}
+```
+
+Advanced GET params (nested hashes):
+```ruby
+>> r = RestClient.get('https://http-params.herokuapp.com/get', params: {outer: {foo: 123, bar: 456}})
+# GET "https://http-params.herokuapp.com/get?outer[foo]=123&outer[bar]=456"
+=> <RestClient::Response 200 "Method: GET...">
+>> puts r.body
+...
+query_string: "outer[foo]=123&outer[bar]=456"
+decoded:      "outer[foo]=123&outer[bar]=456"
+
+GET:
+  {"outer"=>{"foo"=>"123", "bar"=>"456"}}
+```
+
+__New in 2.0:__ The new `RestClient::ParamsArray` class allows callers to
+provide ordering even to structured parameters. This is useful for unusual
+cases where the server treats the order of parameters as significant or you
+want to pass a particular key multiple times.
+
+Multiple fields with the same name using ParamsArray:
+```ruby
+>> RestClient.get('https://httpbin.org/get', params:
+                  RestClient::ParamsArray.new([[:foo, 1], [:foo, 2]]))
+# GET "https://httpbin.org/get?foo=1&foo=2"
+```
+
+Nested ParamsArray:
+```ruby
+>> RestClient.get('https://httpbin.org/get', params:
+                  {foo: RestClient::ParamsArray.new([[:a, 1], [:a, 2]])})
+# GET "https://httpbin.org/get?foo[a]=1&foo[a]=2"
 ```
 
 ## Headers
