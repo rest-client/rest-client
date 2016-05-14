@@ -391,7 +391,8 @@ but treats empty arrays and hashes as `nil`. (Rack drops them entirely, which
 is confusing behavior.)
 
 If you don't like this behavior and want more control, just serialize params
-yourself (e.g. with `URI.encode_www_form`) and pass them as a string.
+yourself (e.g. with `URI.encode_www_form`) and add the query string to the URL
+directly for GET parameters or pass the payload as a string for POST requests.
 
 Basic GET params:
 ```ruby
