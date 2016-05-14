@@ -3,6 +3,14 @@
 require_relative '_lib'
 
 describe RestClient::Payload do
+  context "Base Payload" do
+    it "should reset stream after to_s" do
+      payload = RestClient::Payload::Base.new('foobar')
+      payload.to_s.should eq 'foobar'
+      payload.to_s.should eq 'foobar'
+    end
+  end
+
   context "A regular Payload" do
     it "should use standard enctype as default content-type" do
       RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
@@ -17,8 +25,8 @@ describe RestClient::Payload do
     end
 
     it "should escape parameters" do
-      RestClient::Payload::UrlEncoded.new({'foo ' => 'bar'}).to_s.
-        should eq "foo%20=bar"
+      RestClient::Payload::UrlEncoded.new({'foo + bar' => 'baz'}).to_s.
+        should eq "foo+%2B+bar=baz"
     end
 
     it "should properly handle hashes as parameter" do
@@ -30,17 +38,17 @@ describe RestClient::Payload do
 
     it "should handle many attributes inside a hash" do
       parameters = RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz', :baz => 'qux'}}).to_s
-      parameters.should include("foo[bar]=baz", "foo[baz]=qux")
+      parameters.should eq 'foo[bar]=baz&foo[baz]=qux'
     end
 
-    it "should handle attributes inside a an array inside an hash" do
+    it "should handle attributes inside an array inside an hash" do
       parameters = RestClient::Payload::UrlEncoded.new({"foo" => [{"bar" => 'baz'}, {"bar" => 'qux'}]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+      parameters.should eq 'foo[][bar]=baz&foo[][bar]=qux'
     end
 
-    it "should handle attributes inside a an array inside an array inside an hash" do
-      parameters = RestClient::Payload::UrlEncoded.new({"foo" => [[{"bar" => 'baz'}, {"bar" => 'qux'}]]}).to_s
-      parameters.should include("foo[bar]=baz", "foo[bar]=qux")
+    it "should handle arrays inside a hash inside a hash" do
+      parameters = RestClient::Payload::UrlEncoded.new({"foo" => {'even' => [0, 2], 'odd' => [1, 3]}}).to_s
+      parameters.should eq 'foo[even][]=0&foo[even][]=2&foo[odd][]=1&foo[odd][]=3'
     end
 
     it "should form properly use symbols as parameters" do
@@ -167,6 +175,13 @@ Content-Type: text/plain\r
       EOS
     end
 
+    it 'should correctly format hex boundary' do
+      SecureRandom.stub(:base64).with(12).and_return('TGs89+ttw/xna6TV')
+      f = File.new(File.dirname(__FILE__) + '/master_shake.jpg')
+      m = RestClient::Payload::Multipart.new({:foo => f})
+      m.boundary.should eq('-' * 4 + 'RubyFormBoundary' + 'TGs89AttwBxna6TV')
+    end
+
   end
 
   context "streamed payloads" do
@@ -210,6 +225,13 @@ Content-Type: text/plain\r
       RestClient::Payload.generate({"foo" => "bar", :multipart => true}).should be_kind_of(RestClient::Payload::Multipart)
     end
 
+    it "should handle deeply nested multipart" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      params = {foo: RestClient::ParamsArray.new({nested: f})}
+      RestClient::Payload.generate(params).should be_kind_of(RestClient::Payload::Multipart)
+    end
+
+
     it "should return data if no of the above" do
       RestClient::Payload.generate("data").should be_kind_of(RestClient::Payload::Base)
     end
@@ -237,9 +259,5 @@ Content-Type: text/plain\r
     it "shouldn't treat hashes as streameable" do
       RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
     end
-  end
-
-  class HashMapForTesting < Hash
-    alias :read :[]
   end
 end

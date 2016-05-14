@@ -68,4 +68,80 @@ describe RestClient::Utils do
         ['form-data', {'name' => 'files', 'filename' => 'fo"o;bar'}]
     end
   end
+
+  describe '.encode_query_string' do
+    it 'handles simple hashes' do
+      {
+        {foo: 123, bar: 456} => 'foo=123&bar=456',
+        {'foo' => 123, 'bar' => 456} => 'foo=123&bar=456',
+        {foo: 'abc', bar: 'one two'} => 'foo=abc&bar=one+two',
+        {escaped: '1+2=3'} => 'escaped=1%2B2%3D3',
+        {'escaped + key' => 'foo'} => 'escaped+%2B+key=foo',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles simple arrays' do
+      {
+        {foo: [1, 2, 3]} => 'foo[]=1&foo[]=2&foo[]=3',
+        {foo: %w{a b c}, bar: [1, 2, 3]} => 'foo[]=a&foo[]=b&foo[]=c&bar[]=1&bar[]=2&bar[]=3',
+        {foo: ['one two', 3]} => 'foo[]=one+two&foo[]=3',
+        {'a+b' => [1,2,3]} => 'a%2Bb[]=1&a%2Bb[]=2&a%2Bb[]=3',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles nested hashes' do
+      {
+        {outer: {foo: 123, bar: 456}} => 'outer[foo]=123&outer[bar]=456',
+        {outer: {foo: [1, 2, 3], bar: 'baz'}} => 'outer[foo][]=1&outer[foo][]=2&outer[foo][]=3&outer[bar]=baz',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles null and empty values' do
+      {
+        {string: '', empty: nil, list: [], hash: {}, falsey: false } =>
+          'string=&empty&list&hash&falsey=false',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles nested nulls' do
+      {
+        {foo: {string: '', empty: nil}} => 'foo[string]=&foo[empty]',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles deep nesting' do
+      {
+        {coords: [{x: 1, y: 0}, {x: 2}, {x: 3}]} => 'coords[][x]=1&coords[][y]=0&coords[][x]=2&coords[][x]=3',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles multiple fields with the same name using ParamsArray' do
+      {
+        RestClient::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]]) => 'foo=1&foo=2&foo=3',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+
+    it 'handles nested ParamsArrays' do
+      {
+        {foo: RestClient::ParamsArray.new([[:a, 1], [:a, 2]])} => 'foo[a]=1&foo[a]=2',
+        RestClient::ParamsArray.new([[:foo, {a: 1}], [:foo, {a: 2}]]) => 'foo[a]=1&foo[a]=2',
+      }.each_pair do |input, expected|
+        RestClient::Utils.encode_query_string(input).should eq expected
+      end
+    end
+  end
 end

@@ -16,6 +16,20 @@ describe RestClient::Request do
       RestClient::Request.execute(:url => 'http://some/resource?a=b', :method => :get, :headers => {:foo => :bar, :params => {:c => 'd'}}).body.should eq 'foo'
     end
 
+    it 'encodes nested GET params' do
+      stub_request(:get, 'http://some/resource?a[foo][]=1&a[foo][]=2&a[bar]&b=foo+bar&math=2+%2B+2+%3D%3D+4').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
+      RestClient::Request.execute(url: 'http://some/resource', method: :get, headers: {
+        params: {
+          a: {
+            foo: [1,2],
+            bar: nil,
+          },
+          b: 'foo bar',
+          math: '2 + 2 == 4',
+        }
+      }).body.should eq 'foo'
+    end
+
   end
 
   it "can use a block to process response" do

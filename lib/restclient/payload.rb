@@ -1,5 +1,7 @@
 require 'tempfile'
+require 'securerandom'
 require 'stringio'
+
 require 'mime/types'
 
 module RestClient
@@ -23,28 +25,20 @@ module RestClient
     end
 
     def has_file?(params)
-      params.any? do |_, v|
-        case v
-        when Hash
-          has_file?(v)
-        when Array
-          has_file_array?(v)
-        else
-          v.respond_to?(:path) && v.respond_to?(:read)
-        end
+      unless params.is_a?(Hash)
+        raise ArgumentError.new("Must pass Hash, not #{params.inspect}")
       end
+      _has_file?(params)
     end
 
-    def has_file_array?(params)
-      params.any? do |v|
-        case v
-        when Hash
-          has_file?(v)
-        when Array
-          has_file_array?(v)
-        else
-          v.respond_to?(:path) && v.respond_to?(:read)
-        end
+    def _has_file?(obj)
+      case obj
+      when Hash, ParamsArray
+        obj.any? {|_, v| _has_file?(v) }
+      when Array
+        obj.any? {|v| _has_file?(v) }
+      else
+        obj.respond_to?(:path) && obj.respond_to?(:read)
       end
     end
 
@@ -62,36 +56,9 @@ module RestClient
         @stream.read(*args)
       end
 
-      alias :to_s :read
-
-      # Flatten parameters by converting hashes of hashes to flat hashes
-      # {keys1 => {keys2 => value}} will be transformed into [keys1[key2], value]
-      def flatten_params(params, parent_key = nil)
-        result = []
-        params.each do |key, value|
-          calculated_key = parent_key ? "#{parent_key}[#{handle_key(key)}]" : handle_key(key)
-          if value.is_a? Hash
-            result += flatten_params(value, calculated_key)
-          elsif value.is_a? Array
-            result += flatten_params_array(value, calculated_key)
-          else
-            result << [calculated_key, value]
-          end
-        end
-        result
-      end
-
-      def flatten_params_array value, calculated_key
-        result = []
-        value.each do |elem|
-          if elem.is_a? Hash
-            result += flatten_params(elem, calculated_key)
-          elsif elem.is_a? Array
-            result += flatten_params_array(elem, calculated_key)
-          else
-            result << ["#{calculated_key}[]", elem]
-          end
-        end
+      def to_s
+        result = read
+        @stream.seek(0)
         result
       end
 
@@ -109,14 +76,12 @@ module RestClient
         @stream.close unless @stream.closed?
       end
 
-      def inspect
-        result = to_s.inspect
-        @stream.seek(0)
-        result
+      def to_s_inspect
+        to_s.inspect
       end
 
       def short_inspect
-        (size > 500 ? "#{size} byte(s) length" : inspect)
+        (size > 500 ? "#{size} byte(s) length" : to_s_inspect)
       end
 
     end
@@ -139,37 +104,28 @@ module RestClient
 
     class UrlEncoded < Base
       def build_stream(params = nil)
-        @stream = StringIO.new(flatten_params(params).collect do |entry|
-          "#{entry[0]}=#{handle_key(entry[1])}"
-        end.join("&"))
+        @stream = StringIO.new(Utils.encode_query_string(params))
         @stream.seek(0)
-      end
-
-      # for UrlEncoded escape the keys
-      def handle_key key
-        Parser.escape(key.to_s, Escape)
       end
 
       def headers
         super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
       end
-
-      Parser = URI.const_defined?(:Parser) ? URI::Parser.new : URI
-      Escape = Regexp.new("[^#{URI::PATTERN::UNRESERVED}]")
     end
 
     class Multipart < Base
       EOL = "\r\n"
 
       def build_stream(params)
-        b = "--#{boundary}"
+        b = '--' + boundary
 
         @stream = Tempfile.new("RESTClient.Stream.#{rand(1000)}")
         @stream.binmode
         @stream.write(b + EOL)
 
-        if params.is_a? Hash
-          x = flatten_params(params)
+        case params
+        when Hash, ParamsArray
+          x = Utils.flatten_params(params)
         else
           x = params
         end
@@ -218,10 +174,25 @@ module RestClient
       end
 
       def boundary
-        @boundary ||= rand(1_000_000).to_s
+        return @boundary if @boundary
+
+        # Use the same algorithm used by WebKit: generate 16 random
+        # alphanumeric characters, replacing `+` `/` with `A` `B` (included in
+        # the list twice) to round out the set of 64.
+        s = SecureRandom.base64(12)
+        s.tr!('+/', 'AB')
+
+        @boundary = '----RubyFormBoundary' + s
       end
 
       # for Multipart do not escape the keys
+      #
+      # Ostensibly multipart keys MAY be percent encoded per RFC 7578, but in
+      # practice no major browser that I'm aware of uses percent encoding.
+      #
+      # Further discussion of multipart encoding:
+      # https://github.com/rest-client/rest-client/pull/403#issuecomment-156976930
+      #
       def handle_key key
         key
       end
