@@ -17,7 +17,7 @@ describe RestClient::AbstractResponse, :include_helpers do
 
   before do
     @net_http_res = double('net http response')
-    @request = double('restclient request', url: 'http://example.com', method: 'get')
+    @request = request_double(url: 'http://example.com', method: 'get')
     @response = MyAbstractResponse.new(@net_http_res, @request)
   end
 

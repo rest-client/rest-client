@@ -1,3 +1,5 @@
+require 'uri'
+
 module Helpers
   def response_double(opts={})
     double('response', {:to_hash => {}}.merge(opts))
@@ -13,7 +15,8 @@ module Helpers
   end
 
   def request_double(url: 'http://example.com', method: 'get')
-    double('request', url: url, method: method, user: nil, password: nil,
+    double('request', url: url, uri: URI.parse(url), method: method,
+           user: nil, password: nil,
            redirection_history: nil, args: {url: url, method: method})
   end
 end
