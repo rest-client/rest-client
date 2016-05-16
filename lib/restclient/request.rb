@@ -118,7 +118,7 @@ module RestClient
       @method = normalize_method(args[:method])
       @headers = (args[:headers] || {}).dup
       if args[:url]
-        @url = process_url_params(args[:url], headers)
+        @url = process_url_params(normalize_url(args[:url]), headers)
       else
         raise ArgumentError, "must pass :url"
       end
@@ -364,23 +364,19 @@ module RestClient
       end
     end
 
-    # Parse a string into a URI object. If the string has no HTTP-like scheme
-    # (i.e. scheme followed by '//'), a scheme of 'http' will be added. This
-    # mimics the behavior of browsers and user agents like cURL.
+    # Normalize a URL by adding a protocol if none is present.
     #
-    # @param url [String] A URL string.
+    # If the string has no HTTP-like scheme (i.e. scheme followed by '//'), a
+    # scheme of 'http' will be added. This mimics the behavior of browsers and
+    # user agents like cURL.
     #
-    # @return [URI]
+    # @param [String] url A URL string.
     #
-    # @raise URI::InvalidURIError on invalid URIs
+    # @return [String]
     #
-    def parse_url(url)
-      # Prepend http:// unless the string already contains an RFC 3986 scheme
-      # followed by two forward slashes. (The slashes are not part of the URI
-      # RFC, but specified by the URL RFC 1738.)
-      # https://tools.ietf.org/html/rfc3986#section-3.1
+    def normalize_url(url)
       url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
-      URI.parse(url)
+      url
     end
 
     # Return a certificate store that can be used to validate certificates with
@@ -496,7 +492,7 @@ module RestClient
 
     private
 
-    # Parse the `@url` string into a URI object using #parse_url and save it as
+    # Parse the `@url` string into a URI object and save it as
     # `@uri`. Also save any basic auth user or password as @user and @password.
     # If no auth info was passed, check for credentials in a Netrc file.
     #
@@ -507,7 +503,7 @@ module RestClient
     # @raise URI::InvalidURIError on invalid URIs
     #
     def parse_url_with_auth!(url)
-      uri = parse_url(url)
+      uri = URI.parse(url)
 
       if uri.hostname.nil?
         raise URI::InvalidURIError.new("bad URI(no host provided): #{url}")

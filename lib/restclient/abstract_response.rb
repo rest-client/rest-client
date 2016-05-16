@@ -59,7 +59,7 @@ module RestClient
 
       jar = HTTP::CookieJar.new
       headers.fetch(:set_cookie, []).each do |cookie|
-        jar.parse(cookie, @request.url)
+        jar.parse(cookie, @request.uri)
       end
 
       @cookie_jar = jar
