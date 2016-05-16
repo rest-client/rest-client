@@ -79,6 +79,8 @@ This release is largely API compatible, but makes several breaking changes.
 - Add a few more exception classes for obscure HTTP status codes.
 - Multipart: use a much more robust multipart boundary with greater entropy.
 - Make `RestClient::Payload::Base#inspect` stop pretending to be a String.
+- Add `Request#redacted_uri` and `Request#redacted_url` to display the URI
+  with any password redacted.
 
 # 2.0.0.rc1
 

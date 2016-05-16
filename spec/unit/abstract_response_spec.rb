@@ -17,7 +17,7 @@ describe RestClient::AbstractResponse, :include_helpers do
 
   before do
     @net_http_res = double('net http response')
-    @request = double('restclient request', url: 'http://example.com', method: 'get')
+    @request = request_double(url: 'http://example.com', method: 'get')
     @response = MyAbstractResponse.new(@net_http_res, @request)
   end
 
@@ -77,6 +77,33 @@ describe RestClient::AbstractResponse, :include_helpers do
     @response.cookies.should eq({ 'session_id' => 'BAh7BzoNYXBwX25hbWUiEGFwcGxpY2F0aW9uOgpsb2dpbiIKYWRtaW4%3D%0A--08114ba654f17c04d20dcc5228ec672508f738ca' })
   end
 
+  describe '.cookie_jar' do
+    it 'extracts cookies into cookie jar' do
+      @net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=1; path=/'])
+      @response.cookie_jar.should be_a HTTP::CookieJar
+
+      cookie = @response.cookie_jar.cookies.first
+      cookie.domain.should eq 'example.com'
+      cookie.name.should eq 'session_id'
+      cookie.value.should eq '1'
+      cookie.path.should eq '/'
+    end
+
+    it 'handles cookies when URI scheme is implicit' do
+      net_http_res = double('net http response')
+      net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=1; path=/'])
+      request = double(url: 'example.com', uri: URI.parse('http://example.com'), method: 'get')
+      response = MyAbstractResponse.new(net_http_res, request)
+      response.cookie_jar.should be_a HTTP::CookieJar
+
+      cookie = response.cookie_jar.cookies.first
+      cookie.domain.should eq 'example.com'
+      cookie.name.should eq 'session_id'
+      cookie.value.should eq '1'
+      cookie.path.should eq '/'
+    end
+  end
+
   it "can access the net http result directly" do
     @response.net_http_res.should eq @net_http_res
   end
@@ -106,9 +133,9 @@ describe RestClient::AbstractResponse, :include_helpers do
     end
 
     it "should gracefully handle 302 redirect with no location header" do
-    @net_http_res = response_double(code: 302, location: nil)
-    @request = request_double()
-    @response = MyAbstractResponse.new(@net_http_res, @request)
+      @net_http_res = response_double(code: 302, location: nil)
+      @request = request_double()
+      @response = MyAbstractResponse.new(@net_http_res, @request)
       lambda { @response.return! }.should raise_error RestClient::Found
     end
   end

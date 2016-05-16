@@ -70,43 +70,33 @@ describe RestClient::Request, :include_helpers do
     end
   end
 
-  describe '.parse_url' do
-    it "parses a url into a URI object" do
-      URI.should_receive(:parse).with('http://example.com/resource')
-      @request.parse_url('http://example.com/resource')
-    end
-
+  describe '.normalize_url' do
     it "adds http:// to the front of resources specified in the syntax example.com/resource" do
-      URI.should_receive(:parse).with('http://example.com/resource')
-      @request.parse_url('example.com/resource')
+      @request.normalize_url('example.com/resource').should eq 'http://example.com/resource'
     end
 
     it 'adds http:// to resources containing a colon' do
-      URI.should_receive(:parse).with('http://example.com:1234')
-      @request.parse_url('example.com:1234')
+      @request.normalize_url('example.com:1234').should eq 'http://example.com:1234'
     end
 
     it 'does not add http:// to the front of https resources' do
-      URI.should_receive(:parse).with('https://example.com/resource')
-      @request.parse_url('https://example.com/resource')
+      @request.normalize_url('https://example.com/resource').should eq 'https://example.com/resource'
     end
 
     it 'does not add http:// to the front of capital HTTP resources' do
-      URI.should_receive(:parse).with('HTTP://example.com/resource')
-      @request.parse_url('HTTP://example.com/resource')
+      @request.normalize_url('HTTP://example.com/resource').should eq 'HTTP://example.com/resource'
     end
 
     it 'does not add http:// to the front of capital HTTPS resources' do
-      URI.should_receive(:parse).with('HTTPS://example.com/resource')
-      @request.parse_url('HTTPS://example.com/resource')
+      @request.normalize_url('HTTPS://example.com/resource').should eq 'HTTPS://example.com/resource'
     end
 
     it 'raises with invalid URI' do
       lambda {
-        @request.parse_url('http://a@b:c')
+        RestClient::Request.new(method: :get, url: 'http://a@b:c')
       }.should raise_error(URI::InvalidURIError)
       lambda {
-        @request.parse_url('http://::')
+        RestClient::Request.new(method: :get, url: 'http://::')
       }.should raise_error(URI::InvalidURIError)
     end
   end
