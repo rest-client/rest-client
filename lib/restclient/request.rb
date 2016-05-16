@@ -426,20 +426,26 @@ module RestClient
       end
     end
 
+    def redacted_uri
+      if uri.password
+        sanitized_uri = uri.dup
+        sanitized_uri.password = 'REDACTED'
+        sanitized_uri
+      else
+        uri
+      end
+    end
+
+    def redacted_url
+      redacted_uri.to_s
+    end
+
     def log_request
       return unless RestClient.log
 
-      if uri.password
-        sanitized_uri = uri.dup
-        sanitized_uri.password = "REDACTED"
-        sanitized_url = sanitized_uri.to_s
-      else
-        sanitized_url = uri.to_s
-      end
-
       out = []
 
-      out << "RestClient.#{method} #{sanitized_url.inspect}"
+      out << "RestClient.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
       RestClient.log << out.join(', ') + "\n"
