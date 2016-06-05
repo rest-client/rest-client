@@ -126,10 +126,89 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "correctly formats cookies provided to the constructor" do
-    URI.stub(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
-    @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :cookies => {:session_id => '1', :user_id => "someone" })
-    @request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
-    @request.make_headers({}).should eq({ 'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
+    cookies_arr = [
+      HTTP::Cookie.new('session_id', '1', domain: 'example.com', path: '/'),
+      HTTP::Cookie.new('user_id', 'someone', domain: 'example.com', path: '/'),
+    ]
+
+    jar = HTTP::CookieJar.new
+    cookies_arr.each {|c| jar << c }
+
+    # test Hash, HTTP::CookieJar, and Array<HTTP::Cookie> modes
+    [
+      {session_id: '1', user_id: 'someone'},
+      jar,
+      cookies_arr
+    ].each do |cookies|
+      [true, false].each do |in_headers|
+        if in_headers
+          opts = {headers: {cookies: cookies}}
+        else
+          opts = {cookies: cookies}
+        end
+
+        request = RestClient::Request.new(method: :get, url: 'example.com', **opts)
+        request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+        request.make_headers({}).should eq({'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
+        request.make_cookie_header.should eq 'session_id=1; user_id=someone'
+        request.cookies.should eq({'session_id' => '1', 'user_id' => 'someone'})
+        request.cookie_jar.cookies.length.should eq 2
+        request.cookie_jar.object_id.should_not eq jar.object_id # make sure we dup it
+      end
+    end
+
+    # test with no cookies
+    request = RestClient::Request.new(method: :get, url: 'example.com')
+    request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    request.make_headers({}).should eq({'Foo' => 'bar'})
+    request.make_cookie_header.should be_nil
+    request.cookies.should eq({})
+    request.cookie_jar.cookies.length.should eq 0
+  end
+
+  it 'strips out cookies set for a different domain name' do
+    jar = HTTP::CookieJar.new
+    jar << HTTP::Cookie.new('session_id', '1', domain: 'other.example.com', path: '/')
+    jar << HTTP::Cookie.new('user_id', 'someone', domain: 'other.example.com', path: '/')
+
+    request = RestClient::Request.new(method: :get, url: 'www.example.com', cookies: jar)
+    request.should_receive(:default_headers).and_return({'Foo' => 'bar'})
+    request.make_headers({}).should eq({'Foo' => 'bar'})
+    request.make_cookie_header.should eq nil
+    request.cookies.should eq({})
+    request.cookie_jar.cookies.length.should eq 2
+  end
+
+  it 'assumes default domain and path for cookies set by hash' do
+    request = RestClient::Request.new(method: :get, url: 'www.example.com', cookies: {'session_id' => '1'})
+    request.cookie_jar.cookies.length.should eq 1
+
+    cookie = request.cookie_jar.cookies.first
+    cookie.should be_a(HTTP::Cookie)
+    cookie.domain.should eq('www.example.com')
+    cookie.for_domain?.should be_truthy
+    cookie.path.should eq('/')
+  end
+
+  it 'rejects or warns with contradictory cookie options' do
+    # same opt in two different places
+    lambda {
+      RestClient::Request.new(method: :get, url: 'example.com',
+                              cookies: {bar: '456'},
+                              headers: {cookies: {foo: '123'}})
+    }.should raise_error(ArgumentError, /Cannot pass :cookies in Request.*headers/)
+
+    # :cookies opt and Cookie header
+    [
+      {cookies: {foo: '123'}, headers: {cookie: 'foo'}},
+      {cookies: {foo: '123'}, headers: {'Cookie' => 'foo'}},
+      {headers: {cookies: {foo: '123'}, cookie: 'foo'}},
+      {headers: {cookies: {foo: '123'}, 'Cookie' => 'foo'}},
+    ].each do |opts|
+      fake_stderr {
+        RestClient::Request.new(method: :get, url: 'example.com', **opts)
+      }.should match(/warning: overriding "Cookie" header with :cookies option/)
+    end
   end
 
   it "does not escape or unescape cookies" do
@@ -147,23 +226,29 @@ describe RestClient::Request, :include_helpers do
     # Cookie validity is something of a mess, but we should reject the worst of
     # the RFC 6265 (4.1.1) prohibited characters such as control characters.
 
-    ['', 'foo=bar', 'foo;bar', "foo\nbar"].each do |cookie_name|
+    ['foo=bar', 'foo;bar', "foo\nbar"].each do |cookie_name|
       lambda {
         RestClient::Request.new(:method => 'get', :url => 'example.com',
                                 :cookies => {cookie_name => 'value'})
-      }.should raise_error(ArgumentError, /\AInvalid cookie name/)
+      }.should raise_error(ArgumentError, /\AInvalid cookie name/i)
     end
+
+    cookie_name = ''
+    lambda {
+      RestClient::Request.new(:method => 'get', :url => 'example.com',
+                              :cookies => {cookie_name => 'value'})
+    }.should raise_error(ArgumentError, /cookie name cannot be empty/i)
   end
 
   it "rejects cookie values containing invalid characters" do
     # Cookie validity is something of a mess, but we should reject the worst of
     # the RFC 6265 (4.1.1) prohibited characters such as control characters.
 
-    ['foo,bar', 'foo;bar', "foo\nbar"].each do |cookie_value|
+    ["foo\tbar", "foo\nbar"].each do |cookie_value|
       lambda {
         RestClient::Request.new(:method => 'get', :url => 'example.com',
                                 :cookies => {'test' => cookie_value})
-      }.should raise_error(ArgumentError, /\AInvalid cookie value/)
+      }.should raise_error(ArgumentError, /\AInvalid cookie value/i)
     end
   end
 

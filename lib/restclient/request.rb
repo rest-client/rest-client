@@ -16,7 +16,9 @@ module RestClient
   # * :url
   # Optional parameters (have a look at ssl and/or uri for some explanations):
   # * :headers a hash containing the request headers
-  # * :cookies will replace possible cookies in the :headers
+  # * :cookies may be a Hash{String/Symbol => String} of cookie values, an
+  #     Array<HTTP::Cookie>, or an HTTP::CookieJar containing cookies. These
+  #     will be added to a cookie jar before the request is sent.
   # * :user and :password for basic auth, will be replaced by a user/password available in the :url
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
@@ -38,7 +40,7 @@ module RestClient
   #      called with the HTTP request and request params.
   class Request
 
-    attr_reader :method, :uri, :url, :headers, :cookies, :payload, :proxy,
+    attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
@@ -123,7 +125,10 @@ module RestClient
         raise ArgumentError, "must pass :url"
       end
       parse_url_with_auth!(url)
-      @cookies = @headers.delete(:cookies) || args[:cookies] || {}
+
+      # process cookie arguments found in headers or args
+      @cookie_jar = process_cookie_args!(@uri, @headers, args)
+
       @payload = Payload.generate(args[:payload])
       @user = args[:user]
       @password = args[:password]
@@ -267,47 +272,170 @@ module RestClient
       end
     end
 
-    def make_headers user_headers
-      unless @cookies.empty?
+    # Render a hash of key => value pairs for cookies in the Request#cookie_jar
+    # that are valid for the Request#uri. This will not necessarily include all
+    # cookies if there are duplicate keys. It's safer to use the cookie_jar
+    # directly if that's a concern.
+    #
+    # @see Request#cookie_jar
+    #
+    # @return [Hash]
+    #
+    def cookies
+      hash = {}
 
-        # Validate that the cookie names and values look sane. If you really
-        # want to pass scary characters, just set the Cookie header directly.
-        # RFC6265 is actually much more restrictive than we are.
-        @cookies.each do |key, val|
-          unless valid_cookie_key?(key)
-            raise ArgumentError.new("Invalid cookie name: #{key.inspect}")
+      @cookie_jar.cookies(uri).each do |c|
+        hash[c.name] = c.value
+      end
+
+      hash
+    end
+
+    # @return [HTTP::CookieJar]
+    def cookie_jar
+      @cookie_jar
+    end
+
+    # Render a Cookie HTTP request header from the contents of the @cookie_jar,
+    # or nil if the jar is empty.
+    #
+    # @see Request#cookie_jar
+    #
+    # @return [String, nil]
+    #
+    def make_cookie_header
+      return nil if cookie_jar.nil?
+
+      arr = cookie_jar.cookies(url)
+      return nil if arr.empty?
+
+      return HTTP::Cookie.cookie_value(arr)
+    end
+
+    # Process cookies passed as hash or as HTTP::CookieJar. For backwards
+    # compatibility, these may be passed as a :cookies option masquerading
+    # inside the headers hash. To avoid confusion, if :cookies is passed in
+    # both headers and Request#initialize, raise an error.
+    #
+    # :cookies may be a:
+    # - Hash{String/Symbol => String}
+    # - Array<HTTP::Cookie>
+    # - HTTP::CookieJar
+    #
+    # Passing as a hash:
+    #   Keys may be symbols or strings. Values must be strings.
+    #   Infer the domain name from the request URI and allow subdomains (as
+    #   though '.example.com' had been set in a Set-Cookie header). Assume a
+    #   path of '/'.
+    #
+    #     RestClient::Request.new(url: 'http://example.com', method: :get,
+    #       :cookies => {:foo => 'Value', 'bar' => '123'}
+    #     )
+    #
+    # results in cookies as though set from the server by:
+    #     Set-Cookie: foo=Value; Domain=.example.com; Path=/
+    #     Set-Cookie: bar=123; Domain=.example.com; Path=/
+    #
+    # which yields a client cookie header of:
+    #     Cookie: foo=Value; bar=123
+    #
+    # Passing as HTTP::CookieJar, which will be passed through directly:
+    #
+    #     jar = HTTP::CookieJar.new
+    #     jar.add(HTTP::Cookie.new('foo', 'Value', domain: 'example.com',
+    #                              path: '/', for_domain: false))
+    #
+    #     RestClient::Request.new(..., :cookies => jar)
+    #
+    # @param [URI::HTTP] uri The URI for the request. This will be used to
+    # infer the domain name for cookies passed as strings in a hash. To avoid
+    # this implicit behavior, pass a full cookie jar or use HTTP::Cookie hash
+    # values.
+    # @param [Hash] headers The headers hash from which to pull the :cookies
+    #   option. MUTATION NOTE: This key will be deleted from the hash if
+    #   present.
+    # @param [Hash] args The options passed to Request#initialize. This hash
+    #   will be used as another potential source for the :cookies key.
+    #   These args will not be mutated.
+    #
+    # @return [HTTP::CookieJar] A cookie jar containing the parsed cookies.
+    #
+    def process_cookie_args!(uri, headers, args)
+
+      # Avoid ambiguity in whether options from headers or options from
+      # Request#initialize should take precedence by raising ArgumentError when
+      # both are present. Prior versions of rest-client claimed to give
+      # precedence to init options, but actually gave precedence to headers.
+      # Avoid that mess by erroring out instead.
+      if headers[:cookies] && args[:cookies]
+        raise ArgumentError.new(
+          "Cannot pass :cookies in Request.new() and in headers hash")
+      end
+
+      cookies_data = headers.delete(:cookies) || args[:cookies]
+
+      # return copy of cookie jar as is
+      if cookies_data.is_a?(HTTP::CookieJar)
+        return cookies_data.dup
+      end
+
+      # convert cookies hash into a CookieJar
+      jar = HTTP::CookieJar.new
+
+      (cookies_data || []).each do |key, val|
+
+        # Support for Array<HTTP::Cookie> mode:
+        # If key is a cookie object, add it to the jar directly and assert that
+        # there is no separate val.
+        if key.is_a?(HTTP::Cookie)
+          if val
+            raise ArgumentError.new("extra cookie val: #{val.inspect}")
           end
-          unless valid_cookie_value?(val)
-            raise ArgumentError.new("Invalid cookie value: #{val.inspect}")
-          end
+
+          jar.add(key)
+          next
         end
 
-        user_headers = user_headers.dup
-        user_headers[:cookie] = @cookies.map { |key, val| "#{key}=#{val}" }.sort.join('; ')
+        if key.is_a?(Symbol)
+          key = key.to_s
+        end
+
+        # assume implicit domain from the request URI, and set for_domain to
+        # permit subdomains
+        jar.add(HTTP::Cookie.new(key, val, domain: uri.hostname.downcase,
+                                 path: '/', for_domain: true))
       end
+
+      jar
+    end
+
+    # Generate headers for use by a request. Header keys will be stringified
+    # using `#stringify_headers` to normalize them as capitalized strings.
+    #
+    # The final headers consist of:
+    #   - default headers from #default_headers
+    #   - user_headers provided here
+    #   - headers from the payload object (e.g. Content-Type, Content-Lenth)
+    #   - cookie headers from #make_cookie_header
+    #
+    # @param [Hash] user_headers User-provided headers to include
+    #
+    # @return [Hash<String, String>] A hash of HTTP headers => values
+    #
+    def make_headers(user_headers)
       headers = stringify_headers(default_headers).merge(stringify_headers(user_headers))
       headers.merge!(@payload.headers) if @payload
+
+      # merge in cookies
+      cookies = make_cookie_header
+      if cookies && !cookies.empty?
+        if headers['Cookie']
+          warn('warning: overriding "Cookie" header with :cookies option')
+        end
+        headers['Cookie'] = cookies
+      end
+
       headers
-    end
-
-    # Do some sanity checks on cookie keys.
-    #
-    # Properly it should be a valid TOKEN per RFC 2616, but lots of servers are
-    # more liberal.
-    #
-    # Disallow the empty string as well as keys containing control characters,
-    # equals sign, semicolon, comma, or space.
-    #
-    def valid_cookie_key?(string)
-      return false if string.empty?
-
-      ! Regexp.new('[\x0-\x1f\x7f=;, ]').match(string)
-    end
-
-    # Validate cookie values. Rather than following RFC 6265, allow anything
-    # but control characters, comma, and semicolon.
-    def valid_cookie_value?(value)
-      ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
     # The proxy URI for this request. If `:proxy` was provided on this request,

@@ -47,6 +47,14 @@ This release is largely API compatible, but makes several breaking changes.
 - Handle multiple HTTP response headers with the same name (except for
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
+- Rewrite cookie support to be much smarter and to use cookie jars consistently
+  - The `:cookies` option may now be a Hash of Strings, an Array of
+    HTTP::Cookie objects, or a full HTTP::CookieJar.
+  - Add `RestClient::Request#cookie_jar` and reimplement `Request#cookies` to
+    be a wrapper around the cookie jar.
+  - Still support passing the `:cookies` option in the headers hash, but now
+    raise ArgumentError if that option is also passed to `Request#initialize`.
+  - Warn if both `:cookies` and a `Cookie` header are supplied.
 - Don't set basic auth header if explicit `Authorization` header is specified
 - Add `:proxy` option to requests, which can be used for thread-safe
   per-request proxy configuration, overriding `RestClient.proxy`
