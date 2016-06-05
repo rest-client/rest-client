@@ -109,8 +109,8 @@ describe RestClient::Response, :include_helpers do
     end
 
     it "follows a redirection and keep the parameters" do
-      stub_request(:get, 'http://foo:bar@some/resource').with(:headers => {'Accept' => 'application/json'}).to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
-      stub_request(:get, 'http://foo:bar@new/resource').with(:headers => {'Accept' => 'application/json'}).to_return(:body => 'Foo')
+      stub_request(:get, 'http://some/resource').with(:headers => {'Accept' => 'application/json'}, :basic_auth => ['foo', 'bar']).to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
+      stub_request(:get, 'http://new/resource').with(:headers => {'Accept' => 'application/json'}, :basic_auth => ['foo', 'bar']).to_return(:body => 'Foo')
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body.should eq 'Foo'
     end
 
