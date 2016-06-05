@@ -533,7 +533,7 @@ describe RestClient::Request, :include_helpers do
     it "creates a proxy class with the correct address if a IPv6 proxy url is given" do
       RestClient.stub(:proxy).and_return("http://[::1]/")
       RestClient.stub(:proxy_set?).and_return(true)
-      @proxy_req.net_http_object('host', 80).proxy?.should be true
+      @proxy_req.net_http_object('host', 80).proxy?.should be_truthy
       @proxy_req.net_http_object('host', 80).proxy_address.should == '::1'
     end
 
@@ -544,14 +544,14 @@ describe RestClient::Request, :include_helpers do
     it "disables proxy on a per-request basis" do
       RestClient.stub(:proxy).and_return('http://example.com')
       RestClient.stub(:proxy_set?).and_return(true)
-      @proxy_req.net_http_object('host', 80).proxy?.should be true
+      expect(@proxy_req.net_http_object('host', 80).proxy?).to be_truthy
 
       disabled_req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => nil)
       disabled_req.net_http_object('host', 80).proxy?.should be_falsey
     end
 
     it "sets proxy on a per-request basis" do
-      @proxy_req.net_http_object('some', 80).proxy?.should be_falsey
+      expect(@proxy_req.net_http_object('some', 80).proxy?).to be_falsey
 
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :proxy => 'http://example.com')
       req.net_http_object('host', 80).proxy?.should be true
