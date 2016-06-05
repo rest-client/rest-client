@@ -16,7 +16,7 @@ module Helpers
 
   def request_double(url: 'http://example.com', method: 'get')
     double('request', url: url, uri: URI.parse(url), method: method,
-           user: nil, password: nil,
+           user: nil, password: nil, cookie_jar: HTTP::CookieJar.new,
            redirection_history: nil, args: {url: url, method: method})
   end
 end

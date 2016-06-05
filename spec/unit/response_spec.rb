@@ -120,10 +120,13 @@ describe RestClient::Response, :include_helpers do
       RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Qux'
     end
 
-    it 'does not keep cookies across domains' do
-      stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://new/resource', })
-      stub_request(:get, 'http://new/resource').with(:headers => {'Cookie' => ''}).to_return(:body => 'Qux')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Qux'
+    it 'respects cookie domains on redirect' do
+      stub_request(:get, 'http://some.example.com/').to_return(:body => '', :status => 301,
+        :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://new.example.com/', })
+      stub_request(:get, 'http://new.example.com/').with(
+        :headers => {'Cookie' => 'passedthrough=1'}).to_return(:body => 'Qux')
+
+      RestClient::Request.execute(:url => 'http://some.example.com/', :method => :get, cookies: [HTTP::Cookie.new('passedthrough', '1', domain: 'new.example.com', path: '/')]).body.should eq 'Qux'
     end
 
     it "doesn't follow a 301 when the request is a post" do
@@ -215,6 +218,22 @@ describe RestClient::Response, :include_helpers do
         ex.response.history.length.should eq 5
       }
       WebMock.should have_requested(:get, 'http://some/redirect-2').times(5)
+    end
+
+    it "allows for manual following of redirects" do
+      stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/resource'})
+      stub_request(:get, 'http://some/resource').to_return(:body => 'Qux', :status => 200)
+
+      begin
+        RestClient::Request.execute(url: 'http://some/redirect-1', method: :get, max_redirects: 0)
+      rescue RestClient::MovedPermanently => err
+        resp = err.response.follow_redirection
+      else
+        raise 'notreached'
+      end
+
+      resp.code.should eq 200
+      resp.body.should eq 'Qux'
     end
   end
 

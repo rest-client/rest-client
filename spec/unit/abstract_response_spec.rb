@@ -92,7 +92,8 @@ describe RestClient::AbstractResponse, :include_helpers do
     it 'handles cookies when URI scheme is implicit' do
       net_http_res = double('net http response')
       net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=1; path=/'])
-      request = double(url: 'example.com', uri: URI.parse('http://example.com'), method: 'get')
+      request = double(url: 'example.com', uri: URI.parse('http://example.com'),
+                       method: 'get', cookie_jar: HTTP::CookieJar.new)
       response = MyAbstractResponse.new(net_http_res, request)
       response.cookie_jar.should be_a HTTP::CookieJar
 
@@ -128,6 +129,7 @@ describe RestClient::AbstractResponse, :include_helpers do
 
     it "should follow 302 redirect" do
       @net_http_res.should_receive(:code).and_return('302')
+      @response.should_receive(:check_max_redirects).and_return('fake-check')
       @response.should_receive(:follow_redirection).and_return('fake-redirection')
       @response.return!.should eq 'fake-redirection'
     end
@@ -136,6 +138,7 @@ describe RestClient::AbstractResponse, :include_helpers do
       @net_http_res = response_double(code: 302, location: nil)
       @request = request_double()
       @response = MyAbstractResponse.new(@net_http_res, @request)
+      @response.should_receive(:check_max_redirects).and_return('fake-check')
       lambda { @response.return! }.should raise_error RestClient::Found
     end
   end
