@@ -9,10 +9,10 @@ describe RestClient::RawResponse do
   end
 
   it "behaves like string" do
-    @response.to_s.should eq 'the answer is 42'
+    expect(@response.to_s).to eq 'the answer is 42'
   end
 
   it "exposes a Tempfile" do
-    @response.file.should eq @tf
+    expect(@response.file).to eq @tf
   end
 end

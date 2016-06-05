@@ -41,22 +41,22 @@ describe RestClient::Request do
   describe '.execute' do
     it 'sends a user agent' do
       data = execute_httpbin_json('user-agent', method: :get)
-      data['user-agent'].should match(/rest-client/)
+      expect(data['user-agent']).to match(/rest-client/)
     end
 
     it 'receives cookies on 302' do
       expect {
         execute_httpbin('cookies/set?foo=bar', method: :get, max_redirects: 0)
       }.to raise_error(RestClient::Found) { |ex|
-        ex.http_code.should eq 302
-        ex.response.cookies['foo'].should eq 'bar'
+        expect(ex.http_code).to eq 302
+        expect(ex.response.cookies['foo']).to eq 'bar'
       }
     end
 
     it 'passes along cookies through 302' do
       data = execute_httpbin_json('cookies/set?foo=bar', method: :get)
-      data.should have_key('cookies')
-      data['cookies']['foo'].should eq 'bar'
+      expect(data).to have_key('cookies')
+      expect(data['cookies']['foo']).to eq 'bar'
     end
 
     it 'handles quote wrapped cookies' do
@@ -64,8 +64,8 @@ describe RestClient::Request do
         execute_httpbin('cookies/set?foo=' + CGI.escape('"bar:baz"'),
                         method: :get, max_redirects: 0)
       }.to raise_error(RestClient::Found) { |ex|
-        ex.http_code.should eq 302
-        ex.response.cookies['foo'].should eq '"bar:baz"'
+        expect(ex.http_code).to eq 302
+        expect(ex.response.cookies['foo']).to eq '"bar:baz"'
       }
     end
   end

@@ -9,21 +9,21 @@ describe RestClient::Response, :include_helpers do
   end
 
   it "behaves like string" do
-    @response.to_s.should eq 'abc'
-    @response.to_str.should eq 'abc'
+    expect(@response.to_s).to eq 'abc'
+    expect(@response.to_str).to eq 'abc'
 
-    @response.should_receive(:warn)
-    @response.to_i.should eq 0
+    expect(@response).to receive(:warn)
+    expect(@response.to_i).to eq 0
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
-    RestClient::Response.create(nil, @net_http_res, @request).to_s.should eq ""
+    expect(RestClient::Response.create(nil, @net_http_res, @request).to_s).to eq ""
   end
 
   describe 'header processing' do
     it "test headers and raw headers" do
-      @response.raw_headers["Status"][0].should eq "200 OK"
-      @response.headers[:status].should eq "200 OK"
+      expect(@response.raw_headers["Status"][0]).to eq "200 OK"
+      expect(@response.headers[:status]).to eq "200 OK"
     end
 
     it 'handles multiple headers by joining with comma' do
@@ -32,8 +32,8 @@ describe RestClient::Response, :include_helpers do
       @request = request_double(url: @example_url, method: 'get')
       @response = RestClient::Response.create('abc', @net_http_res, @request)
 
-      @response.raw_headers['My-Header'].should eq ['foo', 'bar']
-      @response.headers[:my_header].should eq 'foo, bar'
+      expect(@response.raw_headers['My-Header']).to eq ['foo', 'bar']
+      expect(@response.headers[:my_header]).to eq 'foo, bar'
     end
   end
 
@@ -43,15 +43,15 @@ describe RestClient::Response, :include_helpers do
 
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => [header_val]})
       response = RestClient::Response.create('abc', net_http_res, @request)
-      response.headers[:set_cookie].should eq [header_val]
-      response.cookies.should eq({ "main_page" => "main_page_no_rewrite" })
+      expect(response.headers[:set_cookie]).to eq [header_val]
+      expect(response.cookies).to eq({ "main_page" => "main_page_no_rewrite" })
     end
 
     it "should correctly deal with multiple cookies [multiple Set-Cookie headers]" do
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, @request)
-      response.headers[:set_cookie].should eq ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]
-      response.cookies.should eq({
+      expect(response.headers[:set_cookie]).to eq ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT", "remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT", "user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]
+      expect(response.cookies).to eq({
         "main_page" => "main_page_no_rewrite",
         "remember_me" => "",
         "user" => "somebody"
@@ -61,7 +61,7 @@ describe RestClient::Response, :include_helpers do
     it "should correctly deal with multiple cookies [one Set-Cookie header with multiple cookies]" do
       net_http_res = double('net http response', :to_hash => {"etag" => ["\"e1ac1a2df945942ef4cac8116366baad\""], "set-cookie" => ["main_page=main_page_no_rewrite; path=/; expires=Sat, 10-Jan-2037 15:03:14 GMT, remember_me=; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT, user=somebody; path=/; expires=Sat, 10-Jan-2037 00:00:00 GMT"]})
       response = RestClient::Response.create('abc', net_http_res, @request)
-      response.cookies.should eq({
+      expect(response.cookies).to eq({
         "main_page" => "main_page_no_rewrite",
         "remember_me" => "",
         "user" => "somebody"
@@ -83,7 +83,7 @@ describe RestClient::Response, :include_helpers do
         unless (200..207).include? code
           net_http_res = response_double(:code => code.to_i)
           resp = RestClient::Response.create('abc', net_http_res, @request)
-          lambda { resp.return! }.should raise_error
+          expect { resp.return! }.to raise_error
         end
       end
     end
@@ -95,29 +95,29 @@ describe RestClient::Response, :include_helpers do
     it "follows a redirection when the request is a get" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body).to eq 'Foo'
     end
 
     it "keeps redirection history" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
       r = RestClient::Request.execute(url: 'http://some/resource', method: :get)
-      r.body.should eq 'Foo'
-      r.history.length.should eq 1
-      r.history.fetch(0).should be_a(RestClient::Response)
-      r.history.fetch(0).code.should be 301
+      expect(r.body).to eq 'Foo'
+      expect(r.history.length).to eq 1
+      expect(r.history.fetch(0)).to be_a(RestClient::Response)
+      expect(r.history.fetch(0).code).to be 301
     end
 
     it "follows a redirection and keep the parameters" do
       stub_request(:get, 'http://some/resource').with(:headers => {'Accept' => 'application/json'}, :basic_auth => ['foo', 'bar']).to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').with(:headers => {'Accept' => 'application/json'}, :basic_auth => ['foo', 'bar']).to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :user => 'foo', :password => 'bar', :headers => {:accept => :json}).body).to eq 'Foo'
     end
 
     it "follows a redirection and keep the cookies" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Set-Cookie' => 'Foo=Bar', 'Location' => 'http://some/new_resource', })
       stub_request(:get, 'http://some/new_resource').with(:headers => {'Cookie' => 'Foo=Bar'}).to_return(:body => 'Qux')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Qux'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body).to eq 'Qux'
     end
 
     it 'respects cookie domains on redirect' do
@@ -126,7 +126,7 @@ describe RestClient::Response, :include_helpers do
       stub_request(:get, 'http://new.example.com/').with(
         :headers => {'Cookie' => 'passedthrough=1'}).to_return(:body => 'Qux')
 
-      RestClient::Request.execute(:url => 'http://some.example.com/', :method => :get, cookies: [HTTP::Cookie.new('passedthrough', '1', domain: 'new.example.com', path: '/')]).body.should eq 'Qux'
+      expect(RestClient::Request.execute(:url => 'http://some.example.com/', :method => :get, cookies: [HTTP::Cookie.new('passedthrough', '1', domain: 'new.example.com', path: '/')]).body).to eq 'Qux'
     end
 
     it "doesn't follow a 301 when the request is a post" do
@@ -134,90 +134,90 @@ describe RestClient::Response, :include_helpers do
 
       response = RestClient::Response.create('abc', net_http_res,
                                              request_double(method: 'post'))
-      lambda {
+      expect {
         response.return!
-      }.should raise_error(RestClient::MovedPermanently)
+      }.to raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
       net_http_res = response_double(:code => 302)
       response = RestClient::Response.create('abc', net_http_res,
                                              request_double(method: 'post'))
-      lambda {
+      expect {
         response.return!
-      }.should raise_error(RestClient::Found)
+      }.to raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
       net_http_res = response_double(:code => 307)
       response = RestClient::Response.create('abc', net_http_res,
                                              request_double(method: 'post'))
-      response.should_not_receive(:follow_redirection)
-      lambda {
+      expect(response).not_to receive(:follow_redirection)
+      expect {
         response.return!
-      }.should raise_error(RestClient::TemporaryRedirect)
+      }.to raise_error(RestClient::TemporaryRedirect)
     end
 
     it "doesn't follow a redirection when the request is a put" do
       net_http_res = response_double(:code => 301)
       response = RestClient::Response.create('abc', net_http_res,
                                              request_double(method: 'put'))
-      lambda {
+      expect {
         response.return!
-      }.should raise_error(RestClient::MovedPermanently)
+      }.to raise_error(RestClient::MovedPermanently)
     end
 
     it "follows a redirection when the request is a post and result is a 303" do
       stub_request(:put, 'http://some/resource').to_return(:body => '', :status => 303, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :put).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :put).body).to eq 'Foo'
     end
 
     it "follows a redirection when the request is a head" do
       stub_request(:head, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:head, 'http://new/resource').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :head).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :head).body).to eq 'Foo'
     end
 
     it "handles redirects with relative paths" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'index'})
       stub_request(:get, 'http://some/index').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body).to eq 'Foo'
     end
 
     it "handles redirects with relative path and query string" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'index?q=1'})
       stub_request(:get, 'http://some/index?q=1').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body).to eq 'Foo'
     end
 
     it "follow a redirection when the request is a get and the response is in the 30x range" do
       stub_request(:get, 'http://some/resource').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://new/resource'})
       stub_request(:get, 'http://new/resource').to_return(:body => 'Foo')
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body.should eq 'Foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get).body).to eq 'Foo'
     end
 
     it "follows no more than 10 redirections before raising error" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
-      lambda {
+      expect {
         RestClient::Request.execute(url: 'http://some/redirect-1', method: :get)
-      }.should raise_error(RestClient::MovedPermanently) { |ex|
-        ex.response.history.each {|r| r.should be_a(RestClient::Response) }
-        ex.response.history.length.should eq 10
+      }.to raise_error(RestClient::MovedPermanently) { |ex|
+        ex.response.history.each {|r| expect(r).to be_a(RestClient::Response) }
+        expect(ex.response.history.length).to eq 10
       }
-      WebMock.should have_requested(:get, 'http://some/redirect-2').times(10)
+      expect(WebMock).to have_requested(:get, 'http://some/redirect-2').times(10)
     end
 
     it "follows no more than max_redirects redirections, if specified" do
       stub_request(:get, 'http://some/redirect-1').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
       stub_request(:get, 'http://some/redirect-2').to_return(:body => '', :status => 301, :headers => {'Location' => 'http://some/redirect-2'})
-      lambda {
+      expect {
         RestClient::Request.execute(url: 'http://some/redirect-1', method: :get, max_redirects: 5)
-      }.should raise_error(RestClient::MovedPermanently) { |ex|
-        ex.response.history.length.should eq 5
+      }.to raise_error(RestClient::MovedPermanently) { |ex|
+        expect(ex.response.history.length).to eq 5
       }
-      WebMock.should have_requested(:get, 'http://some/redirect-2').times(5)
+      expect(WebMock).to have_requested(:get, 'http://some/redirect-2').times(5)
     end
 
     it "allows for manual following of redirects" do
@@ -232,8 +232,8 @@ describe RestClient::Response, :include_helpers do
         raise 'notreached'
       end
 
-      resp.code.should eq 200
-      resp.body.should eq 'Qux'
+      expect(resp.code).to eq 200
+      expect(resp.body).to eq 'Qux'
     end
   end
 

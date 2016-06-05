@@ -75,7 +75,7 @@ describe RestClient::Request do
         },
       )
       expect {request.execute }.to_not raise_error
-      ran_callback.should eq(true)
+      expect(ran_callback).to eq(true)
     end
 
     it "fails verification when the callback returns false",

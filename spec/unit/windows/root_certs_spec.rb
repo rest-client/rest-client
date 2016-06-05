@@ -5,7 +5,7 @@ describe 'RestClient::Windows::RootCerts',
   let(:x509_store) { RestClient::Windows::RootCerts.instance.to_a }
 
   it 'should return at least one X509 certificate' do
-    expect(x509_store.to_a).to have_at_least(1).items
+    expect(x509_store.to_a.size).to be >= 1
   end
 
   it 'should return an X509 certificate with a subject' do
@@ -16,7 +16,7 @@ describe 'RestClient::Windows::RootCerts',
 
   it 'should return X509 certificate objects' do
     x509_store.each do |cert|
-      cert.should be_a(OpenSSL::X509::Certificate)
+      expect(cert).to be_a(OpenSSL::X509::Certificate)
     end
   end
 end

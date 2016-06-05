@@ -6,63 +6,63 @@ describe RestClient::Payload do
   context "Base Payload" do
     it "should reset stream after to_s" do
       payload = RestClient::Payload::Base.new('foobar')
-      payload.to_s.should eq 'foobar'
-      payload.to_s.should eq 'foobar'
+      expect(payload.to_s).to eq 'foobar'
+      expect(payload.to_s).to eq 'foobar'
     end
   end
 
   context "A regular Payload" do
     it "should use standard enctype as default content-type" do
-      RestClient::Payload::UrlEncoded.new({}).headers['Content-Type'].
-        should eq 'application/x-www-form-urlencoded'
+      expect(RestClient::Payload::UrlEncoded.new({}).headers['Content-Type']).
+        to eq 'application/x-www-form-urlencoded'
     end
 
     it "should form properly encoded params" do
-      RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s.
-        should eq "foo=bar"
-      ["foo=bar&baz=qux", "baz=qux&foo=bar"].should include(
+      expect(RestClient::Payload::UrlEncoded.new({:foo => 'bar'}).to_s).
+        to eq "foo=bar"
+      expect(["foo=bar&baz=qux", "baz=qux&foo=bar"]).to include(
                                                         RestClient::Payload::UrlEncoded.new({:foo => 'bar', :baz => 'qux'}).to_s)
     end
 
     it "should escape parameters" do
-      RestClient::Payload::UrlEncoded.new({'foo + bar' => 'baz'}).to_s.
-        should eq "foo+%2B+bar=baz"
+      expect(RestClient::Payload::UrlEncoded.new({'foo + bar' => 'baz'}).to_s).
+        to eq "foo+%2B+bar=baz"
     end
 
     it "should properly handle hashes as parameter" do
-      RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz'}}).to_s.
-        should eq "foo[bar]=baz"
-      RestClient::Payload::UrlEncoded.new({:foo => {:bar => {:baz => 'qux'}}}).to_s.
-        should eq "foo[bar][baz]=qux"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz'}}).to_s).
+        to eq "foo[bar]=baz"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => {:bar => {:baz => 'qux'}}}).to_s).
+        to eq "foo[bar][baz]=qux"
     end
 
     it "should handle many attributes inside a hash" do
       parameters = RestClient::Payload::UrlEncoded.new({:foo => {:bar => 'baz', :baz => 'qux'}}).to_s
-      parameters.should eq 'foo[bar]=baz&foo[baz]=qux'
+      expect(parameters).to eq 'foo[bar]=baz&foo[baz]=qux'
     end
 
     it "should handle attributes inside an array inside an hash" do
       parameters = RestClient::Payload::UrlEncoded.new({"foo" => [{"bar" => 'baz'}, {"bar" => 'qux'}]}).to_s
-      parameters.should eq 'foo[][bar]=baz&foo[][bar]=qux'
+      expect(parameters).to eq 'foo[][bar]=baz&foo[][bar]=qux'
     end
 
     it "should handle arrays inside a hash inside a hash" do
       parameters = RestClient::Payload::UrlEncoded.new({"foo" => {'even' => [0, 2], 'odd' => [1, 3]}}).to_s
-      parameters.should eq 'foo[even][]=0&foo[even][]=2&foo[odd][]=1&foo[odd][]=3'
+      expect(parameters).to eq 'foo[even][]=0&foo[even][]=2&foo[odd][]=1&foo[odd][]=3'
     end
 
     it "should form properly use symbols as parameters" do
-      RestClient::Payload::UrlEncoded.new({:foo => :bar}).to_s.
-        should eq "foo=bar"
-      RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz}}).to_s.
-        should eq "foo[bar]=baz"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => :bar}).to_s).
+        to eq "foo=bar"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => {:bar => :baz}}).to_s).
+        to eq "foo[bar]=baz"
     end
 
     it "should properly handle arrays as repeated parameters" do
-      RestClient::Payload::UrlEncoded.new({:foo => ['bar']}).to_s.
-        should eq "foo[]=bar"
-      RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s.
-        should eq "foo[]=bar&foo[]=baz"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => ['bar']}).to_s).
+        to eq "foo[]=bar"
+      expect(RestClient::Payload::UrlEncoded.new({:foo => ['bar', 'baz']}).to_s).
+        to eq "foo[]=bar&foo[]=baz"
     end
 
     it 'should not close if stream already closed' do
@@ -75,8 +75,8 @@ describe RestClient::Payload do
   context "A multipart Payload" do
     it "should use standard enctype as default content-type" do
       m = RestClient::Payload::Multipart.new({})
-      m.stub(:boundary).and_return(123)
-      m.headers['Content-Type'].should eq 'multipart/form-data; boundary=123'
+      allow(m).to receive(:boundary).and_return(123)
+      expect(m.headers['Content-Type']).to eq 'multipart/form-data; boundary=123'
     end
 
     it 'should not error on close if stream already closed' do
@@ -86,7 +86,7 @@ describe RestClient::Payload do
 
     it "should form properly separated multipart data" do
       m = RestClient::Payload::Multipart.new([[:bar, "baz"], [:foo, "bar"]])
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="bar"\r
 \r
@@ -101,7 +101,7 @@ bar\r
 
     it "should not escape parameters names" do
       m = RestClient::Payload::Multipart.new([["bar ", "baz"]])
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="bar "\r
 \r
@@ -113,7 +113,7 @@ baz\r
     it "should form properly separated multipart data" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       m = RestClient::Payload::Multipart.new({:foo => f})
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
@@ -126,7 +126,7 @@ Content-Type: image/jpeg\r
     it "should ignore the name attribute when it's not set" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       m = RestClient::Payload::Multipart.new({nil => f})
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; filename="master_shake.jpg"\r
 Content-Type: image/jpeg\r
@@ -141,7 +141,7 @@ Content-Type: image/jpeg\r
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
       m = RestClient::Payload::Multipart.new({:foo => f})
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo"; filename="foo.txt"\r
 Content-Type: text/plain\r
@@ -153,7 +153,7 @@ Content-Type: text/plain\r
 
     it "should handle hash in hash parameters" do
       m = RestClient::Payload::Multipart.new({:bar => {:baz => "foo"}})
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="bar[baz]"\r
 \r
@@ -165,7 +165,7 @@ foo\r
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
       m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
-      m.to_s.should eq <<-EOS
+      expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
 Content-Disposition: form-data; name="foo[bar]"; filename="foo.txt"\r
 Content-Type: text/plain\r
@@ -176,10 +176,10 @@ Content-Type: text/plain\r
     end
 
     it 'should correctly format hex boundary' do
-      SecureRandom.stub(:base64).with(12).and_return('TGs89+ttw/xna6TV')
+      allow(SecureRandom).to receive(:base64).with(12).and_return('TGs89+ttw/xna6TV')
       f = File.new(File.dirname(__FILE__) + '/master_shake.jpg')
       m = RestClient::Payload::Multipart.new({:foo => f})
-      m.boundary.should eq('-' * 4 + 'RubyFormBoundary' + 'TGs89AttwBxna6TV')
+      expect(m.boundary).to eq('-' * 4 + 'RubyFormBoundary' + 'TGs89AttwBxna6TV')
     end
 
   end
@@ -188,23 +188,23 @@ Content-Type: text/plain\r
     it "should properly determine the size of file payloads" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       payload = RestClient::Payload.generate(f)
-      payload.size.should eq 76_988
-      payload.length.should eq 76_988
+      expect(payload.size).to eq 76_988
+      expect(payload.length).to eq 76_988
     end
 
     it "should properly determine the size of other kinds of streaming payloads" do
       s = StringIO.new 'foo'
       payload = RestClient::Payload.generate(s)
-      payload.size.should eq 3
-      payload.length.should eq 3
+      expect(payload.size).to eq 3
+      expect(payload.length).to eq 3
 
       begin
         f = Tempfile.new "rest-client"
         f.write 'foo bar'
 
         payload = RestClient::Payload.generate(f)
-        payload.size.should eq 7
-        payload.length.should eq 7
+        expect(payload.size).to eq 7
+        expect(payload.length).to eq 7
       ensure
         f.close
       end
@@ -213,51 +213,51 @@ Content-Type: text/plain\r
 
   context "Payload generation" do
     it "should recognize standard urlencoded params" do
-      RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
+      expect(RestClient::Payload.generate({"foo" => 'bar'})).to be_kind_of(RestClient::Payload::UrlEncoded)
     end
 
     it "should recognize multipart params" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      RestClient::Payload.generate({"foo" => f}).should be_kind_of(RestClient::Payload::Multipart)
+      expect(RestClient::Payload.generate({"foo" => f})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should be multipart if forced" do
-      RestClient::Payload.generate({"foo" => "bar", :multipart => true}).should be_kind_of(RestClient::Payload::Multipart)
+      expect(RestClient::Payload.generate({"foo" => "bar", :multipart => true})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should handle deeply nested multipart" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       params = {foo: RestClient::ParamsArray.new({nested: f})}
-      RestClient::Payload.generate(params).should be_kind_of(RestClient::Payload::Multipart)
+      expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::Multipart)
     end
 
 
     it "should return data if no of the above" do
-      RestClient::Payload.generate("data").should be_kind_of(RestClient::Payload::Base)
+      expect(RestClient::Payload.generate("data")).to be_kind_of(RestClient::Payload::Base)
     end
 
     it "should recognize nested multipart payloads in hashes" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      RestClient::Payload.generate({"foo" => {"file" => f}}).should be_kind_of(RestClient::Payload::Multipart)
+      expect(RestClient::Payload.generate({"foo" => {"file" => f}})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize nested multipart payloads in arrays" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      RestClient::Payload.generate({"foo" => [f]}).should be_kind_of(RestClient::Payload::Multipart)
+      expect(RestClient::Payload.generate({"foo" => [f]})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize file payloads that can be streamed" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      RestClient::Payload.generate(f).should be_kind_of(RestClient::Payload::Streamed)
+      expect(RestClient::Payload.generate(f)).to be_kind_of(RestClient::Payload::Streamed)
     end
 
     it "should recognize other payloads that can be streamed" do
-      RestClient::Payload.generate(StringIO.new('foo')).should be_kind_of(RestClient::Payload::Streamed)
+      expect(RestClient::Payload.generate(StringIO.new('foo'))).to be_kind_of(RestClient::Payload::Streamed)
     end
 
     # hashery gem introduces Hash#read convenience method. Existence of #read method used to determine of content is streameable :/
     it "shouldn't treat hashes as streameable" do
-      RestClient::Payload.generate({"foo" => 'bar'}).should be_kind_of(RestClient::Payload::UrlEncoded)
+      expect(RestClient::Payload.generate({"foo" => 'bar'})).to be_kind_of(RestClient::Payload::UrlEncoded)
     end
   end
 end
