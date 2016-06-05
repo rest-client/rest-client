@@ -39,11 +39,20 @@ module RestClient
       history
     end
 
-    # Hash of cookies extracted from response headers
+    # Hash of cookies extracted from response headers.
+    #
+    # NB: This will return only cookies whose domain matches this request, and
+    # may not even return all of those cookies if there are duplicate names.
+    # Use the full cookie_jar for more nuanced access.
+    #
+    # @see #cookie_jar
+    #
+    # @return [Hash]
+    #
     def cookies
       hash = {}
 
-      cookie_jar.cookies.each do |cookie|
+      cookie_jar.cookies(@request.uri).each do |cookie|
         hash[cookie.name] = cookie.value
       end
 
@@ -57,7 +66,7 @@ module RestClient
     def cookie_jar
       return @cookie_jar if @cookie_jar
 
-      jar = HTTP::CookieJar.new
+      jar = @request.cookie_jar.dup
       headers.fetch(:set_cookie, []).each do |cookie|
         jar.parse(cookie, @request.uri)
       end
@@ -185,10 +194,8 @@ module RestClient
       new_args[:headers] = request.headers
       new_args[:max_redirects] = request.max_redirects - 1
 
-      # TODO: figure out what to do with original :cookie, :cookies values
-      new_args[:headers]['Cookie'] = HTTP::Cookie.cookie_value(
-        cookie_jar.cookies(new_args.fetch(:url)))
-
+      # pass through our new cookie jar
+      new_args[:cookies] = cookie_jar
 
       # prepare new request
       new_req = Request.new(new_args)

@@ -92,7 +92,8 @@ describe RestClient::AbstractResponse, :include_helpers do
     it 'handles cookies when URI scheme is implicit' do
       net_http_res = double('net http response')
       net_http_res.should_receive(:to_hash).and_return('set-cookie' => ['session_id=1; path=/'])
-      request = double(url: 'example.com', uri: URI.parse('http://example.com'), method: 'get')
+      request = double(url: 'example.com', uri: URI.parse('http://example.com'),
+                       method: 'get', cookie_jar: HTTP::CookieJar.new)
       response = MyAbstractResponse.new(net_http_res, request)
       response.cookie_jar.should be_a HTTP::CookieJar
 
