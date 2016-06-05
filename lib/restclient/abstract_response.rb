@@ -82,11 +82,13 @@ module RestClient
       when 301, 302, 307
         case request.method
         when 'get', 'head'
+          check_max_redirects
           follow_redirection(&block)
         else
           raise exception_with_response
         end
       when 303
+        check_max_redirects
         follow_get_redirection(&block)
       else
         raise exception_with_response
@@ -178,9 +180,6 @@ module RestClient
       end
       new_args[:url] = url
 
-      if request.max_redirects <= 0
-        raise exception_with_response
-      end
       new_args[:password] = request.password
       new_args[:user] = request.user
       new_args[:headers] = request.headers
@@ -199,6 +198,12 @@ module RestClient
 
       # execute redirected request
       new_req.execute(&block)
+    end
+
+    def check_max_redirects
+      if request.max_redirects <= 0
+        raise exception_with_response
+      end
     end
 
     def exception_with_response
