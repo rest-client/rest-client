@@ -79,11 +79,12 @@ describe RestClient::Response, :include_helpers do
     end
 
     it "should throw an exception for other codes" do
-      RestClient::Exceptions::EXCEPTIONS_MAP.each_key do |code|
+      RestClient::Exceptions::EXCEPTIONS_MAP.each_pair do |code, exc|
         unless (200..207).include? code
           net_http_res = response_double(:code => code.to_i)
           resp = RestClient::Response.create('abc', net_http_res, @request)
-          expect { resp.return! }.to raise_error
+          allow(@request).to receive(:max_redirects).and_return(5)
+          expect { resp.return! }.to raise_error(exc)
         end
       end
     end
