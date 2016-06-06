@@ -21,6 +21,14 @@ Lint/Eval:
   Exclude:
   - rest-client.windows.gemspec
 
+Lint/HandleExceptions:
+  Exclude:
+  - lib/restclient/utils.rb
+
+Lint/UselessAccessModifier:
+  Exclude:
+  - lib/restclient/windows/root_certs.rb
+
 # Offense count: 4
 # Cop supports --auto-correct.
 Style/Alias:
@@ -35,7 +43,7 @@ Style/AndOr:
 # TODO
 # Offense count: 3
 # Cop supports --auto-correct.
-Style/Blocks:
+Style/BlockDelimiters:
   Enabled: false
 
 # Offense count: 48
@@ -89,6 +97,9 @@ Style/CollectionMethods:
 # Cop supports --auto-correct.
 Style/ColonMethodCall:
   Enabled: false
+
+Style/ConditionalAssignment:
+  EnforcedStyle: assign_inside_condition
 
 # Offense count: 2
 Style/ConstantName:
@@ -161,12 +172,11 @@ Style/FileName:
 Style/FormatString:
   Enabled: false
 
-# TODO: configure
-# Offense count: 514
+# TODO: enable
 # Cop supports --auto-correct.
 # Configuration parameters: SupportedStyles.
 Style/HashSyntax:
-  EnforcedStyle: hash_rockets
+  Enabled: false
 
 # NOTABUG
 # Offense count: 8
@@ -337,10 +347,9 @@ Style/SpaceInsideParens:
 Style/StringLiterals:
   Enabled: false
 
-# NOTABUG
-# Offense count: 14
-# Configuration parameters: EnforcedStyleForMultiline, SupportedStyles.
-Style/TrailingComma:
+Style/TrailingCommaInLiteral:
+  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArguments:
   Enabled: false
 
 # TODO: configure

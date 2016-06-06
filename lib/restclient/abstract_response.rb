@@ -152,7 +152,7 @@ module RestClient
     #
     def self.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
-        key_sym = key.gsub(/-/, '_').downcase.to_sym
+        key_sym = key.tr('-', '_').downcase.to_sym
 
         # Handle Set-Cookie specially since it cannot be joined by comma.
         if key.downcase == 'set-cookie'

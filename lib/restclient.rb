@@ -96,6 +96,7 @@ module RestClient
   def self.proxy
     @proxy ||= nil
   end
+
   def self.proxy=(value)
     @proxy = value
     @proxy_set = true
