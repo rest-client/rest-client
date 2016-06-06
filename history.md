@@ -8,7 +8,7 @@ This release is largely API compatible, but makes several breaking changes.
   rest-client would not override the string encoding chosen by Net::HTTP. Now
   responses that specify a charset will yield a body string in that encoding.
   For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
-  encoded with `Encoding::EUC_JP`.
+  encoded with `Encoding::EUC_JP`. (#361)
 - Change exceptions raised on request timeout. Instead of
   `RestClient::RequestTimeout` (which is still used for HTTP 408), network
   timeouts will now raise either `RestClient::Exceptions::ReadTimeout` or
@@ -48,8 +48,8 @@ This release is largely API compatible, but makes several breaking changes.
   Set-Cookie, which is special) by joining the values with a comma space,
   compliant with RFC 7230
 - Rewrite cookie support to be much smarter and to use cookie jars consistently
-  for requests, responses, and redirection (resolving long-standing complaints
-  about the previously broken behavior):
+  for requests, responses, and redirection in order to resolve long-standing
+  complaints about the previously broken behavior: (#498)
   - The `:cookies` option may now be a Hash of Strings, an Array of
     HTTP::Cookie objects, or a full HTTP::CookieJar.
   - Add `RestClient::Request#cookie_jar` and reimplement `Request#cookies` to
@@ -73,7 +73,7 @@ This release is largely API compatible, but makes several breaking changes.
   treat any object that responds to `.read` as a streaming payload and pass it
   through to `.body_stream=` on the Net:HTTP object. This massively reduces the
   memory required for large file uploads.
-- Changes to redirection behavior:
+- Changes to redirection behavior: (#381, #484)
   - Remove `RestClient::MaxRedirectsReached` in favor of the normal
     `ExceptionWithResponse` subclasses. This makes the response accessible on
     the exception object as `.response`, making it possible for callers to tell
@@ -90,7 +90,11 @@ This release is largely API compatible, but makes several breaking changes.
 - Run tests on Travis's beta OS X support.
 - Make `Request#transmit` a private method, along with a few others.
 - Refactor URI parsing to happen earlier, in Request initialization.
-- When adding URL params, handle URLs that already contain params.
+- Improve consistency and functionality of complex URL parameter handling:
+  - When adding URL params, handle URLs that already contain params.
+  - Add new convention for handling URL params containing deeply nested arrays
+    and hashes, unify handling of null/empty values, and use the same code for
+    GET and POST params. (#437)
 - Add a few more exception classes for obscure HTTP status codes.
 - Multipart: use a much more robust multipart boundary with greater entropy.
 - Make `RestClient::Payload::Base#inspect` stop pretending to be a String.
