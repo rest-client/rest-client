@@ -10,7 +10,7 @@ Gem::Specification.new do |s|
   s.license = 'MIT'
   s.email = 'rest.client@librelist.com'
   s.executables = ['restclient']
-  s.extra_rdoc_files = ['README.rdoc', 'history.md']
+  s.extra_rdoc_files = ['README.md', 'history.md']
   s.files = `git ls-files -z`.split("\0")
   s.test_files = `git ls-files -z spec/`.split("\0")
   s.homepage = 'https://github.com/rest-client/rest-client'
