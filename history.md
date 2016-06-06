@@ -95,6 +95,9 @@ This release is largely API compatible, but makes several breaking changes.
   - Add new convention for handling URL params containing deeply nested arrays
     and hashes, unify handling of null/empty values, and use the same code for
     GET and POST params. (#437)
+  - Add the RestClient::ParamsArray class, a simple array-like container that
+    can be used to pass multiple keys with same name or keys where the ordering
+    is significant.
 - Add a few more exception classes for obscure HTTP status codes.
 - Multipart: use a much more robust multipart boundary with greater entropy.
 - Make `RestClient::Payload::Base#inspect` stop pretending to be a String.
