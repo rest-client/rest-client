@@ -94,7 +94,7 @@ module RestClient
   # A global proxy URL to use for all requests. This can be overridden on a
   # per-request basis by passing `:proxy` to RestClient::Request.
   def self.proxy
-    @proxy
+    @proxy ||= nil
   end
   def self.proxy=(value)
     @proxy = value

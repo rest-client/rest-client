@@ -13,6 +13,10 @@ RSpec.configure do |config|
   #     --seed 1234
   config.order = 'random'
 
+  # always run with ruby warnings enabled
+  # TODO: figure out why this is so obscenely noisy (rspec bug?)
+  # config.warnings = true
+
   # add helpers
   config.include Helpers, :include_helpers
 
@@ -20,3 +24,6 @@ RSpec.configure do |config|
     mocks.yield_receiver_to_any_instance_implementation_blocks = true
   end
 end
+
+# always run with ruby warnings enabled (see above)
+$VERBOSE = true

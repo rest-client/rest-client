@@ -124,6 +124,8 @@ module RestClient
       else
         raise ArgumentError, "must pass :url"
       end
+
+      @user = @password = nil
       parse_url_with_auth!(url)
 
       # process cookie arguments found in headers or args
@@ -815,7 +817,7 @@ module RestClient
         # Kudos to _why!
         @tf = Tempfile.new('rest-client.')
         @tf.binmode
-        size, total = 0, http_response.header['Content-Length'].to_i
+        size, total = 0, http_response['Content-Length'].to_i
         http_response.read_body do |chunk|
           @tf.write chunk
           size += chunk.size

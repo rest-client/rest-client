@@ -64,7 +64,7 @@ module RestClient
     # @return [HTTP::CookieJar]
     #
     def cookie_jar
-      return @cookie_jar if @cookie_jar
+      return @cookie_jar if defined?(@cookie_jar) && @cookie_jar
 
       jar = @request.cookie_jar.dup
       headers.fetch(:set_cookie, []).each do |cookie|
