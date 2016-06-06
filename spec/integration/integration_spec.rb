@@ -8,15 +8,15 @@ describe RestClient do
     body = 'abc'
     stub_request(:get, "www.example.com").to_return(:body => body, :status => 200)
     response = RestClient.get "www.example.com"
-    response.code.should eq 200
-    response.body.should eq body
+    expect(response.code).to eq 200
+    expect(response.body).to eq body
   end
 
   it "a simple request with gzipped content" do
     stub_request(:get, "www.example.com").with(:headers => { 'Accept-Encoding' => 'gzip, deflate' }).to_return(:body => "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000", :status => 200,  :headers => { 'Content-Encoding' => 'gzip' } )
     response = RestClient.get "www.example.com"
-    response.code.should eq 200
-    response.body.should eq "i'm gziped\n"
+    expect(response.code).to eq 200
+    expect(response.body).to eq "i'm gziped\n"
   end
 
   it "a 404" do
@@ -26,10 +26,10 @@ describe RestClient do
       RestClient.get "www.example.com"
       raise
     rescue RestClient::ResourceNotFound => e
-      e.http_code.should eq 404
-      e.response.code.should eq 404
-      e.response.body.should eq body
-      e.http_body.should eq body
+      expect(e.http_code).to eq 404
+      expect(e.response.code).to eq 404
+      expect(e.response.body).to eq body
+      expect(e.http_body).to eq body
     end
   end
 
@@ -41,8 +41,8 @@ describe RestClient do
           'Content-Type' => 'text/plain; charset=UTF-8'
       })
       response = RestClient.get "www.example.com"
-      response.encoding.should eq Encoding::UTF_8
-      response.valid_encoding?.should eq true
+      expect(response.encoding).to eq Encoding::UTF_8
+      expect(response.valid_encoding?).to eq true
     end
 
     it 'handles windows-1252' do
@@ -52,9 +52,9 @@ describe RestClient do
           'Content-Type' => 'text/plain; charset=windows-1252'
       })
       response = RestClient.get "www.example.com"
-      response.encoding.should eq Encoding::WINDOWS_1252
-      response.encode('utf-8').should eq "ÿ"
-      response.valid_encoding?.should eq true
+      expect(response.encoding).to eq Encoding::WINDOWS_1252
+      expect(response.encode('utf-8')).to eq "ÿ"
+      expect(response.valid_encoding?).to eq true
     end
 
     it 'handles binary' do
@@ -64,28 +64,28 @@ describe RestClient do
           'Content-Type' => 'application/octet-stream; charset=binary'
       })
       response = RestClient.get "www.example.com"
-      response.encoding.should eq Encoding::BINARY
-      lambda {
+      expect(response.encoding).to eq Encoding::BINARY
+      expect {
         response.encode('utf-8')
-      }.should raise_error(Encoding::UndefinedConversionError)
-      response.valid_encoding?.should eq true
+      }.to raise_error(Encoding::UndefinedConversionError)
+      expect(response.valid_encoding?).to eq true
     end
 
     it 'handles euc-jp' do
       body = "\xA4\xA2\xA4\xA4\xA4\xA6\xA4\xA8\xA4\xAA".
         force_encoding(Encoding::BINARY)
       body_utf8 = 'あいうえお'
-      body_utf8.encoding.should eq Encoding::UTF_8
+      expect(body_utf8.encoding).to eq Encoding::UTF_8
 
       stub_request(:get, 'www.example.com').to_return(
         :body => body, :status => 200, :headers => {
           'Content-Type' => 'text/plain; charset=EUC-JP'
       })
       response = RestClient.get 'www.example.com'
-      response.encoding.should eq Encoding::EUC_JP
-      response.valid_encoding?.should eq true
-      response.length.should eq 5
-      response.encode('utf-8').should eq body_utf8
+      expect(response.encoding).to eq Encoding::EUC_JP
+      expect(response.valid_encoding?).to eq true
+      expect(response.length).to eq 5
+      expect(response.encode('utf-8')).to eq body_utf8
     end
 
     it 'defaults to Encoding.default_external' do
@@ -95,7 +95,7 @@ describe RestClient do
         })
 
       response = RestClient.get 'www.example.com'
-      response.encoding.should eq Encoding.default_external
+      expect(response.encoding).to eq Encoding.default_external
     end
 
     it 'handles invalid encoding' do
@@ -105,7 +105,7 @@ describe RestClient do
         })
 
       response = RestClient.get 'www.example.com'
-      response.encoding.should eq Encoding.default_external
+      expect(response.encoding).to eq Encoding.default_external
     end
 
     it 'leaves images as binary' do
@@ -117,7 +117,7 @@ describe RestClient do
         })
 
       response = RestClient.get 'www.example.com'
-      response.encoding.should eq Encoding::BINARY
+      expect(response.encoding).to eq Encoding::BINARY
     end
   end
 end

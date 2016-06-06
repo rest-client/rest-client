@@ -64,7 +64,7 @@ module RestClient
     # @return [HTTP::CookieJar]
     #
     def cookie_jar
-      return @cookie_jar if @cookie_jar
+      return @cookie_jar if defined?(@cookie_jar) && @cookie_jar
 
       jar = @request.cookie_jar.dup
       headers.fetch(:set_cookie, []).each do |cookie|
@@ -152,7 +152,7 @@ module RestClient
     #
     def self.beautify_headers(headers)
       headers.inject({}) do |out, (key, value)|
-        key_sym = key.gsub(/-/, '_').downcase.to_sym
+        key_sym = key.tr('-', '_').downcase.to_sym
 
         # Handle Set-Cookie specially since it cannot be joined by comma.
         if key.downcase == 'set-cookie'

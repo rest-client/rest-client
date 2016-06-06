@@ -174,7 +174,7 @@ module RestClient
       end
 
       def boundary
-        return @boundary if @boundary
+        return @boundary if defined?(@boundary) && @boundary
 
         # Use the same algorithm used by WebKit: generate 16 random
         # alphanumeric characters, replacing `+` `/` with `A` `B` (included in

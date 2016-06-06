@@ -5,20 +5,20 @@ describe RestClient::Request do
   context 'params for GET requests' do
     it "manage params for get requests" do
       stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}).body.should eq 'foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}).body).to eq 'foo'
 
       stub_request(:get, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
-      RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => :a}).body.should eq 'foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => :a}).body).to eq 'foo'
     end
 
     it 'adds GET params when params are present in URL' do
       stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
-      RestClient::Request.execute(:url => 'http://some/resource?a=b', :method => :get, :headers => {:foo => :bar, :params => {:c => 'd'}}).body.should eq 'foo'
+      expect(RestClient::Request.execute(:url => 'http://some/resource?a=b', :method => :get, :headers => {:foo => :bar, :params => {:c => 'd'}}).body).to eq 'foo'
     end
 
     it 'encodes nested GET params' do
       stub_request(:get, 'http://some/resource?a[foo][]=1&a[foo][]=2&a[bar]&b=foo+bar&math=2+%2B+2+%3D%3D+4').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
-      RestClient::Request.execute(url: 'http://some/resource', method: :get, headers: {
+      expect(RestClient::Request.execute(url: 'http://some/resource', method: :get, headers: {
         params: {
           a: {
             foo: [1,2],
@@ -27,7 +27,7 @@ describe RestClient::Request do
           b: 'foo bar',
           math: '2 + 2 == 4',
         }
-      }).body.should eq 'foo'
+      }).body).to eq 'foo'
     end
 
   end
@@ -39,7 +39,7 @@ describe RestClient::Request do
     end
     stub_request(:get, 'http://some/resource?a=b&c=d').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate', 'Foo'=>'bar'}).to_return(:body => 'foo', :status => 200)
     RestClient::Request.execute(:url => 'http://some/resource', :method => :get, :headers => {:foo => :bar, :params => {:a => :b, 'c' => 'd'}}, :block_response => block)
-    response_value.should eq "foo"
+    expect(response_value).to eq "foo"
   end
 
   it 'closes payload if not nil' do
@@ -48,7 +48,7 @@ describe RestClient::Request do
     stub_request(:post, 'http://some/resource').with(:headers => {'Accept'=>'*/*', 'Accept-Encoding'=>'gzip, deflate'}).to_return(:body => 'foo', :status => 200)
     RestClient::Request.execute(:url => 'http://some/resource', :method => :post, :payload => {:file => test_file})
 
-    test_file.closed?.should be true
+    expect(test_file.closed?).to be true
   end
 
 end

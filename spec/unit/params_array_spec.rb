@@ -12,11 +12,11 @@ describe RestClient::ParamsArray do
         [{foo: 123}, [:foo, 456], {bar: 789}, {empty: nil}],
         [{foo: 123}, [:foo, 456], {bar: 789}, [:empty]],
       ].each do |input|
-        RestClient::ParamsArray.new(input).to_a.should eq as_array
+        expect(RestClient::ParamsArray.new(input).to_a).to eq as_array
       end
 
-      RestClient::ParamsArray.new([]).to_a.should eq []
-      RestClient::ParamsArray.new([]).empty?.should eq true
+      expect(RestClient::ParamsArray.new([]).to_a).to eq []
+      expect(RestClient::ParamsArray.new([]).empty?).to eq true
     end
 
     it 'rejects various invalid input' do
