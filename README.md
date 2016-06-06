@@ -177,6 +177,38 @@ end
 ➔ 404 Resource Not Found | text/html 282 bytes
 ```
 
+### Manually following redirection
+
+To disable automatic redirection, set `:max_redirects => 0`.
+
+```ruby
+>> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1')
+=> RestClient::Response 200 "{\n  "args":..."
+
+>> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+RestClient::Found: 302 Found
+```
+
+To manually follow redirection, you can call `Response#follow_redirection`. Or
+you could of course inspect the result and choose custom behavior.
+
+```ruby
+>> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+RestClient::Found: 302 Found
+>> begin
+       RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+   rescue RestClient::ExceptionWithResponse => err
+   end
+>> err
+=> #<RestClient::Found: 302 Found>
+>> err.response
+=> RestClient::Response 302 "<!DOCTYPE H..."
+>> err.response.headers[:location]
+=> "/get"
+>> err.response.follow_redirection
+=> RestClient::Response 200 "{\n  "args":..."
+```
+
 ## Result handling
 
 The result of a `RestClient::Request` is a `RestClient::Response` object.
