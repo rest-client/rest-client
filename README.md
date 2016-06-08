@@ -514,6 +514,24 @@ RestClient.post 'http://example.com/resource', {:foo => 'bar', :baz => 'qux'}, {
 RestClient.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
 ```
 
+## Timeouts
+
+By default the timeout for a request is 60 seconds. Timeouts for your request can
+be adjusted by setting the `timeout:` to the number of seconds that you would like
+the request to wait. Setting `timeout:` will override both `read_timeout:` and `open_timeout:`.
+
+```ruby
+RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                            timeout: 120)
+```
+
+Additionally, you can set `read_timeout:` and `open_timeout:` separately.
+
+```ruby
+RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                            read_timeout: 120, open_timeout: 240)
+```
+
 ## Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically
