@@ -253,19 +253,17 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "uses netrc credentials" do
-    allow(URI).to receive(:parse).and_return(double('uri', :user => nil, :password => nil, :hostname => 'example.com'))
-    allow(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
-    @request.send(:parse_url_with_auth!, 'http://example.com/resource')
-    expect(@request.user).to eq 'a'
-    expect(@request.password).to eq 'b'
+    expect(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
+    request = RestClient::Request.new(:method => :put, :url => 'http://example.com/', :payload => 'payload')
+    expect(request.user).to eq 'a'
+    expect(request.password).to eq 'b'
   end
 
   it "uses credentials in the url in preference to netrc" do
-    allow(URI).to receive(:parse).and_return(double('uri', :user => 'joe%20', :password => 'pass1', :hostname => 'example.com'))
     allow(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
-    @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
-    expect(@request.user).to eq 'joe '
-    expect(@request.password).to eq 'pass1'
+    request = RestClient::Request.new(:method => :put, :url =>  'http://joe%20:pass1@example.com/', :payload => 'payload')
+    expect(request.user).to eq 'joe '
+    expect(request.password).to eq 'pass1'
   end
 
   it "determines the Net::HTTP class to instantiate by the method name" do
