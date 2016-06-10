@@ -103,25 +103,33 @@ describe RestClient::Request, :include_helpers do
 
   describe "user - password" do
     it "extracts the username and password when parsing http://user:password@example.com/" do
-      allow(URI).to receive(:parse).and_return(double('uri', user: 'joe', password: 'pass1', hostname: 'example.com'))
       @request.send(:parse_url_with_auth!, 'http://joe:pass1@example.com/resource')
       expect(@request.user).to eq 'joe'
       expect(@request.password).to eq 'pass1'
     end
 
     it "extracts with escaping the username and password when parsing http://user:password@example.com/" do
-      allow(URI).to receive(:parse).and_return(double('uri', user: 'joe%20', password: 'pass1', hostname: 'example.com'))
       @request.send(:parse_url_with_auth!, 'http://joe%20:pass1@example.com/resource')
       expect(@request.user).to eq 'joe '
       expect(@request.password).to eq 'pass1'
     end
 
     it "doesn't overwrite user and password (which may have already been set by the Resource constructor) if there is no user/password in the url" do
-      allow(URI).to receive(:parse).and_return(double('uri', user: nil, password: nil, hostname: 'example.com'))
-      @request = RestClient::Request.new(:method => 'get', :url => 'example.com', :user => 'beth', :password => 'pass2')
-      @request.send(:parse_url_with_auth!, 'http://example.com/resource')
-      expect(@request.user).to eq 'beth'
-      expect(@request.password).to eq 'pass2'
+      request = RestClient::Request.new(method: :get, url: 'http://example.com/resource', user: 'beth', password: 'pass2')
+      expect(request.user).to eq 'beth'
+      expect(request.password).to eq 'pass2'
+    end
+
+    it 'uses the username and password from the URL' do
+      request = RestClient::Request.new(method: :get, url: 'http://person:secret@example.com/resource')
+      expect(request.user).to eq 'person'
+      expect(request.password).to eq 'secret'
+    end
+
+    it 'overrides URL user/pass with explicit options' do
+      request = RestClient::Request.new(method: :get, url: 'http://person:secret@example.com/resource', user: 'beth', password: 'pass2')
+      expect(request.user).to eq 'beth'
+      expect(request.password).to eq 'pass2'
     end
   end
 

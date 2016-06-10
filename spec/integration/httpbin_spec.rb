@@ -68,5 +68,19 @@ describe RestClient::Request do
         expect(ex.response.cookies['foo']).to eq '"bar:baz"'
       }
     end
+
+    it 'sends basic auth' do
+      user = 'user'
+      pass = 'pass'
+
+      data = execute_httpbin_json("basic-auth/#{user}/#{pass}", method: :get, user: user, password: pass)
+      expect(data).to eq({'authenticated' => true, 'user' => user})
+
+      expect {
+        execute_httpbin_json("basic-auth/#{user}/#{pass}", method: :get, user: user, password: 'badpass')
+      }.to raise_error(RestClient::Unauthorized) { |ex|
+        expect(ex.http_code).to eq 401
+      }
+    end
   end
 end
