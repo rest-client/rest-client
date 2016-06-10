@@ -132,8 +132,10 @@ module RestClient
       @cookie_jar = process_cookie_args!(@uri, @headers, args)
 
       @payload = Payload.generate(args[:payload])
-      @user = args[:user]
-      @password = args[:password]
+
+      @user = args[:user] if args.include?(:user)
+      @password = args[:password] if args.include?(:password)
+
       if args.include?(:timeout)
         @read_timeout = args[:timeout]
         @open_timeout = args[:timeout]
