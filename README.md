@@ -351,8 +351,13 @@ $ restclient put http://example.com/resource < input_body
 
 To enable logging you can:
 
-- set RestClient.log with a Ruby Logger, or
-- set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
+- set RestClient.log with a Ruby Logger
+
+```ruby
+RestClient.log = STDOUT
+```
+
+- or set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
 
 ```ruby
 $ RESTCLIENT_LOG=stdout path/to/my/program
