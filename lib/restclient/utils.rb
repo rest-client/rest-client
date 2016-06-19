@@ -8,8 +8,8 @@ module RestClient
     # text. This differs from the older RFC 2616 behavior, which specifies
     # using ISO-8859-1 for text/* content types without a charset.
     #
-    # Strings will effectively end up using `Encoding.default_external` when
-    # this method returns nil.
+    # Strings will use the default encoding when this method returns nil. This
+    # default is likely to be UTF-8 for Ruby >= 2.0
     #
     # @param headers [Hash<Symbol,String>]
     #

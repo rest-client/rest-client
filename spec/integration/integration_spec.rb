@@ -88,14 +88,15 @@ describe RestClient do
       expect(response.encode('utf-8')).to eq body_utf8
     end
 
-    it 'defaults to Encoding.default_external' do
+    it 'defaults to the default encoding' do
       stub_request(:get, 'www.example.com').to_return(
         body: 'abc', status: 200, headers: {
           'Content-Type' => 'text/plain'
         })
 
       response = RestClient.get 'www.example.com'
-      expect(response.encoding).to eq Encoding.default_external
+      # expect(response.encoding).to eq Encoding.default_external
+      expect(response.encoding).to eq Encoding::UTF_8
     end
 
     it 'handles invalid encoding' do
@@ -105,7 +106,8 @@ describe RestClient do
         })
 
       response = RestClient.get 'www.example.com'
-      expect(response.encoding).to eq Encoding.default_external
+      # expect(response.encoding).to eq Encoding.default_external
+      expect(response.encoding).to eq Encoding::UTF_8
     end
 
     it 'leaves images as binary' do
