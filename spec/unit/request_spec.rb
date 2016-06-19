@@ -567,7 +567,8 @@ describe RestClient::Request, :include_helpers do
       allow(ENV).to receive(:[]).with("http_proxy").and_return("http://127.0.0.1")
       allow(ENV).to receive(:[]).with("no_proxy").and_return(nil)
       allow(ENV).to receive(:[]).with("NO_PROXY").and_return(nil)
-      allow(ENV).to receive(:[]).with("NETRC").and_return(nil)
+      allow(Netrc).to receive(:read).and_return({})
+
       req = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
       obj = req.net_http_object('host', 80)
       expect(obj.proxy?).to be true
