@@ -422,7 +422,7 @@ describe RestClient::Request do
       it "logs a response with Content-Type=application/json" do
         res = double('result', :code => '200', :class => Net::HTTPOK, :body => %Q{{"some": "json"}})
         res.stub(:[]).with('Content-type').and_return('application/json; charset=utf-8')
-        res.stub(:[]).with('Authorization').and_return(nil)
+        res.stub(:[]).with('content-encoding').and_return(nil)
         @request.log_response res
         log.size.should eq 2
         log[0].should eq "# => 200 OK | application/json 16 bytes\n"
@@ -446,7 +446,7 @@ describe RestClient::Request do
       it "logs a response with a body" do
         res = double('result', :code => '200', :class => Net::HTTPOK, :body => %Q{{"some": "json"}})
         res.stub(:[]).with('Content-type').and_return('application/json; charset=utf-8')
-        res.stub(:[]).with('Authorization').and_return(nil)
+        res.stub(:[]).with('content-encoding').and_return(nil)
         @request.log_response res
         log[0].should eq "# => 200 OK | application/json 16 bytes\n"
         log[1].should eq %Q{# => {"some": "json"}}
@@ -455,19 +455,19 @@ describe RestClient::Request do
       it "logs a response with a nil body" do
         res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
         res.stub(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-        res.stub(:[]).with('Authorization').and_return(nil)
+        res.stub(:[]).with('content-encoding').and_return(nil)
         @request.log_response res
         log[0].should eq "# => 200 OK | text/html 0 bytes\n"
         log[1].should eq %Q{# => nil}
       end
 
-      it "does not log responses that have been encrypted with ApiAuth" do
+      it "does not log responses that have been gzipped" do
         res = double('result', :code => '200', :class => Net::HTTPOK, :body => %Q{���})
         res.stub(:[]).with('Content-type').and_return('application/json; charset=utf-8')
-        res.stub(:[]).with('Authorization').and_return('APIAuth token')
+        res.stub(:[]).with('content-encoding').and_return('gzip')
         @request.log_response res
         log[0].should eq "# => 200 OK | application/json 3 bytes\n"
-        log[1].should eq %Q{# => <encrypted>}
+        log[1].should eq %Q{# => <gzipped>}
       end
     end
   end
