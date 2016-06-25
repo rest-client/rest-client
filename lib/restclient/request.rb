@@ -538,7 +538,11 @@ module RestClient
       content_type_without_charset = (res['Content-type'] || '').gsub(/;.*$/, '')
       RestClient.log << "# => #{res.code} #{readable_status} | #{content_type_without_charset} #{size} bytes\n"
       if RestClient.log_verbosity == :verbose || RestClient.log_response_body_for_content_types.include?(content_type_without_charset)
-        RestClient.log << "# => #{res.body || 'nil'}"
+        if res['Authorization'] && res['Authorization'].match(/\Aapiauth\s/i)
+          RestClient.log << "# => <encrypted>"
+        else
+          RestClient.log << "# => #{res.body || 'nil'}"
+        end
       end
     end
 
