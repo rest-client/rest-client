@@ -538,8 +538,8 @@ module RestClient
       content_type_without_charset = (res['Content-type'] || '').gsub(/;.*$/, '')
       RestClient.log << "# => #{res.code} #{readable_status} | #{content_type_without_charset} #{size} bytes\n"
       if RestClient.log_verbosity == :verbose || RestClient.log_response_body_for_content_types.include?(content_type_without_charset)
-        if res['Authorization'] && res['Authorization'].match(/\Aapiauth\s/i)
-          RestClient.log << "# => <encrypted>"
+        if res['content-encoding'] == 'gzip'
+          RestClient.log << "# => <gzipped>"
         else
           RestClient.log << "# => #{res.body || 'nil'}"
         end
