@@ -439,6 +439,7 @@ describe RestClient::Request do
 
     context "log_verbosity is set to :verbose" do
       before(:each) { RestClient.log_verbosity = :verbose }
+      after(:each) { RestClient.log_verbosity = nil }
       let!(:log) { RestClient.log = [] }
 
       it "logs a response with a body" do
