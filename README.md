@@ -45,6 +45,35 @@ There are also several development dependencies. It's recommended to use
 [bundler](http://bundler.io/) to manage these dependencies for hacking on
 rest-client.
 
+### Upgrading to rest-client 2.0 from 1.x
+
+Users are encouraged to upgrade to rest-client 2.0, which cleans up a number of
+API warts and wrinkles, making rest-client generally more useful. Usage is
+largely compatible, so many applications will be able to upgrade with no
+changes.
+
+Overview of significant changes:
+
+* requires Ruby >= 2.0
+* `RestClient::Response` objects are a subclass of `String` rather than a
+  Frankenstein monster. And `#body` or `#to_s` return a true `String` object.
+* cleanup of exception classes, including new `RestClient::Exceptions::Timeout`
+* improvements to handling of redirects: responses and history are properly
+  exposed
+* major changes to cookie support: cookie jars are used for browser-like
+  behavior throughout
+* encoding: Content-Type charset response headers are used to automatically set
+  the encoding of the response string
+* HTTP params: handling of GET/POST params is more consistent and sophisticated
+  for deeply nested hash objects, and `ParamsArray` can be used to pass ordered
+  params
+* improved proxy support with per-request proxy configuration, plus the ability
+  to disable proxies set by environment variables
+* default request headers: rest-client sets `Accept: */*` and
+  `User-Agent: rest-client/...`
+
+See [history.md](./history.md) for a more complete description of changes.
+
 ## Usage: Raw URL
 ```ruby
 require 'rest-client'
@@ -177,9 +206,37 @@ end
 ➔ 404 Resource Not Found | text/html 282 bytes
 ```
 
-### Manually following redirection
+### Redirection
+
+By default, rest-client will follow HTTP 30x redirection requests.
+
+__New in 2.0:__ `RestClient::Response` exposes a `#history` method that returns
+a list of each response received in a redirection chain.
+
+```ruby
+>> r = RestClient.get('http://httpbin.org/redirect/2')
+=> <RestClient::Response 200 "{\n  \"args\":...">
+
+# see each response in the redirect chain
+>> r.history
+=> [<RestClient::Response 302 "<!DOCTYPE H...">, <RestClient::Response 302 "">]
+
+# see each requested URL
+>> r.request.url
+=> "http://httpbin.org/get"
+>> r.history.map {|x| x.request.url}
+=> ["http://httpbin.org/redirect/2", "http://httpbin.org/relative-redirect/1"]
+```
+
+#### Manually following redirection
 
 To disable automatic redirection, set `:max_redirects => 0`.
+
+__New in 2.0:__ Prior versions of rest-client would raise
+`RestClient::MaxRedirectsReached`, with no easy way to access the server's
+response. In 2.0, rest-client raises the normal
+`RestClient::ExceptionWithResponse` as it would with any other non-HTTP-20x
+response.
 
 ```ruby
 >> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1')
@@ -226,7 +283,7 @@ Response objects have several useful methods. (See the class rdoc for more detai
 - `Response#cookies`: A hash of HTTP cookies set by the server
 - `Response#cookie_jar`: <em>New in 1.8</em> An HTTP::CookieJar of cookies
 - `Response#request`: The RestClient::Request object used to make the request
-- `Response#history`: If redirection was followed, a list of prior Response objects
+- `Response#history`: <em>New in 2.0</em> If redirection was followed, a list of prior Response objects
 
 ```ruby
 RestClient.get('http://example.com')

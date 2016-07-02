@@ -59,6 +59,10 @@ module RestClient
     #
     # This list will be used by default if the Ruby global OpenSSL default
     # ciphers appear to be a weak list.
+    #
+    # TODO: either remove this code or always use it, since Ruby uses a decent
+    # cipher list in versions >= 2.0.
+    #
     DefaultCiphers = %w{
       !aNULL
       !eNULL
