@@ -259,5 +259,11 @@ Content-Type: text/plain\r
     it "shouldn't treat hashes as streameable" do
       expect(RestClient::Payload.generate({"foo" => 'bar'})).to be_kind_of(RestClient::Payload::UrlEncoded)
     end
+
+    it "should recognize multipart payload wrapped in ParamsArray" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      params = RestClient::ParamsArray.new([[:image, f]])
+      expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::Multipart)
+    end
   end
 end

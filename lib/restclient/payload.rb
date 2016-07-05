@@ -17,6 +17,12 @@ module RestClient
         else
           UrlEncoded.new(params)
         end
+      elsif params.is_a?(ParamsArray)
+        if _has_file?(params)
+          Multipart.new(params)
+        else
+          UrlEncoded.new(params)
+        end
       elsif params.respond_to?(:read)
         Streamed.new(params)
       else
