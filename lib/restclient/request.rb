@@ -21,6 +21,8 @@ module RestClient
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
+  # * :proxy An HTTP proxy URI to use for this request. Any value here
+  #   (including nil) will override RestClient.proxy.
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :timeout and :open_timeout are how long to wait for a response and to
@@ -32,8 +34,8 @@ module RestClient
   #     OpenSSL::SSL::SSLContext#ciphers=
   class Request
 
-    attr_reader :method, :url, :headers, :cookies,
-                :payload, :user, :password, :timeout, :max_redirects,
+    attr_reader :method, :url, :headers, :cookies, :payload, :proxy,
+                :user, :password, :timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
                 :ssl_opts
 
@@ -122,6 +124,8 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
+
+      @proxy = args.fetch(:proxy) if args.include?(:proxy)
 
       @ssl_opts = {}
 
@@ -249,10 +253,30 @@ module RestClient
       ! Regexp.new('[\x0-\x1f\x7f,;]').match(value)
     end
 
+    # The proxy URI for this request. If `:proxy` was provided on this request,
+    # use it over `RestClient.proxy`.
+    #
+    # @return [URI, nil]
+    #
+    def proxy_uri
+      if defined?(@proxy)
+        if @proxy
+          URI.parse(@proxy)
+        else
+          nil
+        end
+      elsif RestClient.proxy
+        URI.parse(RestClient.proxy)
+      else
+        nil
+      end
+    end
+
     def net_http_class
-      if RestClient.proxy
-        proxy_uri = URI.parse(RestClient.proxy)
-        Net::HTTP::Proxy(proxy_uri.host, proxy_uri.port, proxy_uri.user, proxy_uri.password)
+      p_uri = proxy_uri
+
+      if p_uri
+        Net::HTTP::Proxy(p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
       else
         Net::HTTP
       end
