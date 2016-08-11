@@ -147,6 +147,12 @@ RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
 ➔ GET http://example.com/resource?foo=bar
 ```
 
+When using `execute`, the Content-Type headers are not generated; you must add them yourself:
+
+```ruby
+RestClient::Request.execute(method: :post, url: 'https://example.com/resource', payload: your_body.to_json, headers: {content_type: :json, accept: :json}
+```
+
 ## Multipart
 
 Yeah, that's right!  This does multipart sends for you!
