@@ -456,6 +456,16 @@ describe RestClient::Request, :include_helpers do
         request.send(:setup_credentials, req)
       end
     end
+
+    it "sets up digest authentication" do
+      allow(@request).to receive(:user).and_return('joe')
+      allow(@request).to receive(:password).and_return('mypass')
+      allow(RestClient).to receive(:head).with(anything).and_return(true)
+      req = double("request")
+      # initialize request again to set the auth_type option
+      digest_request = RestClient::Request.new(@request.args.merge!(auth_type: :digest))
+      digest_request.send(:setup_credentials, req, @uri)
+    end
   end
 
   it "catches EOFError and shows the more informative ServerBrokeConnection" do
