@@ -46,6 +46,11 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
+    # parse JSON response
+    def parsed_response
+      JSON.parse(self.body)
+    end
+
     # @param [Net::HTTPResponse] net_http_res
     # @param [RestClient::Request] request
     # @param [Time] start_time
