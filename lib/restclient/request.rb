@@ -85,6 +85,12 @@ module RestClient
       @user = args[:user] if args.include?(:user)
       @password = args[:password] if args.include?(:password)
 
+      @auth_type = if args.include?(:auth_type)
+        args[:auth_type]
+      else
+        nil
+      end
+
       if args.include?(:timeout)
         @read_timeout = args[:timeout]
         @open_timeout = args[:timeout]
@@ -650,7 +656,7 @@ module RestClient
       # this is only needed for Timeout exceptions thrown outside of Net::HTTP.
       established_connection = false
 
-      setup_credentials req
+      setup_credentials req, uri
 
       net = net_http_object(uri.hostname, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
@@ -774,9 +780,23 @@ module RestClient
       end
     end
 
-    def setup_credentials(req)
+    def setup_credentials(req, uri = nil)
       if user && !@processed_headers_lowercase.include?('authorization')
-        req.basic_auth(user, password)
+        if @auth_type == :digest
+          RestClient.head(uri.to_s) do |response, request, result|
+            auth_header = response.headers[:www_authenticate]
+            if auth_header =~ /Digest realm=/
+              digest_auth = Net::HTTP::DigestAuth.new
+              uri.user = user
+              uri.password = password
+              auth = digest_auth.auth_header(uri, auth_header, @method.upcase)
+
+              req["Authorization"] = auth
+            end
+          end
+        else
+          req.basic_auth(user, password)
+        end
       end
     end
 

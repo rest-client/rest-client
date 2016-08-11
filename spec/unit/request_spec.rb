@@ -427,7 +427,7 @@ describe RestClient::Request, :include_helpers do
 
       allow(@request).to receive(:user).and_return('joe')
       allow(@request).to receive(:password).and_return('mypass')
-      expect(@request).to receive(:setup_credentials).with('req')
+      expect(@request).to receive(:setup_credentials).with('req', @uri)
 
       @request.send(:transmit, @uri, 'req', nil)
     end

@@ -131,6 +131,10 @@ module RestClient
       options[:log] || RestClient.log
     end
 
+    def auth_type
+      options[:auth_type]
+    end
+
     # Construct a subresource, preserving authentication.
     #
     # Example:
