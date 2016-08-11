@@ -1,4 +1,5 @@
 require 'net/http'
+require 'net/http/digest_auth'
 require 'openssl'
 require 'stringio'
 require 'uri'
