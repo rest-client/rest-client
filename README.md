@@ -75,30 +75,48 @@ Overview of significant changes:
 See [history.md](./history.md) for a more complete description of changes.
 
 ## Usage: Raw URL
+
+Basic usage:
+
+```ruby
+require 'rest-client'
+
+RestClient.get(url, headers={})
+
+RestClient.post(url, payload, headers={})
+```
+
+In the high level helpers, only POST, PATCH, and PUT take a payload argument.
+To pass a payload with other HTTP verbs or to pass more advanced options, use
+`RestClient::Request.execute` instead.
+
+More detailed examples:
+
 ```ruby
 require 'rest-client'
 
 RestClient.get 'http://example.com/resource'
 
-RestClient.get 'http://example.com/resource', {:params => {:id => 50, 'foo' => 'bar'}}
+RestClient.get 'http://example.com/resource', {params: {id: 50, 'foo' => 'bar'}}
 
-RestClient.get 'https://user:password@example.com/private/resource', {:accept => :json}
+RestClient.get 'https://user:password@example.com/private/resource', {accept: :json}
 
-RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
+RestClient.post 'http://example.com/resource', {param1: 'one', nested: {param2: 'two'}}
 
-RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+RestClient.post "http://example.com/resource", {'x' => 1}.to_json, {content_type: :json, accept: :json}
 
 RestClient.delete 'http://example.com/resource'
 
-response = RestClient.get 'http://example.com/resource'
-response.code
-➔ 200
-response.cookies
-➔ {"Foo"=>"BAR", "QUUX"=>"QUUUUX"}
-response.headers
-➔ {:content_type=>"text/html; charset=utf-8", :cache_control=>"private" ...
-response.to_str
-➔ \n<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n   \"http://www.w3.org/TR/html4/strict.dtd\">\n\n<html ....
+>> response = RestClient.get 'http://example.com/resource'
+=> <RestClient::Response 200 "<!doctype h...">
+>> response.code
+=> 200
+>> response.cookies
+=> {"Foo"=>"BAR", "QUUX"=>"QUUUUX"}
+>> response.headers
+=> {:content_type=>"text/html; charset=utf-8", :cache_control=>"private" ... }
+>> response.body
+=> "<!doctype html>\n<html>\n<head>\n    <title>Example Domain</title>\n\n ..."
 
 RestClient.post( url,
   {
