@@ -2,7 +2,7 @@ require 'spec_helper'
 
 describe RestClient::Request do
   before do
-    @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
+    @request = RestClient::Request.new(:method => :put, :url => 'https://some/resource', :payload => 'payload')
 
     @uri = double("uri")
     @uri.stub(:request_uri).and_return('/resource')
@@ -230,7 +230,7 @@ describe RestClient::Request do
   end
 
   it "executes by constructing the Net::HTTP object, headers, and payload and calling transmit" do
-    @request.should_receive(:parse_url_with_auth).with('http://some/resource').and_return(@uri)
+    @request.should_receive(:parse_url_with_auth).with('https://some/resource').and_return(@uri)
     klass = double("net:http class")
     @request.should_receive(:net_http_request_class).with(:put).and_return(klass)
     klass.should_receive(:new).and_return('result')
@@ -519,7 +519,7 @@ describe RestClient::Request do
     end
 
     it "should set net.verify_mode to OpenSSL::SSL::VERIFY_NONE if verify_ssl is false" do
-      @request = RestClient::Request.new(:method => :put, :verify_ssl => false, :url => 'http://some/resource', :payload => 'payload')
+      @request = RestClient::Request.new(:method => :put, :verify_ssl => false, :url => 'https://some/resource', :payload => 'payload')
       @net.should_receive(:verify_mode=).with(OpenSSL::SSL::VERIFY_NONE)
       @http.stub(:request)
       @request.stub(:process_result)

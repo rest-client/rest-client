@@ -123,45 +123,49 @@ module RestClient
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
 
-      @ssl_opts = {}
+      # provide safe defaults also valid for non-SSL connections
+      @ssl_opts = { :verify_ssl => false }
 
-      if args.include?(:verify_ssl)
-        v_ssl = args.fetch(:verify_ssl)
-        if v_ssl
-          if v_ssl == true
-            # interpret :verify_ssl => true as VERIFY_PEER
-            @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+      # only do (expensive!) SSL context setup when needed
+      if @url.start_with?('https')
+        if args.include?(:verify_ssl)
+          v_ssl = args.fetch(:verify_ssl)
+          if v_ssl
+            if v_ssl == true
+              # interpret :verify_ssl => true as VERIFY_PEER
+              @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
+            else
+              # otherwise pass through any truthy values
+              @ssl_opts[:verify_ssl] = v_ssl
+            end
           else
-            # otherwise pass through any truthy values
-            @ssl_opts[:verify_ssl] = v_ssl
+            # interpret all falsy :verify_ssl values as VERIFY_NONE
+            @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_NONE
           end
         else
-          # interpret all falsy :verify_ssl values as VERIFY_NONE
-          @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_NONE
+          # if :verify_ssl was not passed, default to VERIFY_PEER
+          @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
         end
-      else
-        # if :verify_ssl was not passed, default to VERIFY_PEER
-        @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
-      end
 
-      SSLOptionList.each do |key|
-        source_key = ('ssl_' + key).to_sym
-        if args.has_key?(source_key)
-          @ssl_opts[key.to_sym] = args.fetch(source_key)
+        SSLOptionList.each do |key|
+          source_key = ('ssl_' + key).to_sym
+          if args.has_key?(source_key)
+            @ssl_opts[key.to_sym] = args.fetch(source_key)
+          end
         end
-      end
 
-      # If there's no CA file, CA path, or cert store provided, use default
-      if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
-        @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
-      end
+        # If there's no CA file, CA path, or cert store provided, use default
+        if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
+          @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
+        end
 
-      unless @ssl_opts.include?(:ciphers)
-        # If we're on a Ruby version that has insecure default ciphers,
-        # override it with our default list.
-        if WeakDefaultCiphers.include?(
-             OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
-          @ssl_opts[:ciphers] = DefaultCiphers
+        unless @ssl_opts.include?(:ciphers)
+          # If we're on a Ruby version that has insecure default ciphers,
+          # override it with our default list.
+          if WeakDefaultCiphers.include?(
+               OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
+            @ssl_opts[:ciphers] = DefaultCiphers
+          end
         end
       end
 
