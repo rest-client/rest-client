@@ -75,30 +75,48 @@ Overview of significant changes:
 See [history.md](./history.md) for a more complete description of changes.
 
 ## Usage: Raw URL
+
+Basic usage:
+
+```ruby
+require 'rest-client'
+
+RestClient.get(url, headers={})
+
+RestClient.post(url, payload, headers={})
+```
+
+In the high level helpers, only POST, PATCH, and PUT take a payload argument.
+To pass a payload with other HTTP verbs or to pass more advanced options, use
+`RestClient::Request.execute` instead.
+
+More detailed examples:
+
 ```ruby
 require 'rest-client'
 
 RestClient.get 'http://example.com/resource'
 
-RestClient.get 'http://example.com/resource', {:params => {:id => 50, 'foo' => 'bar'}}
+RestClient.get 'http://example.com/resource', {params: {id: 50, 'foo' => 'bar'}}
 
-RestClient.get 'https://user:password@example.com/private/resource', {:accept => :json}
+RestClient.get 'https://user:password@example.com/private/resource', {accept: :json}
 
-RestClient.post 'http://example.com/resource', :param1 => 'one', :nested => { :param2 => 'two' }
+RestClient.post 'http://example.com/resource', {param1: 'one', nested: {param2: 'two'}}
 
-RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+RestClient.post "http://example.com/resource", {'x' => 1}.to_json, {content_type: :json, accept: :json}
 
 RestClient.delete 'http://example.com/resource'
 
-response = RestClient.get 'http://example.com/resource'
-response.code
-➔ 200
-response.cookies
-➔ {"Foo"=>"BAR", "QUUX"=>"QUUUUX"}
-response.headers
-➔ {:content_type=>"text/html; charset=utf-8", :cache_control=>"private" ...
-response.to_str
-➔ \n<!DOCTYPE html PUBLIC \"-//W3C//DTD HTML 4.01//EN\"\n   \"http://www.w3.org/TR/html4/strict.dtd\">\n\n<html ....
+>> response = RestClient.get 'http://example.com/resource'
+=> <RestClient::Response 200 "<!doctype h...">
+>> response.code
+=> 200
+>> response.cookies
+=> {"Foo"=>"BAR", "QUUX"=>"QUUUUX"}
+>> response.headers
+=> {:content_type=>"text/html; charset=utf-8", :cache_control=>"private" ... }
+>> response.body
+=> "<!doctype html>\n<html>\n<head>\n    <title>Example Domain</title>\n\n ..."
 
 RestClient.post( url,
   {
@@ -191,20 +209,43 @@ See `RestClient::Resource` docs for details.
 - for result codes between `200` and `207`, a `RestClient::Response` will be returned
 - for result codes `301`, `302` or `307`, the redirection will be followed if the request is a `GET` or a `HEAD`
 - for result code `303`, the redirection will be followed and the request transformed into a `GET`
-- for other cases, a `RestClient::Exception` holding the Response will be raised; a specific exception class will be thrown for known error codes
+- for other cases, a `RestClient::ExceptionWithResponse` holding the Response will be raised; a specific exception class will be thrown for known error codes
 - call `.response` on the exception to get the server's response
 
 ```ruby
-RestClient.get 'http://example.com/resource'
-➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
+>> RestClient.get 'http://example.com/nonexistent'
+Exception: RestClient::NotFound: 404 Not Found
 
-begin
-  RestClient.get 'http://example.com/resource'
-rescue => e
-  e.response
-end
-➔ 404 Resource Not Found | text/html 282 bytes
+>> begin
+     RestClient.get 'http://example.com/nonexistent'
+   rescue RestClient::ExceptionWithResponse => e
+     e.response
+   end
+=> <RestClient::Response 404 "<!doctype h...">
 ```
+
+### Other exceptions
+
+While most exceptions have been collected under `RestClient::RequestFailed` aka
+`RestClient::ExceptionWithResponse`, there are a few quirky exceptions that
+have been kept for backwards compatibility.
+
+RestClient will propagate up exceptions like socket errors without modification:
+
+```ruby
+>> RestClient.get 'http://localhost:12345'
+Exception: Errno::ECONNREFUSED: Connection refused - connect(2) for "localhost" port 12345
+```
+
+RestClient handles a few specific error cases separately in order to give
+better error messages. These will hopefully be cleaned up in a future major
+release.
+
+`RestClient::ServerBrokeConnection` is translated from `EOFError` to give a
+better error message.
+
+`RestClient::SSLCertificateNotVerified` is raised when HTTPS validation fails.
+Other `OpenSSL::SSL::SSLError` errors are raised as is.
 
 ### Redirection
 
