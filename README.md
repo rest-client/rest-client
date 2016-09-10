@@ -209,20 +209,43 @@ See `RestClient::Resource` docs for details.
 - for result codes between `200` and `207`, a `RestClient::Response` will be returned
 - for result codes `301`, `302` or `307`, the redirection will be followed if the request is a `GET` or a `HEAD`
 - for result code `303`, the redirection will be followed and the request transformed into a `GET`
-- for other cases, a `RestClient::Exception` holding the Response will be raised; a specific exception class will be thrown for known error codes
+- for other cases, a `RestClient::ExceptionWithResponse` holding the Response will be raised; a specific exception class will be thrown for known error codes
 - call `.response` on the exception to get the server's response
 
 ```ruby
-RestClient.get 'http://example.com/resource'
-➔ RestClient::ResourceNotFound: RestClient::ResourceNotFound
+>> RestClient.get 'http://example.com/nonexistent'
+Exception: RestClient::NotFound: 404 Not Found
 
-begin
-  RestClient.get 'http://example.com/resource'
-rescue => e
-  e.response
-end
-➔ 404 Resource Not Found | text/html 282 bytes
+>> begin
+     RestClient.get 'http://example.com/nonexistent'
+   rescue RestClient::ExceptionWithResponse => e
+     e.response
+   end
+=> <RestClient::Response 404 "<!doctype h...">
 ```
+
+### Other exceptions
+
+While most exceptions have been collected under `RestClient::RequestFailed` aka
+`RestClient::ExceptionWithResponse`, there are a few quirky exceptions that
+have been kept for backwards compatibility.
+
+RestClient will propagate up exceptions like socket errors without modification:
+
+```ruby
+>> RestClient.get 'http://localhost:12345'
+Exception: Errno::ECONNREFUSED: Connection refused - connect(2) for "localhost" port 12345
+```
+
+RestClient handles a few specific error cases separately in order to give
+better error messages. These will hopefully be cleaned up in a future major
+release.
+
+`RestClient::ServerBrokeConnection` is translated from `EOFError` to give a
+better error message.
+
+`RestClient::SSLCertificateNotVerified` is raised when HTTPS validation fails.
+Other `OpenSSL::SSL::SSLError` errors are raised as is.
 
 ### Redirection
 
