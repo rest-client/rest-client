@@ -148,21 +148,13 @@ describe RestClient::Request, :include_helpers do
       jar,
       cookies_arr
     ].each do |cookies|
-      [true, false].each do |in_headers|
-        if in_headers
-          opts = {headers: {cookies: cookies}}
-        else
-          opts = {cookies: cookies}
-        end
-
-        request = RestClient::Request.new(method: :get, url: 'example.com', **opts)
-        expect(request).to receive(:default_headers).and_return({'Foo' => 'bar'})
-        expect(request.make_headers({})).to eq({'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
-        expect(request.make_cookie_header).to eq 'session_id=1; user_id=someone'
-        expect(request.cookies).to eq({'session_id' => '1', 'user_id' => 'someone'})
-        expect(request.cookie_jar.cookies.length).to eq 2
-        expect(request.cookie_jar.object_id).not_to eq jar.object_id # make sure we dup it
-      end
+      request = RestClient::Request.new(method: :get, url: 'example.com', cookies: cookies)
+      expect(request).to receive(:default_headers).and_return({'Foo' => 'bar'})
+      expect(request.make_headers({})).to eq({'Foo' => 'bar', 'Cookie' => 'session_id=1; user_id=someone'})
+      expect(request.make_cookie_header).to eq 'session_id=1; user_id=someone'
+      expect(request.cookies).to eq({'session_id' => '1', 'user_id' => 'someone'})
+      expect(request.cookie_jar.cookies.length).to eq 2
+      expect(request.cookie_jar.object_id).not_to eq jar.object_id # make sure we dup it
     end
 
     # test with no cookies
@@ -199,19 +191,10 @@ describe RestClient::Request, :include_helpers do
   end
 
   it 'rejects or warns with contradictory cookie options' do
-    # same opt in two different places
-    expect {
-      RestClient::Request.new(method: :get, url: 'example.com',
-                              cookies: {bar: '456'},
-                              headers: {cookies: {foo: '123'}})
-    }.to raise_error(ArgumentError, /Cannot pass :cookies in Request.*headers/)
-
     # :cookies opt and Cookie header
     [
       {cookies: {foo: '123'}, headers: {cookie: 'foo'}},
       {cookies: {foo: '123'}, headers: {'Cookie' => 'foo'}},
-      {headers: {cookies: {foo: '123'}, cookie: 'foo'}},
-      {headers: {cookies: {foo: '123'}, 'Cookie' => 'foo'}},
     ].each do |opts|
       expect(fake_stderr {
         RestClient::Request.new(method: :get, url: 'example.com', **opts)
@@ -437,9 +420,9 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "does not attempt to send credentials if Authorization header is set" do
-      @request.headers['Authorization'] = 'Token abc123'
-      allow(@request).to receive(:user).and_return('joe')
-      allow(@request).to receive(:password).and_return('mypass')
+      @request = RestClient::Request.new(method: :get, url: 'http://some/resource',
+                                         headers: {authorization: 'Token abc123'},
+                                         user: 'joe', password: 'mypass')
       req = double("request")
       expect(req).not_to receive(:basic_auth)
       @request.send(:setup_credentials, req)
@@ -736,34 +719,6 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:response_log)
 
       expect(@net).to receive(:read_timeout=).with(nil)
-      expect(@net).to receive(:open_timeout=).with(nil)
-
-      @request.send(:transmit, @uri, 'req', nil)
-    end
-
-    it 'deprecated: warns when disabling timeout by setting it to -1' do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1)
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-
-      expect(@net).to receive(:read_timeout=).with(nil)
-
-      expect(fake_stderr {
-        @request.send(:transmit, @uri, 'req', nil)
-      }).to match(/^Deprecated: .*timeout.* nil instead of -1$/)
-    end
-
-    it "deprecated: disable timeout by setting it to -1" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1, :open_timeout => -1)
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-
-      expect(@request).to receive(:warn)
-      expect(@net).to receive(:read_timeout=).with(nil)
-
-      expect(@request).to receive(:warn)
       expect(@net).to receive(:open_timeout=).with(nil)
 
       @request.send(:transmit, @uri, 'req', nil)
@@ -1228,24 +1183,24 @@ describe RestClient::Request, :include_helpers do
 
   describe 'process_url_params' do
     it 'should handle basic URL params' do
-      expect(@request.process_url_params('https://example.com/foo', params: {key1: 123, key2: 'abc'})).
+      expect(@request.process_url_params('https://example.com/foo', {key1: 123, key2: 'abc'})).
         to eq 'https://example.com/foo?key1=123&key2=abc'
 
-      expect(@request.process_url_params('https://example.com/foo', params: {'key1' => 123})).
+      expect(@request.process_url_params('https://example.com/foo', {'key1' => 123})).
         to eq 'https://example.com/foo?key1=123'
 
       expect(@request.process_url_params('https://example.com/path',
-                                  params: {foo: 'one two', bar: 'three + four == seven'})).
+                                  {foo: 'one two', bar: 'three + four == seven'})).
         to eq 'https://example.com/path?foo=one+two&bar=three+%2B+four+%3D%3D+seven'
     end
 
     it 'should combine with & when URL params already exist' do
-      expect(@request.process_url_params('https://example.com/path?foo=1', params: {bar: 2})).
+      expect(@request.process_url_params('https://example.com/path?foo=1', {bar: 2})).
         to eq 'https://example.com/path?foo=1&bar=2'
     end
 
     it 'should handle complex nested URL params per Rack / Rails conventions' do
-      expect(@request.process_url_params('https://example.com/', params: {
+      expect(@request.process_url_params('https://example.com/', {
         foo: [1,2,3],
         null: nil,
         false: false,
@@ -1258,7 +1213,7 @@ describe RestClient::Request, :include_helpers do
 
     it 'should handle ParamsArray objects' do
       expect(@request.process_url_params('https://example.com/',
-        params: RestClient::ParamsArray.new([[:foo, 1], [:foo, 2]])
+        RestClient::ParamsArray.new([[:foo, 1], [:foo, 2]])
       )).to eq 'https://example.com/?foo=1&foo=2'
     end
   end

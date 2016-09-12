@@ -133,6 +133,7 @@ module RestClient
     def initialize(
         method:,
         url:,
+        payload: nil,
         headers: {},
         params: {},
         cookies: nil,
@@ -145,7 +146,7 @@ module RestClient
         read_timeout: :notprovided, open_timeout: :notprovided,
         timeout: :notprovided,
         ssl_client_cert: nil, ssl_client_key: nil, ssl_ca_file: nil,
-        ssl_ca_path: nil, ssl_cert_store: nil, ssl_verify_callback:
+        ssl_ca_path: nil, ssl_cert_store: :notprovided, ssl_verify_callback:
         nil, ssl_verify_callback_warnings: nil, ssl_version: nil,
         ssl_ciphers: nil,
         before_execution_proc: nil)
@@ -172,25 +173,20 @@ module RestClient
       end
 
       @method = normalize_method(method)
-      @headers = headers.dup.freeze # TODO don't dup/freeze
+      @headers = headers.dup.freeze
       @url = process_url_params(normalize_url(url), params)
 
       @user = @password = nil
-      parse_url_with_auth!(url, use_netrc: use_netrc)
+      parse_url_with_auth!(@url, use_netrc: use_netrc)
 
       # process cookies
-      if cookies
-        @cookie_jar = process_cookie_args(@uri, cookies)
-      else
-        @cookie_jar = nil
-      end
+      @cookie_jar = process_cookie_args(@uri, cookies)
 
       @payload = Payload.generate(payload)
 
       @user = user if user
       @password = password if password
 
-      @read_timeout = @open_timeout = nil
       if timeout != :notprovided
         @read_timeout = @open_timeout = timeout
       end
@@ -226,23 +222,23 @@ module RestClient
         @ssl_client_key = ssl_client_key
         @ssl_ca_file = ssl_ca_file
         @ssl_ca_path = ssl_ca_path
-        @ssl_cert_store = ssl_cert_store
+        @ssl_cert_store = ssl_cert_store if ssl_cert_store != :notprovided
         @ssl_version = ssl_version
         @ssl_ciphers = ssl_ciphers
         @ssl_verify_callback = ssl_verify_callback
         @ssl_verify_callback_warnings = ssl_verify_callback_warnings
 
         # If there's no CA file, CA path, or cert store provided, use default
-        if !ssl_ca_file && !ssl_ca_path && !ssl_cert_store
+        if !@ssl_ca_file && !@ssl_ca_path && !defined?(@ssl_cert_store)
           @ssl_cert_store = self.class.default_ssl_cert_store
         end
 
-        unless ssl_ciphers
+        unless @ssl_ciphers
           # If we're on a Ruby version that has insecure default ciphers,
           # override it with our default list.
           if WeakDefaultCiphers.include?(
                OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
-            @ssl_opts[:ciphers] = DefaultCiphers
+            @ssl_ciphers = DefaultCiphers
           end
         end
       end
@@ -287,7 +283,8 @@ module RestClient
       when RestClient::ParamsArray
       else
         raise ArgumentError.new(
-          'params must be Hash or RestClient::ParamsArray')
+          'params must be Hash or RestClient::ParamsArray, got ' +
+          url_params.inspect)
       end
 
       # build resulting URL with query string
@@ -317,8 +314,6 @@ module RestClient
     #
     def cookies
       hash = {}
-
-      return nil unless @cookie_jar
 
       @cookie_jar.cookies(uri).each do |c|
         hash[c.name] = c.value
@@ -748,14 +743,8 @@ module RestClient
         warn('Try passing :verify_ssl => false instead.')
       end
 
-      net.read_timeout = @read_timeout
-      if defined? @open_timeout
-        if @open_timeout == -1
-          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
-          @open_timeout = nil
-        end
-        net.open_timeout = @open_timeout
-      end
+      net.read_timeout = @read_timeout if defined?(@read_timeout)
+      net.open_timeout = @open_timeout if defined?(@open_timeout)
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, self)
@@ -796,7 +785,7 @@ module RestClient
     end
 
     def setup_credentials(req)
-      req.basic_auth(user, password) if user && !headers.has_key?("Authorization")
+      req.basic_auth(user, password) if user && !@processed_headers.has_key?("Authorization")
     end
 
     def fetch_body(http_response)

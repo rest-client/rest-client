@@ -3,37 +3,37 @@ require_relative '_lib'
 describe RestClient do
   describe "API" do
     it "GET" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource')
       RestClient.get('http://some/resource')
     end
 
     it "POST" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'payload')
       RestClient.post('http://some/resource', 'payload')
     end
 
     it "PUT" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'payload')
       RestClient.put('http://some/resource', 'payload')
     end
 
     it "PATCH" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :patch, :url => 'http://some/resource', :payload => 'payload', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :patch, :url => 'http://some/resource', :payload => 'payload')
       RestClient.patch('http://some/resource', 'payload')
     end
 
     it "DELETE" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :delete, :url => 'http://some/resource')
       RestClient.delete('http://some/resource')
     end
 
     it "HEAD" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :head, :url => 'http://some/resource')
       RestClient.head('http://some/resource')
     end
 
     it "OPTIONS" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :options, :url => 'http://some/resource', :headers => {})
+      expect(RestClient::Request).to receive(:execute).with(:method => :options, :url => 'http://some/resource')
       RestClient.options('http://some/resource')
     end
   end
