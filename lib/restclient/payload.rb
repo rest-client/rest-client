@@ -185,18 +185,6 @@ module RestClient
         @boundary = '----RubyFormBoundary' + s
       end
 
-      # for Multipart do not escape the keys
-      #
-      # Ostensibly multipart keys MAY be percent encoded per RFC 7578, but in
-      # practice no major browser that I'm aware of uses percent encoding.
-      #
-      # Further discussion of multipart encoding:
-      # https://github.com/rest-client/rest-client/pull/403#issuecomment-156976930
-      #
-      def handle_key key
-        key
-      end
-
       def headers
         super.merge({'Content-Type' => %Q{multipart/form-data; boundary=#{boundary}}})
       end

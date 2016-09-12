@@ -63,32 +63,49 @@ require File.dirname(__FILE__) + '/restclient/windows'
 #
 module RestClient
 
-  def self.get(url, headers={}, &block)
-    Request.execute(:method => :get, :url => url, :headers => headers, &block)
+  def self.get(url, options={}, &block)
+    options[:url] = url
+    options[:method] = :get
+    Request.execute(options, &block)
   end
 
-  def self.post(url, payload, headers={}, &block)
-    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers, &block)
+  def self.post(url, payload, options={}, &block)
+    options[:url] = url
+    options[:method] = :post
+    options[:payload] = payload
+    Request.execute(options, &block)
   end
 
-  def self.patch(url, payload, headers={}, &block)
-    Request.execute(:method => :patch, :url => url, :payload => payload, :headers => headers, &block)
+  def self.patch(url, payload, options={}, &block)
+    options[:url] = url
+    options[:method] = :patch
+    options[:payload] = payload
+    Request.execute(options, &block)
   end
 
-  def self.put(url, payload, headers={}, &block)
-    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
+  def self.put(url, payload, options={}, &block)
+    options[:url] = url
+    options[:method] = :put
+    options[:payload] = payload
+    Request.execute(options, &block)
   end
 
-  def self.delete(url, headers={}, &block)
-    Request.execute(:method => :delete, :url => url, :headers => headers, &block)
+  def self.delete(url, options={}, &block)
+    options[:url] = url
+    options[:method] = :delete
+    Request.execute(options, &block)
   end
 
-  def self.head(url, headers={}, &block)
-    Request.execute(:method => :head, :url => url, :headers => headers, &block)
+  def self.head(url, options={}, &block)
+    options[:url] = url
+    options[:method] = :head
+    Request.execute(options, &block)
   end
 
-  def self.options(url, headers={}, &block)
-    Request.execute(:method => :options, :url => url, :headers => headers, &block)
+  def self.options(url, options={}, &block)
+    options[:url] = url
+    options[:method] = :options
+    Request.execute(options, &block)
   end
 
   # A global proxy URL to use for all requests. This can be overridden on a

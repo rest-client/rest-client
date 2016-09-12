@@ -116,13 +116,13 @@ module RestClient
     # Follow a redirection response by making a new HTTP request to the
     # redirection target.
     def follow_redirection(&block)
-      _follow_redirection(request.args.dup, &block)
+      _follow_redirection(request.original_opts.dup, &block)
     end
 
     # Follow a redirection response, but change the HTTP method to GET and drop
     # the payload from the original request.
     def follow_get_redirection(&block)
-      new_args = request.args.dup
+      new_args = request.original_opts.dup
       new_args[:method] = :get
       new_args.delete(:payload)
 

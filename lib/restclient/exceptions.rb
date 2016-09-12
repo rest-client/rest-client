@@ -234,11 +234,4 @@ module RestClient
       self.message = message
     end
   end
-
-  class SSLCertificateNotVerified < Exception
-    def initialize(message = 'SSL certificate not verified')
-      super nil, nil
-      self.message = message
-    end
-  end
 end

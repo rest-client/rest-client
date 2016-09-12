@@ -40,16 +40,29 @@ module RestClient
   #      called with the HTTP request and request params.
   class Request
 
+    # Before attr_reader :method overrides method(), alias it. We still use
+    # :method for backwards compatibility.
+    alias obj_method method
+
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
-                :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :open_timeout, :raw_response, :processed_headers,
+                :verify_ssl, :ssl_client_cert, :ssl_client_key, :ssl_ca_file,
+                :ssl_ca_path, :ssl_cert_store, :ssl_verify_callback,
+                :ssl_verify_callback_warnings, :ssl_version, :ssl_ciphers,
+                :before_execution_proc,
+                :original_opts
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
 
-    def self.execute(args, & block)
-      new(args).execute(& block)
+    # Request.execute is convenience wrapper around Request#execute.
+    #
+    # Request.execute(opts, &block) is equivalent to calling
+    # Request.new(opts).execute(&block)
+    #
+    def self.execute(opts, &block)
+      new(opts).execute(&block)
     end
 
     # This is similar to the list now in ruby core, but adds HIGH for better
@@ -61,7 +74,7 @@ module RestClient
     # ciphers appear to be a weak list.
     #
     # TODO: either remove this code or always use it, since Ruby uses a decent
-    # cipher list in versions >= 2.0.
+    # cipher list in versions >= 2.0. (Though jruby is a special snowflake.)
     #
     DefaultCiphers = %w{
       !aNULL
@@ -113,85 +126,118 @@ module RestClient
       "ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
     ])
 
-    SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
-                       version ciphers verify_callback verify_callback_warnings}
-
     def inspect
       "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
     end
 
-    def initialize args
-      @method = normalize_method(args[:method])
-      @headers = (args[:headers] || {}).dup
-      if args[:url]
-        @url = process_url_params(normalize_url(args[:url]), headers)
-      else
-        raise ArgumentError, "must pass :url"
+    def initialize(
+        method:,
+        url:,
+        headers: {},
+        params: {},
+        cookies: nil,
+        user: nil, password: nil,
+        use_netrc: true,
+        block_response: nil, raw_response: nil,
+        max_redirects: 10,
+        proxy: :notprovided,
+        verify_ssl: OpenSSL::SSL::VERIFY_PEER,
+        read_timeout: :notprovided, open_timeout: :notprovided,
+        timeout: :notprovided,
+        ssl_client_cert: nil, ssl_client_key: nil, ssl_ca_file: nil,
+        ssl_ca_path: nil, ssl_cert_store: nil, ssl_verify_callback:
+        nil, ssl_verify_callback_warnings: nil, ssl_version: nil,
+        ssl_ciphers: nil,
+        before_execution_proc: nil)
+
+      # Preserve the original arguments passed to this function so that we can
+      # use them for creating copies (e.g. for redirection). This is a bit of a
+      # hack, but it seems like the best way to capture the original arguments
+      # to the function. (Ruby 2.1+ only)
+      @original_opts = {}
+      obj_method(__method__).parameters.each do |type, name|
+        value = binding.local_variable_get(name)
+        case type
+        when :req, :opt
+          raise NotImplementedError.new(
+            "This method isn't supposed to accept positional arguments, " +
+            "but received them somehow")
+          # @original_args << value
+        when :keyreq, :key
+          @original_opts[name] = value
+        else
+          raise NotImplementedError.new(
+            "Unexpected parameter type, #{type.inspect}")
+        end
       end
+
+      @method = normalize_method(method)
+      @headers = headers.dup.freeze # TODO don't dup/freeze
+      @url = process_url_params(normalize_url(url), params)
 
       @user = @password = nil
-      parse_url_with_auth!(url)
+      parse_url_with_auth!(url, use_netrc: use_netrc)
 
-      # process cookie arguments found in headers or args
-      @cookie_jar = process_cookie_args!(@uri, @headers, args)
-
-      @payload = Payload.generate(args[:payload])
-
-      @user = args[:user] if args.include?(:user)
-      @password = args[:password] if args.include?(:password)
-
-      if args.include?(:timeout)
-        @read_timeout = args[:timeout]
-        @open_timeout = args[:timeout]
+      # process cookies
+      if cookies
+        @cookie_jar = process_cookie_args(@uri, cookies)
+      else
+        @cookie_jar = nil
       end
-      if args.include?(:read_timeout)
-        @read_timeout = args[:read_timeout]
+
+      @payload = Payload.generate(payload)
+
+      @user = user if user
+      @password = password if password
+
+      @read_timeout = @open_timeout = nil
+      if timeout != :notprovided
+        @read_timeout = @open_timeout = timeout
       end
-      if args.include?(:open_timeout)
-        @open_timeout = args[:open_timeout]
+      if read_timeout != :notprovided
+        @read_timeout = read_timeout
       end
-      @block_response = args[:block_response]
-      @raw_response = args[:raw_response] || false
+      if open_timeout != :notprovided
+        @open_timeout = open_timeout
+      end
 
-      @proxy = args.fetch(:proxy) if args.include?(:proxy)
+      @block_response = block_response
+      @raw_response = raw_response
 
-      @ssl_opts = {}
+      @proxy = proxy if proxy != :notprovided
 
-      if args.include?(:verify_ssl)
-        v_ssl = args.fetch(:verify_ssl)
-        if v_ssl
-          if v_ssl == true
-            # interpret :verify_ssl => true as VERIFY_PEER
-            @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
-          else
-            # otherwise pass through any truthy values
-            @ssl_opts[:verify_ssl] = v_ssl
-          end
+      if verify_ssl
+        if verify_ssl == true
+          # interpret :verify_ssl => true as VERIFY_PEER
+          @verify_ssl = OpenSSL::SSL::VERIFY_PEER
         else
-          # interpret all falsy :verify_ssl values as VERIFY_NONE
-          @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_NONE
+          # otherwise pass through any truthy values
+          @verify_ssl = verify_ssl
         end
       else
-        # if :verify_ssl was not passed, default to VERIFY_PEER
-        @ssl_opts[:verify_ssl] = OpenSSL::SSL::VERIFY_PEER
-      end
-
-      SSLOptionList.each do |key|
-        source_key = ('ssl_' + key).to_sym
-        if args.has_key?(source_key)
-          @ssl_opts[key.to_sym] = args.fetch(source_key)
-        end
+        # interpret all falsy :verify_ssl values as VERIFY_NONE
+        @verify_ssl = OpenSSL::SSL::VERIFY_NONE
       end
 
       # Set some other default SSL options, but only if we have an HTTPS URI.
       if use_ssl?
 
+        @ssl_client_cert = ssl_client_cert
+        @ssl_client_key = ssl_client_key
+        @ssl_ca_file = ssl_ca_file
+        @ssl_ca_path = ssl_ca_path
+        @ssl_cert_store = ssl_cert_store
+        @ssl_version = ssl_version
+        @ssl_ciphers = ssl_ciphers
+        @ssl_verify_callback = ssl_verify_callback
+        @ssl_verify_callback_warnings = ssl_verify_callback_warnings
+
         # If there's no CA file, CA path, or cert store provided, use default
-        if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
-          @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
+        if !ssl_ca_file && !ssl_ca_path && !ssl_cert_store
+          @ssl_cert_store = self.class.default_ssl_cert_store
         end
 
-        unless @ssl_opts.include?(:ciphers)
+        unless ssl_ciphers
           # If we're on a Ruby version that has insecure default ciphers,
           # override it with our default list.
           if WeakDefaultCiphers.include?(
@@ -202,11 +248,10 @@ module RestClient
       end
 
       @tf = nil # If you are a raw request, this is your tempfile
-      @max_redirects = args[:max_redirects] || 10
+      @max_redirects = max_redirects
       @processed_headers = make_headers headers
-      @args = args
 
-      @before_execution_proc = args[:before_execution_proc]
+      @before_execution_proc = before_execution_proc
     end
 
     def execute & block
@@ -215,16 +260,6 @@ module RestClient
       transmit uri, net_http_request_class(method).new(uri, processed_headers), payload, & block
     ensure
       payload.close if payload
-    end
-
-    # SSL-related options
-    def verify_ssl
-      @ssl_opts.fetch(:verify_ssl)
-    end
-    SSLOptionList.each do |key|
-      define_method('ssl_' + key) do
-        @ssl_opts[key.to_sym]
-      end
     end
 
     # Return true if the request URI will use HTTPS.
@@ -237,37 +272,26 @@ module RestClient
 
     # Extract the query parameters and append them to the url
     #
-    # Look through the headers hash for a :params option (case-insensitive,
-    # may be string or symbol). If present and the value is a Hash or
-    # RestClient::ParamsArray, *delete* the key/value pair from the headers
-    # hash and encode the value into a query string. Append this query string
-    # to the URL and return the resulting URL.
+    # Take a Hash or RestClient::ParamsArray and encode the value into a query
+    # string. Append this query string to the URL and return the resulting URL.
     #
     # @param [String] url
-    # @param [Hash] headers An options/headers hash to process. Mutation
-    #   warning: the params key may be removed if present!
+    # @param [Hash, RestClient::ParamsArray] url_params The params Hash or
+    #   ParamsArray with GET param data to add to the URL.
     #
     # @return [String] resulting url with query string
     #
-    def process_url_params(url, headers)
-      url_params = nil
-
-      # find and extract/remove "params" key if the value is a Hash/ParamsArray
-      headers.delete_if do |key, value|
-        if key.to_s.downcase == 'params' &&
-            (value.is_a?(Hash) || value.is_a?(RestClient::ParamsArray))
-          if url_params
-            raise ArgumentError.new("Multiple 'params' options passed")
-          end
-          url_params = value
-          true
-        else
-          false
-        end
+    def process_url_params(url, url_params)
+      case url_params
+      when Hash
+      when RestClient::ParamsArray
+      else
+        raise ArgumentError.new(
+          'params must be Hash or RestClient::ParamsArray')
       end
 
       # build resulting URL with query string
-      if url_params && !url_params.empty?
+      if !url_params.empty?
         query_string = RestClient::Utils.encode_query_string(url_params)
 
         if url.include?('?')
@@ -285,12 +309,16 @@ module RestClient
     # cookies if there are duplicate keys. It's safer to use the cookie_jar
     # directly if that's a concern.
     #
+    # Return nil if cookies were not passed.
+    #
     # @see Request#cookie_jar
     #
-    # @return [Hash]
+    # @return [Hash, nil]
     #
     def cookies
       hash = {}
+
+      return nil unless @cookie_jar
 
       @cookie_jar.cookies(uri).each do |c|
         hash[c.name] = c.value
@@ -320,10 +348,7 @@ module RestClient
       return HTTP::Cookie.cookie_value(arr)
     end
 
-    # Process cookies passed as hash or as HTTP::CookieJar. For backwards
-    # compatibility, these may be passed as a :cookies option masquerading
-    # inside the headers hash. To avoid confusion, if :cookies is passed in
-    # both headers and Request#initialize, raise an error.
+    # Process cookies passed as hash or as HTTP::CookieJar.
     #
     # :cookies may be a:
     # - Hash{String/Symbol => String}
@@ -359,38 +384,22 @@ module RestClient
     # infer the domain name for cookies passed as strings in a hash. To avoid
     # this implicit behavior, pass a full cookie jar or use HTTP::Cookie hash
     # values.
-    # @param [Hash] headers The headers hash from which to pull the :cookies
-    #   option. MUTATION NOTE: This key will be deleted from the hash if
-    #   present.
-    # @param [Hash] args The options passed to Request#initialize. This hash
-    #   will be used as another potential source for the :cookies key.
-    #   These args will not be mutated.
+    # @param [Hash, Array<HTTP::Cookie>, HTTP::CookieJar] cookies The HTTP
+    #   cookies to set.
     #
     # @return [HTTP::CookieJar] A cookie jar containing the parsed cookies.
     #
-    def process_cookie_args!(uri, headers, args)
-
-      # Avoid ambiguity in whether options from headers or options from
-      # Request#initialize should take precedence by raising ArgumentError when
-      # both are present. Prior versions of rest-client claimed to give
-      # precedence to init options, but actually gave precedence to headers.
-      # Avoid that mess by erroring out instead.
-      if headers[:cookies] && args[:cookies]
-        raise ArgumentError.new(
-          "Cannot pass :cookies in Request.new() and in headers hash")
-      end
-
-      cookies_data = headers.delete(:cookies) || args[:cookies]
+    def process_cookie_args(uri, cookies)
 
       # return copy of cookie jar as is
-      if cookies_data.is_a?(HTTP::CookieJar)
-        return cookies_data.dup
+      if cookies.is_a?(HTTP::CookieJar)
+        return cookies.dup
       end
 
       # convert cookies hash into a CookieJar
       jar = HTTP::CookieJar.new
 
-      (cookies_data || []).each do |key, val|
+      (cookies || []).each do |key, val|
 
         # Support for Array<HTTP::Cookie> mode:
         # If key is a cookie object, add it to the jar directly and assert that
@@ -511,6 +520,7 @@ module RestClient
     # @return [String]
     #
     def normalize_url(url)
+      raise ArgumentError.new('url is falsy') unless url
       url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
       url
     end
@@ -644,7 +654,7 @@ module RestClient
     #
     # @raise URI::InvalidURIError on invalid URIs
     #
-    def parse_url_with_auth!(url)
+    def parse_url_with_auth!(url, use_netrc: true)
       uri = URI.parse(url)
 
       if uri.hostname.nil?
@@ -653,7 +663,7 @@ module RestClient
 
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
-      if !@user && !@password
+      if !@user && !@password && use_netrc
         @user, @password = Netrc.read[uri.hostname]
       end
 
@@ -738,13 +748,7 @@ module RestClient
         warn('Try passing :verify_ssl => false instead.')
       end
 
-      if defined? @read_timeout
-        if @read_timeout == -1
-          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
-          @read_timeout = nil
-        end
-        net.read_timeout = @read_timeout
-      end
+      net.read_timeout = @read_timeout
       if defined? @open_timeout
         if @open_timeout == -1
           warn 'Deprecated: to disable timeouts, please use nil instead of -1'
@@ -754,11 +758,11 @@ module RestClient
       end
 
       RestClient.before_execution_procs.each do |before_proc|
-        before_proc.call(req, args)
+        before_proc.call(req, self)
       end
 
       if @before_execution_proc
-        @before_execution_proc.call(req, args)
+        @before_execution_proc.call(req, self)
       end
 
       log_request
@@ -788,27 +792,6 @@ module RestClient
         raise RestClient::Exceptions::ReadTimeout.new(nil, err)
       else
         raise RestClient::Exceptions::OpenTimeout.new(nil, err)
-      end
-
-    rescue OpenSSL::SSL::SSLError => error
-      # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
-      # pass through OpenSSL::SSL::SSLError directly.
-      #
-      # Exceptions in verify_callback are ignored [1], and jruby doesn't support
-      # it at all [2]. RestClient has to catch OpenSSL::SSL::SSLError and either
-      # re-throw it as is, or throw SSLCertificateNotVerified based on the
-      # contents of the message field of the original exception.
-      #
-      # The client has to handle OpenSSL::SSL::SSLError exceptions anyway, so
-      # we shouldn't make them handle both OpenSSL and RestClient exceptions.
-      #
-      # [1] https://github.com/ruby/ruby/blob/89e70fe8e7/ext/openssl/ossl.c#L238
-      # [2] https://github.com/jruby/jruby/issues/597
-
-      if error.message.include?("certificate verify failed")
-        raise SSLCertificateNotVerified.new(error.message)
-      else
-        raise error
       end
     end
 
@@ -860,10 +843,6 @@ module RestClient
         response.return!(&block)
       end
 
-    end
-
-    def parser
-      URI.const_defined?(:Parser) ? URI::Parser.new : URI
     end
 
     # Given a MIME type or file extension, return either a MIME type or, if
