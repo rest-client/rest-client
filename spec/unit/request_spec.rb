@@ -839,7 +839,8 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', 'payload')
     end
 
-    it "should not set the ssl_ciphers if set to nil" do
+    it "should not set the ssl_ciphers if set to nil",
+        :unless => RestClient::Request::WeakDefaultCiphers.include?(OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers)) do
       @request = RestClient::Request.new(
         :method => :put,
         :url => 'https://some/resource',
