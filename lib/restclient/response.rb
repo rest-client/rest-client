@@ -20,6 +20,10 @@ module RestClient
       String.new(self)
     end
 
+    def parsed_response
+      JSON.parse(body) rescue body
+    end
+
     # Convert the HTTP response body to a pure String object.
     #
     # @return [String]
