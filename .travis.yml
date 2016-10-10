@@ -11,6 +11,7 @@ rvm:
   - "2.3.1" # TODO: switch to "2.3" once travis fixes it
   - "ruby-head"
   - "jruby-9.0.5.0"
+  - "jruby-9.1.5.0"
   - "jruby-head"
 script:
   bundle exec rake test
@@ -42,6 +43,10 @@ matrix:
       rvm: 'jruby-head'
     - os: linux
       rvm: 'jruby-head'
+    - os: osx
+      rvm: 'jruby-9.1.5.0'
+    - os: linux
+      rvm: 'jruby-9.1.5.0'
   fast_finish: true
 
 sudo: false
