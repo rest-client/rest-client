@@ -94,7 +94,11 @@ describe RestClient::Resource do
     expect(parent.send(:[], 'posts', &block2).block).not_to eq block1
   end
 
-  it "the block should be overrideable in ruby 1.9 syntax" do
+  # Test fails on jruby 9.1.[0-5].* due to
+  # https://github.com/jruby/jruby/issues/4217
+  it "the block should be overrideable in ruby 1.9 syntax",
+      :unless => (RUBY_ENGINE == 'jruby' && JRUBY_VERSION =~ /\A9\.1\.[0-5]\./) \
+  do
     block1 = proc {|r| r}
     block2 = ->(r) {}
 
