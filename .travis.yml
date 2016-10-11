@@ -9,7 +9,7 @@ os:
 rvm:
   - "2.0.0"
   - "2.1" # latest 2.1.x
-  - "2.2" # latest 2.2.x
+  - "2.2.5" # TODO: switch to "2.2" once it works for OS X
   - "2.3.1" # TODO: switch to "2.3" once travis fixes it
   - "ruby-head"
   - "jruby-9.0.5.0"
@@ -32,15 +32,8 @@ before_install:
 # only on versions that actually work.
 # (last tested: 2016-10)
 matrix:
-  exclude:
-    - os: osx
-      rvm: '2.2'
-    - os: osx
-      rvm: '2.3.1' # No 2.3.x at all
-
-  include:
-    - os: osx
-      rvm: '2.2.5' # Travis OS X doesn't have 2.2 aliases
+  # exclude: {}
+  # include: {}
 
   allow_failures:
 
