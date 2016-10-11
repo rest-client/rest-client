@@ -41,19 +41,6 @@ matrix:
     # https://github.com/flori/json/issues/303
     - rvm: 'ruby-head'
 
-    # jruby 9.1.x.x fails tests due to bug below
-    - os: osx
-      rvm: 'jruby-head'
-    - os: linux
-      rvm: 'jruby-head'
-
-    # jruby 9.1.x.x fails tests due to jruby bug
-    # https://github.com/jruby/jruby/issues/4217
-    - os: osx
-      rvm: 'jruby-9.1.5.0'
-    - os: linux
-      rvm: 'jruby-9.1.5.0'
-
   # return results as soon as mandatory versions are done
   fast_finish: true
 
