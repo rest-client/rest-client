@@ -20,7 +20,7 @@ module RestClient
       String.new(self)
     end
 
-    def parsed_response
+    def json
       JSON.parse(body) rescue body
     end
 
