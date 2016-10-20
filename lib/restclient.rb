@@ -160,7 +160,17 @@ module RestClient
   @@log = nil
 
   def self.log # :nodoc:
-    @@env_log || @@log
+    local_log || @@env_log || @@log
+  end
+
+  LocalLogVariable = :restclient_local_log
+
+  def self.local_log
+    Thread.current[LocalLogVariable]
+  end
+
+  def self.local_log= logger
+    Thread.current[LocalLogVariable] = create_log logger
   end
 
   @@before_execution_procs = []

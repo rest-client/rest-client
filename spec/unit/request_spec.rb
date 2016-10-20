@@ -612,6 +612,23 @@ describe RestClient::Request, :include_helpers do
       expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
 
+    it 'logs requests with local logger' do
+      log1 = []
+      log2 = []
+      threads = []
+      threads << Thread.new do
+        RestClient.local_log = log1
+        RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client-thread-1'}).log_request
+      end
+      threads << Thread.new do
+        RestClient.local_log = log2
+        RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client-thread-2'}).log_request
+      end
+      threads.each(&:join)
+      expect(log1[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client-thread-1"\n}
+      expect(log2[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client-thread-2"\n}
+    end
+
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo', :headers => {:user_agent => 'rest-client'}).log_request
