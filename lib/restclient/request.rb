@@ -30,6 +30,8 @@ module RestClient
   # * :read_timeout and :open_timeout are how long to wait for a response and
   #     to open a connection, in seconds. Pass nil to disable the timeout.
   # * :timeout can be used to set both timeouts
+  # * :local_host The local host used to establish the connection
+  # * :local_port The local port used to establish the connection
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -43,7 +45,8 @@ module RestClient
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :local_host, :local_port
+
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -139,6 +142,9 @@ module RestClient
 
       @user = args[:user] if args.include?(:user)
       @password = args[:password] if args.include?(:password)
+
+      @local_host = args[:local_host] if args.include?(:local_host)
+      @local_port = args[:local_port] if args.include?(:local_port)
 
       if args.include?(:timeout)
         @read_timeout = args[:timeout]
@@ -752,6 +758,9 @@ module RestClient
         end
         net.open_timeout = @open_timeout
       end
+
+      net.local_host = local_host if local_host
+      net.local_port = local_port if local_port
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
