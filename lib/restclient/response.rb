@@ -38,6 +38,10 @@ module RestClient
       "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
+    def log
+      request.log
+    end
+
     def self.create(body, net_http_res, request)
       result = self.new(body || '')
 
@@ -54,8 +58,8 @@ module RestClient
       begin
         encoding = Encoding.find(charset) if charset
       rescue ArgumentError
-        if RestClient.log
-          RestClient.log << "No such encoding: #{charset.inspect}"
+        if response.log
+          response.log << "No such encoding: #{charset.inspect}"
         end
       end
 

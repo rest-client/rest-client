@@ -131,6 +131,7 @@ module RestClient
         end
       end
 
+      @log = args[:log]
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -525,19 +526,24 @@ module RestClient
       redacted_uri.to_s
     end
 
+    # Default to the global logger if there's not a request-specific one
+    def log
+      @log || RestClient.log
+    end
+
     def log_request
-      return unless RestClient.log
+      return unless log
 
       out = []
 
       out << "RestClient.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
-      RestClient.log << out.join(', ') + "\n"
+      log << out.join(', ') + "\n"
     end
 
     def log_response res
-      return unless RestClient.log
+      return unless log
 
       size = if @raw_response
                File.size(@tf.path)
@@ -545,7 +551,7 @@ module RestClient
                res.body.nil? ? 0 : res.body.size
              end
 
-      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+      log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end
 
     # Return a hash of headers whose keys are capitalized strings
@@ -776,13 +782,13 @@ module RestClient
         http_response.read_body do |chunk|
           @tf.write chunk
           size += chunk.size
-          if RestClient.log
+          if log
             if size == 0
-              RestClient.log << "%s %s done (0 length file)\n" % [@method, @url]
+              log << "%s %s done (0 length file)\n" % [@method, @url]
             elsif total == 0
-              RestClient.log << "%s %s (zero content length)\n" % [@method, @url]
+              log << "%s %s (zero content length)\n" % [@method, @url]
             else
-              RestClient.log << "%s %s %d%% done (%d of %d)\n" % [@method, @url, (size * 100) / total, size, total]
+              log << "%s %s %d%% done (%d of %d)\n" % [@method, @url, (size * 100) / total, size, total]
             end
           end
         end

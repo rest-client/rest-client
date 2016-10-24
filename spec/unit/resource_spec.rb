@@ -7,37 +7,37 @@ describe RestClient::Resource do
 
   context "Resource delegation" do
     it "GET" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.get
     end
 
     it "HEAD" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :head, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.head
     end
 
     it "POST" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :post, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.post 'abc', :content_type => 'image/jpg'
     end
 
     it "PUT" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :put, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.put 'abc', :content_type => 'image/jpg'
     end
 
     it "PATCH" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :patch, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :patch, :url => 'http://some/resource', :payload => 'abc', :headers => {:content_type => 'image/jpg', 'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.patch 'abc', :content_type => 'image/jpg'
     end
 
     it "DELETE" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :delete, :url => 'http://some/resource', :headers => {'X-Something' => '1'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.delete
     end
 
     it "overrides resource headers" do
-      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '2'}, :user => 'jane', :password => 'mypass')
+      expect(RestClient::Request).to receive(:execute).with(:method => :get, :url => 'http://some/resource', :headers => {'X-Something' => '2'}, :user => 'jane', :password => 'mypass', :log => nil)
       @resource.get 'X-Something' => '2'
     end
   end
