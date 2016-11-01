@@ -545,7 +545,25 @@ module RestClient
       out << "RestClient.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
-      log << out.join(', ') + "\n"
+
+      if RestClient.log.respond_to?(:add)
+        RestClient.log.add(RestClient.log.level, out.join(', ') + "\n")
+      else
+        RestClient.log << out.join(', ') + "\n"
+      end
+    end
+
+    def log_response res
+      return unless RestClient.log
+
+      size = if @raw_response
+               File.size(@tf.path)
+             else
+               res.body.nil? ? 0 : res.body.size
+             end
+
+      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
+>>>>>>> 224e59d... Modify log request so that it honors log formatters.
     end
 
     # Return a hash of headers whose keys are capitalized strings
