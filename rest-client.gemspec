@@ -20,7 +20,7 @@ Gem::Specification.new do |s|
   s.add_development_dependency('rspec', '~> 3.0')
   s.add_development_dependency('pry', '~> 0')
   s.add_development_dependency('pry-doc', '~> 0')
-  s.add_development_dependency('rdoc', '>= 2.4.2', '< 5.0')
+  s.add_development_dependency('rdoc', '>= 2.4.2', '< 6.0')
   s.add_development_dependency('rubocop', '~> 0')
 
   s.add_dependency('http-cookie', '>= 1.0.2', '< 2.0')
