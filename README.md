@@ -357,7 +357,7 @@ RestClient.get('http://my-rest-service.com/resource'){ |response, request, resul
   when 423
     raise SomeCustomExceptionIfYouWant
   else
-    response.return!(request, result, &block)
+    response.return!(&block)
   end
 }
 
@@ -369,7 +369,7 @@ RestClient.get('http://my-rest-service.com/resource'){ |response, request, resul
   if [301, 302, 307].include? response.code
     response.follow_redirection(request, result, &block)
   else
-    response.return!(request, result, &block)
+    response.return!(&block)
   end
 }
 ```
