@@ -35,8 +35,8 @@ matrix:
   # exclude: {}
   # include: {}
 
-  # allow_failures:
-    # - rvm: 'ruby-head'
+  allow_failures:
+    - rvm: 'ruby-head'
 
   # return results as soon as mandatory versions are done
   fast_finish: true
