@@ -338,18 +338,20 @@ end
 ➔ <RestClient::Response 404 "<!doctype h...">
 ```
 
-### Response callbacks
+### Response callbacks, error handling
 
 A block can be passed to the RestClient method. This block will then be called with the Response.
 Response.return! can be called to invoke the default response's behavior.
 
 ```ruby
 # Don't raise exceptions but return the response
-RestClient.get('http://example.com/resource'){|response, request, result| response }
-➔ 404 Resource Not Found | text/html 282 bytes
+>> RestClient.get('http://example.com/nonexistent') {|response, request, result| response }
+=> <RestClient::Response 404 "<!doctype h...">
+```
 
+```ruby
 # Manage a specific error code
-RestClient.get('http://my-rest-service.com/resource'){ |response, request, result, &block|
+RestClient.get('http://example.com/resource') { |response, request, result, &block|
   case response.code
   when 200
     p "It worked !"
@@ -360,19 +362,68 @@ RestClient.get('http://my-rest-service.com/resource'){ |response, request, resul
     response.return!(request, result, &block)
   end
 }
+```
 
+But note that it may be more straightforward to use exceptions to handle
+different HTTP error response cases:
+
+```ruby
+begin
+  resp = RestClient.get('http://example.com/resource')
+rescue RestClient::Unauthorized, RestClient::Forbidden => err
+  puts 'Access denied'
+  return err.response
+rescue RestClient::ImATeapot => err
+  puts 'The server is a teapot! # RFC 2324'
+  return err.response
+else
+  puts 'It worked!'
+  return resp
+end
+```
+
+For GET and HEAD requests, rest-client automatically follows redirection. For
+other HTTP verbs, call `.follow_redirection` on the response object (works both
+in block form and in exception form).
+
+```ruby
 # Follow redirections for all request types and not only for get and head
 # RFC : "If the 301, 302 or 307 status code is received in response to a request other than GET or HEAD,
 #        the user agent MUST NOT automatically redirect the request unless it can be confirmed by the user,
 #        since this might change the conditions under which the request was issued."
-RestClient.get('http://my-rest-service.com/resource'){ |response, request, result, &block|
-  if [301, 302, 307].include? response.code
-    response.follow_redirection(request, result, &block)
+
+# block style
+RestClient.post('http://example.com/redirect', 'body') { |response, request, result|
+  case response.code
+  when 301, 302, 307
+    response.follow_redirection
   else
-    response.return!(request, result, &block)
+    response.return!
   end
 }
+
+# exception style by explicit classes
+begin
+  RestClient.post('http://example.com/redirect', 'body')
+rescue RestClient::MovedPermanently,
+       RestClient::Found,
+       RestClient::TemporaryRedirect => err
+  err.response.follow_redirection
+end
+
+# exception style by response code
+begin
+  RestClient.post('http://example.com/redirect', 'body')
+rescue RestClient::ExceptionWithResponse => err
+  case err.http_code
+  when 301, 302, 307
+    err.response.follow_redirection
+  else
+    raise
+  end
+end
 ```
+
 ## Non-normalized URIs
 
 If you need to normalize URIs, e.g. to work with International Resource Identifiers (IRIs),
