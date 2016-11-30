@@ -550,6 +550,14 @@ Basic `x-www-form-urlencoded` POST params:
     "url"=>"https://httpbin.org/post"}
 ```
 
+JSON payload: rest-client does not speak JSON natively, so serialize your
+payload to a string before passing it to rest-client.
+```ruby
+>> payload = {'name' => 'newrepo', 'description': 'A new repo'}
+>> RestClient.post('https://api.github.com/user/repos', payload.to_json, content_type: :json)
+=> <RestClient::Response 201 "{\"id\":75149...">
+```
+
 Advanced GET params (arrays):
 ```ruby
 >> r = RestClient.get('https://http-params.herokuapp.com/get', params: {foo: [1,2,3]})
