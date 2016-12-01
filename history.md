@@ -1,3 +1,9 @@
+# Unreleased
+
+- Warn if auto-generated headers from the payload, such as Content-Type,
+  override headers set by the user. (This is usually not what the user wants to
+  happen, and can be surprising.)
+
 # 2.0.0
 
 This release is largely API compatible, but makes several breaking changes.
