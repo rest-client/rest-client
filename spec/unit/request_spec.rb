@@ -260,6 +260,34 @@ describe RestClient::Request, :include_helpers do
     end
   end
 
+  it 'warns when overriding existing headers via payload' do
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: {'foo' => 1}, headers: {content_type: :json})
+    }).to match(/warning: Overriding "Content-Type" header/i)
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: {'foo' => 1}, headers: {'Content-Type' => 'application/json'})
+    }).to match(/warning: Overriding "Content-Type" header/i)
+
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: '123456', headers: {content_length: '20'})
+    }).to match(/warning: Overriding "Content-Length" header/i)
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: '123456', headers: {'Content-Length' => '20'})
+    }).to match(/warning: Overriding "Content-Length" header/i)
+  end
+
+  it 'does not warn for a normal looking payload' do
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com', payload: 'payload')
+      RestClient::Request.new(method: :post, url: 'example.com', payload: 'payload', headers: {content_type: :json})
+      RestClient::Request.new(method: :post, url: 'example.com', payload: {'foo' => 'bar'})
+    }).to eq ''
+  end
+
   it "uses netrc credentials" do
     expect(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
     request = RestClient::Request.new(:method => :put, :url => 'http://example.com/', :payload => 'payload')
