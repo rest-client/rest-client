@@ -2,13 +2,7 @@ require 'tempfile'
 require 'cgi'
 require 'netrc'
 require 'set'
-
-begin
-  # Use mime/types/columnar if available, for reduced memory usage
-  require 'mime/types/columnar'
-rescue LoadError
-  require 'mime/types'
-end
+require 'mini_mime'
 
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
@@ -864,12 +858,8 @@ module RestClient
         return ext
       end
 
-      types = MIME::Types.type_for(ext)
-      if types.empty?
-        ext
-      else
-        types.first.content_type
-      end
+      type = MiniMime.lookup_by_filename("a.#{ext}")
+      type ? type.content_type : ext
     end
   end
 end
