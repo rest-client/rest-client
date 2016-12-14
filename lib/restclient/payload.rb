@@ -2,7 +2,7 @@ require 'tempfile'
 require 'securerandom'
 require 'stringio'
 
-require 'mime/types'
+require 'mini_mime'
 
 module RestClient
   module Payload
@@ -169,8 +169,8 @@ module RestClient
       end
 
       def mime_for(path)
-        mime = MIME::Types.type_for path
-        mime.empty? ? 'text/plain' : mime[0].content_type
+        mime = MiniMime.lookup_by_filename path
+        mime ? mime.content_type : 'text/plain'
       end
 
       def boundary

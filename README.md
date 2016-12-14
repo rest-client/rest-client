@@ -37,7 +37,7 @@ updates.
 
 The rest-client gem depends on these other gems for usage at runtime:
 
-* [mime-types](http://rubygems.org/gems/mime-types)
+* [mini-mime](http://rubygems.org/gems/mini-mime)
 * [netrc](http://rubygems.org/gems/netrc)
 * [http-cookie](https://rubygems.org/gems/http-cookie)
 
