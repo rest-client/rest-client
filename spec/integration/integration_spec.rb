@@ -13,7 +13,7 @@ describe RestClient do
   end
 
   it "a simple request with gzipped content" do
-    stub_request(:get, "www.example.com").with(:headers => { 'Accept-Encoding' => 'gzip, deflate' }).to_return(:body => "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000", :status => 200,  :headers => { 'Content-Encoding' => 'gzip' } )
+    stub_request(:get, "www.example.com").to_return(:body => "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000", :status => 200,  :headers => { 'Content-Encoding' => 'gzip' } )
     response = RestClient.get "www.example.com"
     expect(response.code).to eq 200
     expect(response.body).to eq "i'm gziped\n"
