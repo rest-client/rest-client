@@ -796,17 +796,17 @@ module RestClient
         end
       end
     rescue EOFError
-      raise RestClient::ServerBrokeConnection
+      raise RestClient::ServerBrokeConnection.new(nil, self)
     rescue Net::OpenTimeout => err
-      raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+      raise RestClient::Exceptions::OpenTimeout.new(nil, err, self)
     rescue Net::ReadTimeout => err
-      raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+      raise RestClient::Exceptions::ReadTimeout.new(nil, err, self)
     rescue Timeout::Error, Errno::ETIMEDOUT => err
       # handling for non-Net::HTTP timeouts
       if established_connection
-        raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+        raise RestClient::Exceptions::ReadTimeout.new(nil, err, self)
       else
-        raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+        raise RestClient::Exceptions::OpenTimeout.new(nil, err, self)
       end
 
     rescue OpenSSL::SSL::SSLError => error

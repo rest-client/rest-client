@@ -200,8 +200,8 @@ module RestClient
     # NB: Previous releases of rest-client would raise RequestTimeout both for
     # HTTP 408 responses and for actual connection timeouts.
     class Timeout < RestClient::RequestTimeout
-      def initialize(message=nil, original_exception=nil)
-        super(nil, nil)
+      def initialize(message=nil, original_exception=nil, request=nil)
+        super(nil, nil, request)
         self.message = message if message
         self.original_exception = original_exception if original_exception
       end
@@ -229,15 +229,15 @@ module RestClient
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.
   class ServerBrokeConnection < Exception
-    def initialize(message = 'Server broke connection')
-      super nil, nil
+    def initialize(message='Server broke connection', request=nil)
+      super nil, nil, request
       self.message = message
     end
   end
 
   class SSLCertificateNotVerified < Exception
-    def initialize(message = 'SSL certificate not verified')
-      super nil, nil
+    def initialize(message='SSL certificate not verified', request=nil)
+      super nil, nil, request
       self.message = message
     end
   end

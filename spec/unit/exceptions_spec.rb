@@ -36,7 +36,7 @@ describe RestClient::Exception do
     end
 
     context 'when response is available' do
-      let(:exception) { described_class.new double('HTTP Response', request: request), nil }
+      let(:exception) { described_class.new double('HTTP Response', request: request) }
       it { is_expected.to eq request }
     end
   end
