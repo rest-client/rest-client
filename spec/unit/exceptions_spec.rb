@@ -1,25 +1,44 @@
 require_relative '_lib'
 
 describe RestClient::Exception do
-  it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
-    e = RestClient::Exception.new
-    expect(e.message).to eq "RestClient::Exception"
+  let(:exception) { described_class.new }
+
+  describe '#message' do
+    subject { exception.message }
+
+    context 'when it is not set' do
+      it { is_expected.to eq 'RestClient::Exception' }
+    end
+
+    context 'when it is explicitly set' do
+      before { exception.message = 'An explicitly set message' }
+      it { is_expected.to eq 'An explicitly set message' }
+    end
   end
 
-  it "returns the 'message' that was set" do
-    e = RestClient::Exception.new
-    message = "An explicitly set message"
-    e.message = message
-    expect(e.message).to eq message
+  describe 'descendants' do
+    [RestClient::Unauthorized, RestClient::ServerBrokeConnection].each do |klass|
+      describe klass.name do
+        subject { klass.new }
+        it { is_expected.to be_a_kind_of(described_class) }
+      end
+    end
   end
 
-  it "sets the exception message to ErrorMessage" do
-    expect(RestClient::ResourceNotFound.new.message).to eq 'Not Found'
-  end
+  describe '#request' do
+    subject { exception.request }
+    let(:request) { double 'HTTP Request' }
+    it { is_expected.to be_nil }
 
-  it "contains exceptions in RestClient" do
-    expect(RestClient::Unauthorized.new).to be_a_kind_of(RestClient::Exception)
-    expect(RestClient::ServerBrokeConnection.new).to be_a_kind_of(RestClient::Exception)
+    context 'when set explicitly' do
+      let(:exception) { described_class.new nil, nil, request }
+      it { is_expected.to eq request }
+    end
+
+    context 'when response is available' do
+      let(:exception) { described_class.new double('HTTP Response', request: request), nil }
+      it { is_expected.to eq request }
+    end
   end
 end
 
@@ -59,6 +78,11 @@ describe RestClient::RequestFailed do
 end
 
 describe RestClient::ResourceNotFound do
+  describe '#message' do
+    subject { described_class.new.message }
+    it { is_expected.to eq 'Not Found' }
+  end
+
   it "also has the http response attached" do
     response = "response"
     begin
