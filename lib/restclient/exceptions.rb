@@ -107,12 +107,12 @@ module RestClient
   # For example, the entire result body (which is
   # probably an HTML error page) is e.response.
   class Exception < RuntimeError
-    attr_accessor :response
-    attr_accessor :original_exception
+    attr_accessor :response, :request, :original_exception
     attr_writer :message
 
-    def initialize response = nil, initial_response_code = nil
+    def initialize response = nil, initial_response_code = nil, request = (response && response.request)
       @response = response
+      @request = request
       @message = nil
       @initial_response_code = initial_response_code
     end

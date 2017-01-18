@@ -50,12 +50,9 @@ describe RestClient::ServerBrokeConnection do
 end
 
 describe RestClient::RequestFailed do
-  before do
-    @response = double('HTTP Response', :code => '502')
-  end
+  let(:response) { double 'HTTP Response', code: '502', request: double('HTTP Request') }
 
   it "stores the http response on the exception" do
-    response = "response"
     begin
       raise RestClient::RequestFailed, response
     rescue RestClient::RequestFailed => e
@@ -64,27 +61,28 @@ describe RestClient::RequestFailed do
   end
 
   it "http_code convenience method for fetching the code as an integer" do
-    expect(RestClient::RequestFailed.new(@response).http_code).to eq 502
+    expect(RestClient::RequestFailed.new(response).http_code).to eq 502
   end
 
   it "http_body convenience method for fetching the body (decoding when necessary)" do
-    expect(RestClient::RequestFailed.new(@response).http_code).to eq 502
-    expect(RestClient::RequestFailed.new(@response).message).to eq 'HTTP status code 502'
+    expect(RestClient::RequestFailed.new(response).http_code).to eq 502
+    expect(RestClient::RequestFailed.new(response).message).to eq 'HTTP status code 502'
   end
 
   it "shows the status code in the message" do
-    expect(RestClient::RequestFailed.new(@response).to_s).to match(/502/)
+    expect(RestClient::RequestFailed.new(response).to_s).to match(/502/)
   end
 end
 
 describe RestClient::ResourceNotFound do
+  let(:response) { double 'HTTP Response', code: '502', request: double('HTTP Request') }
+
   describe '#message' do
     subject { described_class.new.message }
     it { is_expected.to eq 'Not Found' }
   end
 
   it "also has the http response attached" do
-    response = "response"
     begin
       raise RestClient::ResourceNotFound, response
     rescue RestClient::ResourceNotFound => e
