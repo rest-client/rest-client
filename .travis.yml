@@ -14,7 +14,6 @@ rvm:
   - "ruby-head"
   - "jruby-9.0.5.0"
   - "jruby-9.1.5.0"
-  - "jruby-head"
 
 script:
   bundle exec rake test
@@ -36,7 +35,9 @@ matrix:
   # include: {}
 
   allow_failures:
-    - rvm: 'ruby-head'
+    - rvm:
+      - 'ruby-head'
+      - 'jruby-head'
 
   # return results as soon as mandatory versions are done
   fast_finish: true
