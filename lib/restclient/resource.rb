@@ -46,55 +46,25 @@ module RestClient
       end
     end
 
-    def get(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :get,
-              :url => url,
-              :headers => headers), &(block || @block))
+    %w(get head delete).each do |method|
+      define_method method do |additional_headers={}, &block|
+        headers = (options[:headers] || {}).merge(additional_headers)
+        Request.execute(options.merge(
+                :method => method.to_sym,
+                :url => url,
+                :headers => headers), &(block || @block))
+      end
     end
 
-    def head(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :head,
-              :url => url,
-              :headers => headers), &(block || @block))
-    end
-
-    def post(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :post,
-              :url => url,
-              :payload => payload,
-              :headers => headers), &(block || @block))
-    end
-
-    def put(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :put,
-              :url => url,
-              :payload => payload,
-              :headers => headers), &(block || @block))
-    end
-
-    def patch(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :patch,
-              :url => url,
-              :payload => payload,
-              :headers => headers), &(block || @block))
-    end
-
-    def delete(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
-      Request.execute(options.merge(
-              :method => :delete,
-              :url => url,
-              :headers => headers), &(block || @block))
+    %w(post put patch).each do |method|
+      define_method method do |payload, additional_headers={}, &block|
+        headers = (options[:headers] || {}).merge(additional_headers)
+        Request.execute(options.merge(
+                :method => method.to_sym,
+                :url => url,
+                :payload => payload,
+                :headers => headers), &(block || @block))
+      end
     end
 
     def to_s
