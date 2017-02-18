@@ -3,6 +3,9 @@
 - Warn if auto-generated headers from the payload, such as Content-Type,
   override headers set by the user. (This is usually not what the user wants to
   happen, and can be surprising.)
+- Drop the old check for weak default TLS ciphers, and use the built-in Ruby
+  defaults. Ruby versions from Oct. 2014 onward use sane defaults, so this is
+  no longer needed. (#573)
 
 # 2.0.0
 
