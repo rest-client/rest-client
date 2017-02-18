@@ -926,56 +926,6 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', 'payload')
     end
 
-    it "should override ssl_ciphers with better defaults with weak default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
-          :options=>-2147480577,
-        }
-      )
-
-      @request = RestClient::Request.new(
-        :method => :put,
-        :url => 'https://some/resource',
-        :payload => 'payload',
-      )
-
-      expect(@net).to receive(:ciphers=).with(RestClient::Request::DefaultCiphers)
-
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-      @request.send(:transmit, @uri, 'req', 'payload')
-    end
-
-    it "should not override ssl_ciphers with better defaults with different default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"HIGH:!aNULL:!eNULL:!EXPORT:!LOW:!MEDIUM:!SSLv2",
-          :options=>-2147480577,
-        }
-      )
-
-      @request = RestClient::Request.new(
-        :method => :put,
-        :url => 'https://some/resource',
-        :payload => 'payload',
-      )
-
-      expect(@net).not_to receive(:ciphers=)
-
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-      @request.send(:transmit, @uri, 'req', 'payload')
-    end
-
     it "should set the ssl_client_cert if provided" do
       @request = RestClient::Request.new(
               :method => :put,
