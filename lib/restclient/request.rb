@@ -41,64 +41,6 @@ module RestClient
       new(args).execute(& block)
     end
 
-    # This is similar to the list now in ruby core, but adds HIGH and RC4-MD5
-    # for better compatibility (similar to Firefox) and moves AES-GCM cipher
-    # suites above DHE/ECDHE CBC suites (similar to Chromium).
-    # https://github.com/ruby/ruby/commit/699b209cf8cf11809620e12985ad33ae33b119ee
-    #
-    # This list will be used by default if the Ruby global OpenSSL default
-    # ciphers appear to be a weak list.
-    DefaultCiphers = %w{
-      !aNULL
-      !eNULL
-      !EXPORT
-      !SSLV2
-      !LOW
-
-      ECDHE-ECDSA-AES128-GCM-SHA256
-      ECDHE-RSA-AES128-GCM-SHA256
-      ECDHE-ECDSA-AES256-GCM-SHA384
-      ECDHE-RSA-AES256-GCM-SHA384
-      DHE-RSA-AES128-GCM-SHA256
-      DHE-DSS-AES128-GCM-SHA256
-      DHE-RSA-AES256-GCM-SHA384
-      DHE-DSS-AES256-GCM-SHA384
-      AES128-GCM-SHA256
-      AES256-GCM-SHA384
-      ECDHE-ECDSA-AES128-SHA256
-      ECDHE-RSA-AES128-SHA256
-      ECDHE-ECDSA-AES128-SHA
-      ECDHE-RSA-AES128-SHA
-      ECDHE-ECDSA-AES256-SHA384
-      ECDHE-RSA-AES256-SHA384
-      ECDHE-ECDSA-AES256-SHA
-      ECDHE-RSA-AES256-SHA
-      DHE-RSA-AES128-SHA256
-      DHE-RSA-AES256-SHA256
-      DHE-RSA-AES128-SHA
-      DHE-RSA-AES256-SHA
-      DHE-DSS-AES128-SHA256
-      DHE-DSS-AES256-SHA256
-      DHE-DSS-AES128-SHA
-      DHE-DSS-AES256-SHA
-      AES128-SHA256
-      AES256-SHA256
-      AES128-SHA
-      AES256-SHA
-      ECDHE-ECDSA-RC4-SHA
-      ECDHE-RSA-RC4-SHA
-      RC4-SHA
-
-      HIGH
-      +RC4
-      RC4-MD5
-    }.join(":")
-
-    # A set of weak default ciphers that we will override by default.
-    WeakDefaultCiphers = Set.new([
-      "ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
-    ])
-
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
                        version ciphers verify_callback verify_callback_warnings}
 
@@ -154,15 +96,6 @@ module RestClient
       # If there's no CA file, CA path, or cert store provided, use default
       if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
         @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
-      end
-
-      unless @ssl_opts.include?(:ciphers)
-        # If we're on a Ruby version that has insecure default ciphers,
-        # override it with our default list.
-        if WeakDefaultCiphers.include?(
-             OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
-          @ssl_opts[:ciphers] = DefaultCiphers
-        end
       end
 
       @tf = nil # If you are a raw request, this is your tempfile
