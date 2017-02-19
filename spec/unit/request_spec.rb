@@ -927,15 +927,10 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "should override ssl_ciphers with better defaults with weak default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
-          :options=>-2147480577,
-        }
-      )
+      expect(RestClient::Request::WeakDefaultCiphers)
+        .to receive(:include?)
+        .with(OpenSSL::SSL::SSLContext.new.ciphers)
+        .and_return(true)
 
       @request = RestClient::Request.new(
         :method => :put,
@@ -952,15 +947,10 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "should not override ssl_ciphers with better defaults with different default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"HIGH:!aNULL:!eNULL:!EXPORT:!LOW:!MEDIUM:!SSLv2",
-          :options=>-2147480577,
-        }
-      )
+      expect(RestClient::Request::WeakDefaultCiphers)
+        .to receive(:include?)
+        .with(OpenSSL::SSL::SSLContext.new.ciphers)
+        .and_return(false)
 
       @request = RestClient::Request.new(
         :method => :put,
