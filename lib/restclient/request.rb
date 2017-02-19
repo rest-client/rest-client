@@ -194,8 +194,13 @@ module RestClient
         unless @ssl_opts.include?(:ciphers)
           # If we're on a Ruby version that has insecure default ciphers,
           # override it with our default list.
-          if WeakDefaultCiphers.include?(
-               OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers))
+          if defined?(OpenSSL::OPENSSL_LIBRARY_VERSION) &&
+             OpenSSL::OPENSSL_LIBRARY_VERSION.start_with?("OpenSSL 1.1")
+            ciphers = OpenSSL::SSL::SSLContext.new.ciphers.map(&:first).join(':')
+          else
+            ciphers = OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers)
+          end
+          if WeakDefaultCiphers.include?(ciphers)
             @ssl_opts[:ciphers] = DefaultCiphers
           end
         end
