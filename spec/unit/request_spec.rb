@@ -1131,6 +1131,11 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', 'payload')
     end
 
+    it 'should not have weak default ciphers' do
+      expect(OpenSSL::SSL::SSLContext::DEFAULT_PARAMS.fetch(:ciphers)).not_to \
+        equal("ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW")
+    end
+
     # </ssl>
   end
 
