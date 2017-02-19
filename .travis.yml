@@ -2,6 +2,9 @@
 
 language: ruby
 
+dist: trusty
+sudo: false
+
 os:
   - linux
   - osx
@@ -44,5 +47,3 @@ matrix:
 
   # return results as soon as mandatory versions are done
   fast_finish: true
-
-sudo: false
