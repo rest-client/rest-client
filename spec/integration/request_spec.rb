@@ -1,4 +1,5 @@
 require_relative '_lib'
+require 'webrick'
 
 describe RestClient::Request do
   before(:all) do
@@ -124,4 +125,62 @@ describe RestClient::Request do
     end
   end
 
+  class HostEchoServer < WEBrick::HTTPServlet::AbstractServlet
+    def do_GET request, response
+      response.status = 200
+      response['Content-Type'] = 'text/plain'
+      response.body = "Host: #{request.header['host'].first}"
+    end
+  end
+
+  def start_echo_server(bind_address, port)
+    server = WEBrick::HTTPServer.new(BindAddress: bind_address, Port: port)
+    server.mount('/', HostEchoServer)
+    server
+  end
+
+  describe "requests by IP address" do
+    before(:all) do
+      port = 8080
+      begin
+        @v6server = start_echo_server('::1', port)
+        @v6port = port
+      rescue Errno::EADDRINUSE
+        port += 1
+        retry
+      end
+
+      begin
+        @v4server = start_echo_server('127.0.0.1', port)
+        @v4port = port
+      rescue Errno::EADDRINUSE
+        port += 1
+        retry
+      end
+
+      @server_threads = []
+      @server_threads << Thread.new { @v6server.start }
+      @server_threads << Thread.new { @v4server.start }
+
+      puts "started HTTP servers"
+    end
+
+    after(:all) do
+      puts 'stopping HTTP servers'
+      @v6server.shutdown
+      @v4server.shutdown
+      @server_threads.map(&:join)
+      puts 'stopped'
+    end
+
+    it 'correctly set Host for IPv4 server' do
+      resp = RestClient.get("http://127.0.0.1:#{@v4port}")
+      expect(resp.body).to eq "Host: 127.0.0.1:#{@v4port}"
+    end
+
+    it 'correctly set Host for IPv6 server' do
+      resp = RestClient.get("http://[::1]:#{@v6port}")
+      expect(resp.body).to eq "Host: [::1]:#{@v4port}"
+    end
+  end
 end

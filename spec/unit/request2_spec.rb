@@ -32,6 +32,27 @@ describe RestClient::Request do
 
   end
 
+  context "IP addresses in Host header" do
+    it 'passes IPv4 Host header correctly' do
+      stub_request(:get, 'http://127.0.0.1').
+        with(headers: {'Host' => '127.0.0.1'}).
+        to_return(body: 'foo', status: 200)
+
+      expect(RestClient.get('http://127.0.0.1').body).to eq 'foo'
+    end
+
+    # Cannot use webmock to test this because webmock itself handles IPv6
+    # addresses incorrectly. (as of webmock 2.3.2)
+    #
+    # it 'passes IPv6 Host header correctly' do
+    #   stub_request(:get, 'http://[::1]/').
+    #     with(headers: {'Host' => '[::1]'}).
+    #     to_return(body: 'foo', status: 200)
+    #
+    #   expect(RestClient.get('http://[::1]/').body).to eq 'foo'
+    # end
+  end
+
   it "can use a block to process response" do
     response_value = nil
     block = proc do |http_response|
