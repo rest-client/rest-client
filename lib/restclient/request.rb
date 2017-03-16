@@ -783,7 +783,12 @@ module RestClient
     def setup_credentials(req, uri = nil)
       if user && !@processed_headers_lowercase.include?('authorization')
         if @auth_type == :digest
-          RestClient.head(uri.to_s) do |response, request, result|
+          ssl = args.include?(:verify_ssl) ? args[:verify_ssl] : true
+          RestClient::Request.execute(
+            method: :head,
+            url: args[:url],
+            verify_ssl: ssl
+          ) do |response, request, result|
             auth_header = response.headers[:www_authenticate]
             if auth_header =~ /Digest realm=/
               digest_auth = Net::HTTP::DigestAuth.new
