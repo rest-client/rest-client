@@ -185,11 +185,25 @@ Content-Type: text/plain\r
   end
 
   context "streamed payloads" do
-    it "should properly determine the size of file payloads" do
+    it "should properly determine the size of file payloads and set Content-Length" do
       f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
       payload = RestClient::Payload.generate(f)
       expect(payload.size).to eq 76_988
       expect(payload.length).to eq 76_988
+
+      expect(payload.headers).not_to include 'Transfer-Encoding'
+      expect(payload.headers).to include 'Content-Length'
+    end
+
+    it "should set the Transfer-Encoding header to 'chunked' when size is unknown" do
+      IO.pipe do |r, w|
+        w << 'foo'
+        w.close
+        payload = RestClient::Payload.generate(r)
+        expect(payload.size).to eq nil
+        expect(payload.headers).not_to include 'Content-Length'
+        expect(payload.headers).to include 'Transfer-Encoding' => 'chunked'
+      end
     end
 
     it "should properly determine the size of other kinds of streaming payloads" do

@@ -63,7 +63,11 @@ module RestClient
       end
 
       def headers
-        {'Content-Length' => size.to_s}
+        if size
+          {'Content-Length' => size.to_s}
+        else
+          {'Transfer-Encoding' => 'chunked'}
+        end
       end
 
       def size
@@ -92,17 +96,13 @@ module RestClient
       end
 
       def size
-        if @stream.respond_to?(:size)
-          @stream.size
-        elsif @stream.is_a?(IO)
-          @stream.stat.size
-        end
+        @stream.size if @stream.respond_to?(:size)
       end
 
       alias :length :size
     end
 
-    class UrlEncoded < Base
+    class UrlEncoded < Streamed
       def build_stream(params = nil)
         @stream = StringIO.new(Utils.encode_query_string(params))
         @stream.seek(0)
@@ -113,7 +113,7 @@ module RestClient
       end
     end
 
-    class Multipart < Base
+    class Multipart < Streamed
       EOL = "\r\n"
 
       def build_stream(params)
