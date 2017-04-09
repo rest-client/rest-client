@@ -762,13 +762,12 @@ Need caching, more advanced logging or any ability provided by Rack middleware?
 Have a look at rest-client-components: http://github.com/crohr/rest-client-components
 
 ## Credits
-
-|||
-|---------------------|---------------------------------------------------------|
-| REST Client Team    | Andy Brody                                              |
-| Creator             | Adam Wiggins                                            |
-| Maintainers Emeriti | Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch |
-| Major contributions | Blake Mizerany, Julien Kirch                            |
+| | |
+|-------------------------|---------------------------------------------------------|
+| **REST Client Team**    | Andy Brody                                              |
+| **Creator**             | Adam Wiggins                                            |
+| **Maintainers Emeriti** | Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch |
+| **Major contributions** | Blake Mizerany, Julien Kirch                            |
 
 A great many generous folks have contributed features and patches.
 See AUTHORS for the full list.
