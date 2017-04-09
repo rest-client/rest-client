@@ -17,6 +17,8 @@ rvm:
   - "jruby-9.1.5.0"
   - "jruby-head"
 
+cache: bundler
+
 script:
   bundle exec rake test
 
@@ -44,10 +46,3 @@ matrix:
   fast_finish: true
 
 sudo: false
-
-
-# Use Java 8 for jruby to fix some Java 7 bugs.
-addons:
-  apt:
-    packages:
-      - oracle-java8-set-default

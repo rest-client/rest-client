@@ -13,7 +13,8 @@ describe RestClient::Request do
   def default_httpbin_url
     # add a hack to work around java/jruby bug
     # java.lang.RuntimeException: Could not generate DH keypair with backtrace
-    if ['jruby-19mode', 'jruby-9.0.5.0'].include?(ENV['TRAVIS_RUBY_VERSION'])
+    # Also (2017-04-09) Travis Jruby versions have a broken CA keystore
+    if ENV['TRAVIS_RUBY_VERSION'] =~ /\Ajruby-/
       'http://httpbin.org/'
     else
       'https://httpbin.org/'
