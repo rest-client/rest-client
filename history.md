@@ -1,5 +1,8 @@
 # Unreleased
 
+- Suppress the header override warning introduced in 2.0.1 if the value is the
+  same. There's no conflict if the value is unchanged. (#578)
+
 # 2.0.1
 
 - Warn if auto-generated headers from the payload, such as Content-Type,
