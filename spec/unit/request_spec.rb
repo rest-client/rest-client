@@ -280,6 +280,13 @@ describe RestClient::Request, :include_helpers do
     }).to match(/warning: Overriding "Content-Length" header/i)
   end
 
+  it "does not warn when overriding user header with header derived from payload if those header values were identical" do
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: {'foo' => '123456'}, headers: { 'Content-Type' => 'application/x-www-form-urlencoded' })
+    }).not_to match(/warning: Overriding "Content-Type" header/i)
+  end
+
   it 'does not warn for a normal looking payload' do
     expect(fake_stderr {
       RestClient::Request.new(method: :post, url: 'example.com', payload: 'payload')
