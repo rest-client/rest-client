@@ -64,7 +64,7 @@ require File.dirname(__FILE__) + '/restclient/windows'
 module RestClient
 
   def self.get(url, headers={}, &block)
-    Request.execute(:method => :get, :url => url, :headers => headers, &block)
+    Request.execute(:method => :get, :url => url, :payload => headers.delete(:payload), :headers => headers, &block)
   end
 
   def self.post(url, payload, headers={}, &block)
