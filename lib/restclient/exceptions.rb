@@ -125,6 +125,9 @@ module RestClient
         @initial_response_code
       end
     end
+    def http_header
+      @response.header if @response
+    end
 
     def http_headers
       @response.headers if @response
