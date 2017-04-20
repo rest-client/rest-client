@@ -1,7 +1,7 @@
 module RestClient
   # The response from RestClient on a raw request looks like a string, but is
   # actually one of these.  99% of the time you're making a rest call all you
-  # care about is the body, but on the occassion you want to fetch the
+  # care about is the body, but on the occasion you want to fetch the
   # headers you can:
   #
   #   RestClient.get('http://example.com').headers[:content_type]

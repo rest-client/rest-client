@@ -40,7 +40,7 @@ require File.dirname(__FILE__) + '/restclient/windows'
 #   # DELETE
 #   RestClient.delete 'http://example.com/resource'
 #
-#   # retreive the response http code and headers
+#   # retrieve the response http code and headers
 #   res = RestClient.get 'http://example.com/some.jpg'
 #   res.code                    # => 200
 #   res.headers[:content_type]  # => 'image/jpg'
