@@ -171,6 +171,11 @@ module RestClient
     raise ArgumentError.new('block is required') unless proc
     @@before_execution_procs << proc
   end
+  
+  # Reset the procs to be called before each request is executed.
+  def self.reset_before_execution_procs
+    @@before_execution_procs = []
+  end
 
   # Reset the procs to be called before each request is executed.
   def self.reset_before_execution_procs
