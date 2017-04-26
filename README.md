@@ -57,7 +57,8 @@ Overview of significant changes:
 * requires Ruby >= 2.0
 * `RestClient::Response` objects are a subclass of `String` rather than a
   Frankenstein monster. And `#body` or `#to_s` return a true `String` object.
-* cleanup of exception classes, including new `RestClient::Exceptions::Timeout`
+* cleanup of exception classes, including new `RestClient::Exceptions::Timeout`.
+* `:timeout` option renamed `:read_timeout`.
 * improvements to handling of redirects: responses and history are properly
   exposed
 * major changes to cookie support: cookie jars are used for browser-like

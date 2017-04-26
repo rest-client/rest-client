@@ -744,6 +744,20 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', nil)
     end
 
+    it 'handles :timeout with :open_timeout compatibly to 1.x' do
+      # Just a special case of :open_timeout winning, but helpful for code
+      # written before :timeout -> :read_timeout rename.
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34)
+      allow(@http).to receive(:request)
+      allow(@request).to receive(:process_result)
+      allow(@request).to receive(:response_log)
+
+      expect(@net).to receive(:open_timeout=).with(34)
+      expect(@net).to receive(:read_timeout=).with(123)
+
+      @request.send(:transmit, @uri, 'req', nil)
+    end
+
     it 'supersedes :timeout with open/read_timeout' do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34, :read_timeout => 56)
       allow(@http).to receive(:request)
