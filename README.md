@@ -537,10 +537,15 @@ To enable logging globally you can:
 $ RESTCLIENT_LOG=stdout path/to/my/program
 ```
 
-You can also set individual loggers when instantiating a Resource:
+You can also set individual loggers when instantiating a Resource or making an
+individual request:
 
 ```ruby
 resource = RestClient::Resource.new 'http://example.com/resource', log: Logger.new(STDOUT)
+```
+
+```ruby
+RestClient::Request.execute(method: :get, url: 'http://example.com/foo', log: Logger.new(STDERR))
 ```
 
 All options produce logs like this:
