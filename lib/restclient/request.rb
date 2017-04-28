@@ -138,6 +138,8 @@ module RestClient
       end
 
       @log = args[:log]
+      @log_proc = args[:log_proc]
+
       @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
@@ -540,6 +542,11 @@ module RestClient
     def log_request
       return unless log
 
+      if @log_proc
+        @log_proc.call(:request, {request: self, headers: processed_headers})
+        return
+      end
+
       out = []
 
       out << "RestClient.#{method} #{redacted_url.inspect}"
@@ -550,6 +557,11 @@ module RestClient
 
     def log_response res
       return unless log
+
+      if @log_proc
+        @log_proc.call(:request, {request: self, response: res})
+        return
+      end
 
       size = if @raw_response
                File.size(@tf.path)
@@ -790,6 +802,7 @@ module RestClient
           size += chunk.size
           if log
             if size == 0
+              # TODO XXX
               log << "%s %s done (0 length file)\n" % [@method, @url]
             elsif total == 0
               log << "%s %s (zero content length)\n" % [@method, @url]
