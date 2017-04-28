@@ -359,7 +359,7 @@ RestClient.get('http://example.com/resource') { |response, request, result, &blo
   when 423
     raise SomeCustomExceptionIfYouWant
   else
-    response.return!(request, result, &block)
+    response.return!(&block)
   end
 }
 ```
