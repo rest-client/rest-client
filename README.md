@@ -448,11 +448,20 @@ See `RestClient::Request`'s documentation for more information.
 
 ### Streaming
 
-Normally, when you use `RestClient.get` or the lower level `RestClient::Request.execute method: :get` to retrieve data, the entire response is buffered in memory and returned as the response to the call.
+Normally, when you use `RestClient.get` or the lower level
+`RestClient::Request.execute method: :get` to retrieve data, the entire
+response is buffered in memory and returned as the response to the call.
 
-However, if you are retrieving a large amount of data, for example a Docker image, an iso or any other large file, you may want to stream the response directly to disk rather than loading it in memory. If you have a very large file, it may become *impossible* to load it into memory.
+However, if you are retrieving a large amount of data, for example a Docker
+image, an iso or any other large file, you may want to stream the response
+directly to disk rather than loading it in memory. If you have a very large
+file, it may become *impossible* to load it into memory.
 
-If you want to stream the data from the `GET` to a file as it comes, rather than entirely in memory, you must pass `RestClient::Request.execute` a parameter `block_response` to which you pass a `block` that streams the request. That block, in turn, will receive the response and the ability to stream directly to file as each chunk comes across.
+If you want to stream the data from the `GET` to a file as it comes, rather
+than entirely in memory, you must pass `RestClient::Request.execute` a
+parameter `block_response` to which you pass a `block` that streams the
+request. That block, in turn, will receive the response and the ability to
+stream directly to file as each chunk comes across.
 
 The following is an example:
 
