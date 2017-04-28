@@ -3,6 +3,7 @@ require 'openssl'
 require 'stringio'
 require 'uri'
 require 'zlib'
+require 'json/pure'
 
 require File.dirname(__FILE__) + '/restclient/version'
 require File.dirname(__FILE__) + '/restclient/platform'
