@@ -51,7 +51,8 @@ module RestClient
       Request.execute(options.merge(
               :method => :get,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def head(additional_headers={}, &block)
@@ -59,7 +60,8 @@ module RestClient
       Request.execute(options.merge(
               :method => :head,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def post(payload, additional_headers={}, &block)
@@ -68,7 +70,8 @@ module RestClient
               :method => :post,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def put(payload, additional_headers={}, &block)
@@ -77,7 +80,8 @@ module RestClient
               :method => :put,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def patch(payload, additional_headers={}, &block)
@@ -86,7 +90,8 @@ module RestClient
               :method => :patch,
               :url => url,
               :payload => payload,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def delete(additional_headers={}, &block)
@@ -94,7 +99,8 @@ module RestClient
       Request.execute(options.merge(
               :method => :delete,
               :url => url,
-              :headers => headers), &(block || @block))
+              :headers => headers,
+              :log => log), &(block || @block))
     end
 
     def to_s
@@ -119,6 +125,10 @@ module RestClient
 
     def open_timeout
       options[:open_timeout]
+    end
+
+    def log
+      options[:log] || RestClient.log
     end
 
     # Construct a subresource, preserving authentication.

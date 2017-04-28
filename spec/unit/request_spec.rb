@@ -694,6 +694,12 @@ describe RestClient::Request, :include_helpers do
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
       expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end
+
+    it 'logs to a passed logger, if provided' do
+      logger = double('logger', '<<' => true)
+      expect(logger).to receive(:<<)
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', log: logger).log_request
+    end
   end
 
   it "strips the charset from the response content type" do

@@ -528,7 +528,7 @@ $ restclient put http://example.com/resource < input_body
 
 ## Logging
 
-To enable logging you can:
+To enable logging globally you can:
 
 - set RestClient.log with a Ruby Logger, or
 - set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
@@ -536,7 +536,14 @@ To enable logging you can:
 ```ruby
 $ RESTCLIENT_LOG=stdout path/to/my/program
 ```
-Either produces logs like this:
+
+You can also set individual loggers when instantiating a Resource:
+
+```ruby
+resource = RestClient::Resource.new 'http://example.com/resource', log: Logger.new(STDOUT)
+```
+
+All options produce logs like this:
 
 ```ruby
 RestClient.get "http://some/resource"

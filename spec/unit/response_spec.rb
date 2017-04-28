@@ -238,4 +238,16 @@ describe RestClient::Response, :include_helpers do
     end
   end
 
+  describe "logging" do
+    it "uses the request's logger" do
+      stub_request(:get, 'http://some/resource').to_return(body: 'potato', status: 200)
+
+      logger = double('logger', '<<' => true)
+      request = RestClient::Request.new(url: 'http://some/resource', method: :get, log: logger)
+
+      expect(logger).to receive(:<<)
+
+      request.execute
+    end
+  end
 end
