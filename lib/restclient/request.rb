@@ -527,6 +527,7 @@ module RestClient
 
     def log_request
       return unless RestClient.log
+      return unless RestClient.log_level_request_info?
 
       out = []
 
@@ -538,6 +539,7 @@ module RestClient
 
     def log_response res
       return unless RestClient.log
+      return unless RestClient.log_level_response_info?
 
       size = if @raw_response
                File.size(@tf.path)

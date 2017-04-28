@@ -21,6 +21,7 @@ describe RestClient::Request, :include_helpers do
     allow(@net).to receive(:ciphers=)
     allow(@net).to receive(:cert_store=)
     RestClient.log = nil
+    RestClient.log_level = :default
   end
 
   it "accept */* mimetype" do
@@ -691,6 +692,32 @@ describe RestClient::Request, :include_helpers do
 
     it 'does not log request password' do
       log = RestClient.log = []
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
+      expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+    end
+
+    it 'does not log response if log_level is request' do
+      log = RestClient.log = []
+      RestClient.log_level = 'request'
+      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      allow(res).to receive(:[]).with('Content-type').and_return(nil)
+      @request.log_response res
+      expect(log[0]).to eq nil
+    end
+
+    it 'does not log request if log_level is response' do
+      log = RestClient.log = []
+      RestClient.log_level = 'response'
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
+      expect(log[0]).to eq nil
+    end
+
+    it 'does not log request/response if log_level is other than :default' do
+      log = RestClient.log = []
+      RestClient.log_level = 'test'
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
+      expect(log[0]).to eq nil
+      RestClient.log_level = 'default'
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
       expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
     end

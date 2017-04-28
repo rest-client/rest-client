@@ -118,6 +118,10 @@ module RestClient
     @@log = create_log log
   end
 
+  def self.log_level= log_level
+    @@log_level = log_level.to_sym
+  end
+
   # Create a log that respond to << like a logger
   # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
   def self.create_log param
@@ -156,11 +160,24 @@ module RestClient
   end
 
   @@env_log = create_log ENV['RESTCLIENT_LOG']
-
+  @@env_log_level = ENV['RESTCLIENT_LOG_LEVEL']
   @@log = nil
+  @@log_level = :default
 
   def self.log # :nodoc:
     @@env_log || @@log
+  end
+
+  def self.log_level
+    @@env_log_level || @@log_level || :default
+  end
+
+  def self.log_level_request_info?
+    log_level == :request || log_level == :default
+  end
+
+  def self.log_level_response_info?
+    log_level == :response || log_level == :default
   end
 
   @@before_execution_procs = []
