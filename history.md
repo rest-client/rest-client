@@ -1,3 +1,5 @@
+# unreleased
+
 # 2.0.2
 
 - Suppress the header override warning introduced in 2.0.1 if the value is the
