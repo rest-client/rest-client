@@ -5,7 +5,7 @@ module RestClient
 
   module AbstractResponse
 
-    attr_reader :net_http_res, :request
+    attr_reader :net_http_res, :request, :start_time, :end_time, :duration
 
     def inspect
       raise NotImplementedError.new('must override in subclass')
@@ -31,9 +31,18 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
-    def response_set_vars(net_http_res, request)
+    def response_set_vars(net_http_res, request, start_time)
       @net_http_res = net_http_res
       @request = request
+      @start_time = start_time
+      @end_time = Time.now
+
+      if @start_time
+        @duration = @end_time - @start_time
+      else
+        warn 'deprecation warning: Response object created without start_time'
+        @duration = nil
+      end
 
       # prime redirection history
       history

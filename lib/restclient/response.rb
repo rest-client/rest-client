@@ -42,10 +42,10 @@ module RestClient
       request.log
     end
 
-    def self.create(body, net_http_res, request)
+    def self.create(body, net_http_res, request, start_time=nil)
       result = self.new(body || '')
 
-      result.response_set_vars(net_http_res, request)
+      result.response_set_vars(net_http_res, request, start_time)
       fix_encoding(result)
 
       result
