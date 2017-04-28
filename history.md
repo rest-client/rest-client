@@ -2,6 +2,8 @@
 
 - Use mime/types/columnar from mime-types 2.6.1+, which is leaner in memory
   usage than the older storage model of mime-types. (#393)
+- Add `:log` option to individual requests. This allows users to set a log on a
+  per-request / per-resource basis instead of the kludgy global log. (#538)
 
 # 2.0.2
 
