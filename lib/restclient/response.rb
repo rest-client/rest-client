@@ -38,10 +38,6 @@ module RestClient
       "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
-    def log
-      request.log
-    end
-
     def self.create(body, net_http_res, request, start_time=nil)
       result = self.new(body || '')
 

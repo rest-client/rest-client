@@ -11,6 +11,11 @@ module RestClient
       raise NotImplementedError.new('must override in subclass')
     end
 
+    # Logger from the request, potentially nil.
+    def log
+      request.log
+    end
+
     # HTTP status code
     def code
       @code ||= @net_http_res.code.to_i
