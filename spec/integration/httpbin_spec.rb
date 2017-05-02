@@ -1,6 +1,8 @@
 require_relative '_lib'
 require 'json'
 
+require 'zlib'
+
 describe RestClient::Request do
   before(:all) do
     WebMock.disable!
@@ -98,6 +100,29 @@ describe RestClient::Request do
         expect(data['method']).to eq 'GET'
         expect(data.fetch(var)).to be true
       end
+    end
+
+    it 'does not uncompress response when accept-encoding is set' do
+      # == gzip ==
+      raw = execute_httpbin('gzip', method: :get, headers: {accept_encoding: 'gzip, deflate'})
+
+      # check for gzip magic number
+      expect(raw.body).to start_with("\x1F\x8B".b)
+
+      decoded = Zlib::GzipReader.new(StringIO.new(raw.body)).read
+      parsed = JSON.parse(decoded)
+
+      expect(parsed['method']).to eq 'GET'
+      expect(parsed.fetch('gzipped')).to be true
+
+      # == delate ==
+      raw = execute_httpbin('deflate', method: :get, headers: {accept_encoding: 'gzip, deflate'})
+
+      decoded = Zlib::Inflate.new.inflate(raw.body)
+      parsed = JSON.parse(decoded)
+
+      expect(parsed['method']).to eq 'GET'
+      expect(parsed.fetch('deflated')).to be true
     end
   end
 end
