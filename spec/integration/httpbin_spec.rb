@@ -83,5 +83,21 @@ describe RestClient::Request do
         expect(ex.http_code).to eq 401
       }
     end
+
+    it 'handles gzipped/deflated responses' do
+      [['gzip', 'gzipped'], ['deflate', 'deflated']].each do |encoding, var|
+        raw = execute_httpbin(encoding, method: :get)
+
+        begin
+          data = JSON.parse(raw)
+        rescue
+          puts "Failed to parse: " + raw.inspect
+          raise
+        end
+
+        expect(data['method']).to eq 'GET'
+        expect(data.fetch(var)).to be true
+      end
+    end
   end
 end

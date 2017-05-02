@@ -27,30 +27,6 @@ describe RestClient::Request, :include_helpers do
     expect(@request.default_headers[:accept]).to eq '*/*'
   end
 
-  describe "compression" do
-
-    it "decodes an uncompressed result body by passing it straight through" do
-      expect(RestClient::Request.decode(nil, 'xyz')).to eq 'xyz'
-    end
-
-    it "doesn't fail for nil bodies" do
-      expect(RestClient::Request.decode('gzip', nil)).to be_nil
-    end
-
-
-    it "decodes a gzip body" do
-      expect(RestClient::Request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000")).to eq "i'm gziped\n"
-    end
-
-    it "ingores gzip for empty bodies" do
-      expect(RestClient::Request.decode('gzip', '')).to be_empty
-    end
-
-    it "decodes a deflated body" do
-      expect(RestClient::Request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363")).to eq "some deflated text"
-    end
-  end
-
   it "processes a successful result" do
     res = res_double
     allow(res).to receive(:code).and_return("200")
@@ -315,7 +291,7 @@ describe RestClient::Request, :include_helpers do
 
   describe "user headers" do
     it "merges user headers with the default headers" do
-      expect(@request).to receive(:default_headers).and_return({ :accept => '*/*', :accept_encoding => 'gzip, deflate' })
+      expect(@request).to receive(:default_headers).and_return({:accept => '*/*'})
       headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
       expect(headers).to have_key "Accept-Encoding"
       expect(headers["Accept-Encoding"]).to eq "gzip"
@@ -644,25 +620,25 @@ describe RestClient::Request, :include_helpers do
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Content-Length"=>"3", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000), :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs input headers as a hash" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain', :user_agent => 'rest-client' }).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a response including the status code, content type, and result body size in bytes" do
@@ -695,7 +671,7 @@ describe RestClient::Request, :include_helpers do
     it 'does not log request password' do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "User-Agent"=>"rest-client"\n}
     end
 
     it 'logs to a passed logger, if provided' do

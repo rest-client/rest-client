@@ -505,24 +505,6 @@ module RestClient
       cert_store
     end
 
-    def self.decode content_encoding, body
-      if (!body) || body.empty?
-        body
-      elsif content_encoding == 'gzip'
-        Zlib::GzipReader.new(StringIO.new(body)).read
-      elsif content_encoding == 'deflate'
-        begin
-          Zlib::Inflate.new.inflate body
-        rescue Zlib::DataError
-          # No luck with Zlib decompression. Let's try with raw deflate,
-          # like some broken web servers do.
-          Zlib::Inflate.new(-Zlib::MAX_WBITS).inflate body
-        end
-      else
-        body
-      end
-    end
-
     def redacted_uri
       if uri.password
         sanitized_uri = uri.dup
@@ -578,10 +560,13 @@ module RestClient
       end
     end
 
+    # Default headers set by RestClient. In addition to these headers, servers
+    # will receive headers set by Net::HTTP, such as Accept-Encoding and Host.
+    #
+    # @return [Hash<Symbol, String>]
     def default_headers
       {
         :accept => '*/*',
-        :accept_encoding => 'gzip, deflate',
         :user_agent => RestClient::Platform.default_user_agent,
       }
     end
@@ -814,11 +799,12 @@ module RestClient
     # @param start_time [Time] Time of request start
     def process_result(res, start_time, tempfile=nil, &block)
       if @raw_response
-        # We don't decode raw requests
+        unless tempfile
+          raise ArgumentError.new('tempfile is required')
+        end
         response = RawResponse.new(tempfile, res, self, start_time)
       else
-        decoded = Request.decode(res['content-encoding'], res.body)
-        response = Response.create(decoded, res, self, start_time)
+        response = Response.create(res.body, res, self, start_time)
       end
 
       response.log_response
