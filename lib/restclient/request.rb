@@ -826,9 +826,6 @@ module RestClient
     # @param start_time [Time] Time of request start
     def process_result(res, start_time, tempfile, &block)
       if @raw_response
-        unless tempfile
-          raise ArgumentError.new('tempfile required if @raw_response true')
-        end
         # We don't decode raw requests
         response = RawResponse.new(tempfile, res, self, start_time)
       else

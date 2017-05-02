@@ -19,8 +19,15 @@ module RestClient
       "<RestClient::RawResponse @code=#{code.inspect}, @file=#{file.inspect}, @request=#{request.inspect}>"
     end
 
+    # @param [Tempfile] tempfile The temporary file containing the body
+    # @param [Net::HTTPResponse] net_http_res
+    # @param [RestClient::Request] request
+    # @param [Time] start_time
     def initialize(tempfile, net_http_res, request, start_time=nil)
       @file = tempfile
+
+      # reopen the tempfile so we can read it
+      @file.open
 
       response_set_vars(net_http_res, request, start_time)
     end
@@ -30,7 +37,7 @@ module RestClient
     end
 
     def body
-      @file.open
+      @file.rewind
       @file.read
     end
 

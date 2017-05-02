@@ -36,6 +36,9 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
+    # @param [Net::HTTPResponse] net_http_res
+    # @param [RestClient::Request] request
+    # @param [Time] start_time
     def response_set_vars(net_http_res, request, start_time)
       @net_http_res = net_http_res
       @request = request
