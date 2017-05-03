@@ -135,7 +135,7 @@ describe RestClient::AbstractResponse, :include_helpers do
     end
 
     it "should gracefully handle 302 redirect with no location header" do
-      @net_http_res = response_double(code: 302, location: nil)
+      @net_http_res = res_double(code: 302, location: nil)
       @request = request_double()
       @response = MyAbstractResponse.new(@net_http_res, @request)
       expect(@response).to receive(:check_max_redirects).and_return('fake-check')

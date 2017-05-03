@@ -1,8 +1,20 @@
 require 'uri'
 
 module Helpers
-  def response_double(opts={})
-    double('response', {:to_hash => {}}.merge(opts))
+  def res_double(opts={})
+    double('Net::HTTPResponse', {to_hash: {}, body: 'response body'}.merge(opts))
+  end
+
+  def response_from_res_double(net_http_res_double, request=nil, duration: 1)
+    request ||= request_double()
+    start_time = Time.now - duration
+
+    response = RestClient::Response.create(net_http_res_double.body, net_http_res_double, request, start_time)
+
+    # mock duration to ensure it gets the value we expect
+    allow(response).to receive(:duration).and_return(duration)
+
+    response
   end
 
   def fake_stderr

@@ -52,21 +52,21 @@ describe RestClient::Request, :include_helpers do
   end
 
   it "processes a successful result" do
-    res = response_double
+    res = res_double
     allow(res).to receive(:code).and_return("200")
     allow(res).to receive(:body).and_return('body')
     allow(res).to receive(:[]).with('content-encoding').and_return(nil)
-    expect(@request.send(:process_result, res).body).to eq 'body'
-    expect(@request.send(:process_result, res).to_s).to eq 'body'
+    expect(@request.send(:process_result, res, Time.now).body).to eq 'body'
+    expect(@request.send(:process_result, res, Time.now).to_s).to eq 'body'
   end
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = response_double
+      res = res_double
       allow(res).to receive(:code).and_return(code.to_s)
       allow(res).to receive(:body).and_return("")
       allow(res).to receive(:[]).with('content-encoding').and_return(nil)
-      expect(@request.send(:process_result, res)).to be_empty
+      expect(@request.send(:process_result, res, Time.now)).to be_empty
     end
   end
 
@@ -535,25 +535,25 @@ describe RestClient::Request, :include_helpers do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::Unauthorized)
+      res = res_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = response_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::ResourceNotFound)
+      res = res_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = response_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::InternalServerError)
+      res = res_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      expect(@request.send(:process_result, res){|response, request| "foo"}).to eq "foo"
+      res = res_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      expect(@request.send(:process_result, res, Time.now){|response, request| "foo"}).to eq "foo"
     end
   end
 
@@ -667,26 +667,29 @@ describe RestClient::Request, :include_helpers do
 
     it "logs a response including the status code, content type, and result body size in bytes" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
       allow(res).to receive(:[]).with('Content-type').and_return('text/html')
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK | text/html 4 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK | text/html 4 bytes, 1.00s\n"]
     end
 
     it "logs a response with a nil Content-type" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
       allow(res).to receive(:[]).with('Content-type').and_return(nil)
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK |  4 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK |  4 bytes, 1.00s\n"]
     end
 
     it "logs a response with a nil body" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+      res = res_double(code: '200', class: Net::HTTPOK, body: nil)
       allow(res).to receive(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK | text/html 0 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK | text/html 0 bytes, 1.00s\n"]
     end
 
     it 'does not log request password' do
@@ -704,10 +707,11 @@ describe RestClient::Request, :include_helpers do
 
   it "strips the charset from the response content type" do
     log = RestClient.log = []
-    res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+    res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
     allow(res).to receive(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-    @request.log_response res
-    expect(log[0]).to eq "# => 200 OK | text/html 4 bytes\n"
+    response = response_from_res_double(res, @request)
+    response.log_response
+    expect(log).to eq ["# => 200 OK | text/html 4 bytes, 1.00s\n"]
   end
 
   describe "timeout" do
@@ -1155,7 +1159,7 @@ describe RestClient::Request, :include_helpers do
     )
     net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
     allow(net_http_res).to receive(:read_body).and_return(nil)
-    expect(@http).to receive(:request).and_return(@request.send(:fetch_body, net_http_res))
+    expect(@http).to receive(:request).and_return(net_http_res)
     response = @request.send(:transmit, @uri, 'req', 'payload')
     expect(response).not_to be_nil
     expect(response.code).to eq 204
@@ -1173,7 +1177,8 @@ describe RestClient::Request, :include_helpers do
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       allow(net_http_res).to receive(:read_body).and_return("body")
-      @request.send(:fetch_body, net_http_res)
+      received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res)
+      expect(received_tempfile).to eq tempfile
     end
   end
 
