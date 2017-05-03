@@ -553,18 +553,6 @@ module RestClient
       log << out.join(', ') + "\n"
     end
 
-    def log_response(net_http_res, response)
-      return unless log
-
-      duration = response.duration
-
-      code = net_http_res.code
-      res_name = net_http_res.class.to_s.split('::').last
-      content_type = (net_http_res['Content-type'] || '').gsub(/;.*\z/, '')
-
-      log << "# => #{code} #{res_name} | #{content_type} #{response.size} bytes, #{sprintf('%.2f', duration)}s\n"
-    end
-
     # Return a hash of headers whose keys are capitalized strings
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
@@ -824,7 +812,7 @@ module RestClient
 
     # @param res The Net::HTTP response object
     # @param start_time [Time] Time of request start
-    def process_result(res, start_time, tempfile, &block)
+    def process_result(res, start_time, tempfile=nil, &block)
       if @raw_response
         # We don't decode raw requests
         response = RawResponse.new(tempfile, res, self, start_time)
@@ -833,7 +821,7 @@ module RestClient
         response = Response.create(decoded, res, self, start_time)
       end
 
-      log_response(res, response)
+      response.log_response
 
       if block_given?
         block.call(response, self, res, & block)

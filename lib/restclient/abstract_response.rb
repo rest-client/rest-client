@@ -16,6 +16,16 @@ module RestClient
       request.log
     end
 
+    def log_response
+      return unless log
+
+      code = net_http_res.code
+      res_name = net_http_res.class.to_s.gsub(/\ANet::HTTP/, '')
+      content_type = (net_http_res['Content-type'] || '').gsub(/;.*\z/, '')
+
+      log << "# => #{code} #{res_name} | #{content_type} #{size} bytes, #{sprintf('%.2f', duration)}s\n"
+    end
+
     # HTTP status code
     def code
       @code ||= @net_http_res.code.to_i
@@ -48,7 +58,6 @@ module RestClient
       if @start_time
         @duration = @end_time - @start_time
       else
-        warn 'deprecation warning: Response object created without start_time'
         @duration = nil
       end
 
