@@ -2,21 +2,21 @@ require_relative '_lib'
 
 describe RestClient::AbstractResponse, :include_helpers do
 
+  # Sample class implementing AbstractResponse used for testing.
   class MyAbstractResponse
 
     include RestClient::AbstractResponse
 
     attr_accessor :size
 
-    def initialize net_http_res, request
-      @net_http_res = net_http_res
-      @request = request
+    def initialize(net_http_res, request)
+      response_set_vars(net_http_res, request, Time.now - 1)
     end
 
   end
 
   before do
-    @net_http_res = double('net http response')
+    @net_http_res = res_double()
     @request = request_double(url: 'http://example.com', method: 'get')
     @response = MyAbstractResponse.new(@net_http_res, @request)
   end
@@ -92,8 +92,8 @@ describe RestClient::AbstractResponse, :include_helpers do
     it 'handles cookies when URI scheme is implicit' do
       net_http_res = double('net http response')
       expect(net_http_res).to receive(:to_hash).and_return('set-cookie' => ['session_id=1; path=/'])
-      request = double(url: 'example.com', uri: URI.parse('http://example.com'),
-                       method: 'get', cookie_jar: HTTP::CookieJar.new)
+      request = double('request', url: 'example.com', uri: URI.parse('http://example.com'),
+                       method: 'get', cookie_jar: HTTP::CookieJar.new, redirection_history: nil)
       response = MyAbstractResponse.new(net_http_res, request)
       expect(response.cookie_jar).to be_a HTTP::CookieJar
 
@@ -135,7 +135,7 @@ describe RestClient::AbstractResponse, :include_helpers do
     end
 
     it "should gracefully handle 302 redirect with no location header" do
-      @net_http_res = res_double(code: 302, location: nil)
+      @net_http_res = res_double(code: 302)
       @request = request_double()
       @response = MyAbstractResponse.new(@net_http_res, @request)
       expect(@response).to receive(:check_max_redirects).and_return('fake-check')
