@@ -20,7 +20,21 @@ describe RestClient::Request, :include_helpers do
     allow(@net).to receive(:verify_callback=)
     allow(@net).to receive(:ciphers=)
     allow(@net).to receive(:cert_store=)
+    allow(@net).to receive(:open_timeout=) { |t| @net_open_timeout = t }
+    allow(@net).to receive(:read_timeout=) { |t| @net_read_timeout = t }
     RestClient.log = nil
+  end
+
+  def assert_timeouts(open: RestClient::Request::DefaultOpenTimeout,
+                      read: RestClient::Request::DefaultReadTimeout)
+    # test both accessors and values passed to Net::HTTP
+    expect(@request.open_timeout).to eq(open)
+    expect(@request.read_timeout).to eq(read)
+
+    expect(defined?(@net_open_timeout)).to eq('instance-variable')
+    expect(@net_open_timeout).to eq(open)
+    expect(defined?(@net_read_timeout)).to eq('instance-variable')
+    expect(@net_read_timeout).to eq(read)
   end
 
   it "accept */* mimetype" do
@@ -692,16 +706,21 @@ describe RestClient::Request, :include_helpers do
   end
 
   describe "timeout" do
+    it "defaults are sane" do
+      expect(RestClient::Request::DefaultOpenTimeout).to eq(RUBY_VERSION >= '2.3' ? 60 : nil)
+      expect(RestClient::Request::DefaultReadTimeout).to eq(60)
+    end
+
     it "does not set timeouts if not specified" do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload')
+
       allow(@http).to receive(:request)
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).not_to receive(:read_timeout=)
-      expect(@net).not_to receive(:open_timeout=)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts
     end
 
     it 'sets read_timeout' do
@@ -710,9 +729,9 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).to receive(:read_timeout=).with(123)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(read: 123)
     end
 
     it "sets open_timeout" do
@@ -721,9 +740,9 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).to receive(:open_timeout=).with(123)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(open: 123)
     end
 
     it 'sets both timeouts with :timeout' do
@@ -732,10 +751,9 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).to receive(:open_timeout=).with(123)
-      expect(@net).to receive(:read_timeout=).with(123)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(open: 123, read: 123)
     end
 
     it 'supersedes :timeout with open/read_timeout' do
@@ -744,10 +762,9 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).to receive(:open_timeout=).with(34)
-      expect(@net).to receive(:read_timeout=).with(56)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(open: 34, read: 56)
     end
 
 
@@ -757,10 +774,9 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
-      expect(@net).to receive(:read_timeout=).with(nil)
-      expect(@net).to receive(:open_timeout=).with(nil)
-
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(open: nil, read: nil)
     end
 
     it 'deprecated: warns when disabling timeout by setting it to -1' do
@@ -774,6 +790,8 @@ describe RestClient::Request, :include_helpers do
       expect(fake_stderr {
         @request.send(:transmit, @uri, 'req', nil)
       }).to match(/^Deprecated: .*timeout.* nil instead of -1$/)
+
+      assert_timeouts(read: nil)
     end
 
     it "deprecated: disable timeout by setting it to -1" do
@@ -783,12 +801,11 @@ describe RestClient::Request, :include_helpers do
       allow(@request).to receive(:response_log)
 
       expect(@request).to receive(:warn)
-      expect(@net).to receive(:read_timeout=).with(nil)
-
       expect(@request).to receive(:warn)
-      expect(@net).to receive(:open_timeout=).with(nil)
 
       @request.send(:transmit, @uri, 'req', nil)
+
+      assert_timeouts(open: nil, read: nil)
     end
   end
 
