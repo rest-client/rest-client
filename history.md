@@ -14,6 +14,9 @@
   - Note: this changes behavior for compressed responses when using
     `:raw_response => true`. Previously the raw response would not have been
     uncompressed by rest-client, but now Net::HTTP will uncompress it.
+- The previous fix to avoid having Netrc username/password override an
+  Authorization header was case-sensitive and incomplete. Fix this by
+  respecting existing Authorization headers, regardless of letter case. (#550)
 
 # 2.0.2
 
