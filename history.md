@@ -4,6 +4,16 @@
   usage than the older storage model of mime-types. (#393)
 - Add `:log` option to individual requests. This allows users to set a log on a
   per-request / per-resource basis instead of the kludgy global log. (#538)
+- Log request duration by tracking request start and end times. Make
+  `log_response` a method on the Response object, and ensure the `size` method
+  works on RawResponse objects. (#126)
+  - `# => 200 OK | text/html 1270 bytes, 0.08s`
+- Drop custom handling of compression and use built-in Net::HTTP support for
+  supported Content-Encodings like gzip and deflate. Don't set any explicit
+  `Accept-Encoding` header, rely instead on Net::HTTP defaults. (#597)
+  - Note: this changes behavior for compressed responses when using
+    `:raw_response => true`. Previously the raw response would not have been
+    uncompressed by rest-client, but now Net::HTTP will uncompress it.
 
 # 2.0.2
 
