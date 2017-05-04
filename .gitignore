@@ -6,3 +6,5 @@
 /pkg
 /rdoc
 /.yardoc
+
+.idea/*
