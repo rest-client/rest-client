@@ -2,10 +2,10 @@ require_relative '_lib'
 
 describe RestClient::Response, :include_helpers do
   before do
-    @net_http_res = double('net http response', :to_hash => {"Status" => ["200 OK"]}, :code => 200)
+    @net_http_res = res_double(to_hash: {'Status' => ['200 OK']}, code: '200', body: 'abc')
     @example_url = 'http://example.com'
     @request = request_double(url: @example_url, method: 'get')
-    @response = RestClient::Response.create('abc', @net_http_res, @request)
+    @response = response_from_res_double(@net_http_res, @request, duration: 1)
   end
 
   it "behaves like string" do
@@ -17,6 +17,7 @@ describe RestClient::Response, :include_helpers do
   end
 
   it "accepts nil strings and sets it to empty for the case of HEAD" do
+    # TODO
     expect(RestClient::Response.create(nil, @net_http_res, @request).to_s).to eq ""
   end
 
@@ -27,13 +28,13 @@ describe RestClient::Response, :include_helpers do
     end
 
     it 'handles multiple headers by joining with comma' do
-      @net_http_res = double('net http response', :to_hash => {'My-Header' => ['foo', 'bar']}, :code => 200)
-      @example_url = 'http://example.com'
-      @request = request_double(url: @example_url, method: 'get')
-      @response = RestClient::Response.create('abc', @net_http_res, @request)
+      net_http_res = res_double(to_hash: {'My-Header' => ['foo', 'bar']}, code: '200', body: nil)
+      example_url = 'http://example.com'
+      request = request_double(url: example_url, method: 'get')
+      response = response_from_res_double(net_http_res, request)
 
-      expect(@response.raw_headers['My-Header']).to eq ['foo', 'bar']
-      expect(@response.headers[:my_header]).to eq 'foo, bar'
+      expect(response.raw_headers['My-Header']).to eq ['foo', 'bar']
+      expect(response.headers[:my_header]).to eq 'foo, bar'
     end
   end
 
@@ -72,7 +73,7 @@ describe RestClient::Response, :include_helpers do
   describe "exceptions processing" do
     it "should return itself for normal codes" do
       (200..206).each do |code|
-        net_http_res = response_double(:code => '200')
+        net_http_res = res_double(:code => '200')
         resp = RestClient::Response.create('abc', net_http_res, @request)
         resp.return!
       end
@@ -81,7 +82,7 @@ describe RestClient::Response, :include_helpers do
     it "should throw an exception for other codes" do
       RestClient::Exceptions::EXCEPTIONS_MAP.each_pair do |code, exc|
         unless (200..207).include? code
-          net_http_res = response_double(:code => code.to_i)
+          net_http_res = res_double(:code => code.to_i)
           resp = RestClient::Response.create('abc', net_http_res, @request)
           allow(@request).to receive(:max_redirects).and_return(5)
           expect { resp.return! }.to raise_error(exc)
@@ -131,28 +132,27 @@ describe RestClient::Response, :include_helpers do
     end
 
     it "doesn't follow a 301 when the request is a post" do
-      net_http_res = response_double(:code => 301)
+      net_http_res = res_double(:code => 301)
+      response = response_from_res_double(net_http_res, request_double(method: 'post'))
 
-      response = RestClient::Response.create('abc', net_http_res,
-                                             request_double(method: 'post'))
       expect {
         response.return!
       }.to raise_error(RestClient::MovedPermanently)
     end
 
     it "doesn't follow a 302 when the request is a post" do
-      net_http_res = response_double(:code => 302)
-      response = RestClient::Response.create('abc', net_http_res,
-                                             request_double(method: 'post'))
+      net_http_res = res_double(:code => 302)
+      response = response_from_res_double(net_http_res, request_double(method: 'post'))
+
       expect {
         response.return!
       }.to raise_error(RestClient::Found)
     end
 
     it "doesn't follow a 307 when the request is a post" do
-      net_http_res = response_double(:code => 307)
-      response = RestClient::Response.create('abc', net_http_res,
-                                             request_double(method: 'post'))
+      net_http_res = res_double(:code => 307)
+      response = response_from_res_double(net_http_res, request_double(method: 'post'))
+
       expect(response).not_to receive(:follow_redirection)
       expect {
         response.return!
@@ -160,9 +160,8 @@ describe RestClient::Response, :include_helpers do
     end
 
     it "doesn't follow a redirection when the request is a put" do
-      net_http_res = response_double(:code => 301)
-      response = RestClient::Response.create('abc', net_http_res,
-                                             request_double(method: 'put'))
+      net_http_res = res_double(:code => 301)
+      response = response_from_res_double(net_http_res, request_double(method: 'put'))
       expect {
         response.return!
       }.to raise_error(RestClient::MovedPermanently)

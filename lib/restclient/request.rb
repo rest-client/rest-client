@@ -98,6 +98,12 @@ module RestClient
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
 
+      @stream_log_percent = args[:stream_log_percent] || 10
+      if @stream_log_percent <= 0 || @stream_log_percent > 100
+        raise ArgumentError.new(
+          "Invalid :stream_log_percent #{@stream_log_percent.inspect}")
+      end
+
       @proxy = args.fetch(:proxy) if args.include?(:proxy)
 
       @ssl_opts = {}
@@ -138,7 +144,6 @@ module RestClient
       end
 
       @log = args[:log]
-      @tf = nil # If you are a raw request, this is your tempfile
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
       @args = args
@@ -548,18 +553,6 @@ module RestClient
       log << out.join(', ') + "\n"
     end
 
-    def log_response res
-      return unless log
-
-      size = if @raw_response
-               File.size(@tf.path)
-             else
-               res.body.nil? ? 0 : res.body.size
-             end
-
-      log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
-    end
-
     # Return a hash of headers whose keys are capitalized strings
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
@@ -724,6 +717,9 @@ module RestClient
 
       log_request
 
+      start_time = Time.now
+      tempfile = nil
+
       net.start do |http|
         established_connection = true
 
@@ -731,10 +727,16 @@ module RestClient
           net_http_do_request(http, req, payload, &@block_response)
         else
           res = net_http_do_request(http, req, payload) { |http_response|
-            fetch_body(http_response)
+            if @raw_response
+              # fetch body into tempfile
+              tempfile = fetch_body_to_tempfile(http_response)
+            else
+              # fetch body
+              http_response.read_body
+            end
+            http_response
           }
-          log_response res
-          process_result res, & block
+          process_result(res, start_time, tempfile, &block)
         end
       end
     rescue EOFError
@@ -777,43 +779,49 @@ module RestClient
       req.basic_auth(user, password) if user && !headers.has_key?("Authorization")
     end
 
-    def fetch_body(http_response)
-      if @raw_response
-        # Taken from Chef, which as in turn...
-        # Stolen from http://www.ruby-forum.com/topic/166423
-        # Kudos to _why!
-        @tf = Tempfile.new('rest-client.')
-        @tf.binmode
-        size, total = 0, http_response['Content-Length'].to_i
-        http_response.read_body do |chunk|
-          @tf.write chunk
-          size += chunk.size
-          if log
-            if size == 0
-              log << "%s %s done (0 length file)\n" % [@method, @url]
-            elsif total == 0
-              log << "%s %s (zero content length)\n" % [@method, @url]
-            else
-              log << "%s %s %d%% done (%d of %d)\n" % [@method, @url, (size * 100) / total, size, total]
+    def fetch_body_to_tempfile(http_response)
+      # Taken from Chef, which as in turn...
+      # Stolen from http://www.ruby-forum.com/topic/166423
+      # Kudos to _why!
+      tf = Tempfile.new('rest-client.')
+      tf.binmode
+
+      size = 0
+      total = http_response['Content-Length'].to_i
+      stream_log_bucket = nil
+
+      http_response.read_body do |chunk|
+        tf.write chunk
+        size += chunk.size
+        if log
+          if total == 0
+            log << "streaming %s %s (%d of unknown) [0 Content-Length]\n" % [@method.upcase, @url, size]
+          else
+            percent = (size * 100) / total
+            current_log_bucket, _ = percent.divmod(@stream_log_percent)
+            if current_log_bucket != stream_log_bucket
+              stream_log_bucket = current_log_bucket
+              log << "streaming %s %s %d%% done (%d of %d)\n" % [@method.upcase, @url, (size * 100) / total, size, total]
             end
           end
         end
-        @tf.close
-        @tf
-      else
-        http_response.read_body
       end
-      http_response
+      tf.close
+      tf
     end
 
-    def process_result res, & block
+    # @param res The Net::HTTP response object
+    # @param start_time [Time] Time of request start
+    def process_result(res, start_time, tempfile=nil, &block)
       if @raw_response
         # We don't decode raw requests
-        response = RawResponse.new(@tf, res, self)
+        response = RawResponse.new(tempfile, res, self, start_time)
       else
         decoded = Request.decode(res['content-encoding'], res.body)
-        response = Response.create(decoded, res, self)
+        response = Response.create(decoded, res, self, start_time)
       end
+
+      response.log_response
 
       if block_given?
         block.call(response, self, res, & block)

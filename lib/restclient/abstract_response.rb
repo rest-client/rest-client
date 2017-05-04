@@ -5,10 +5,25 @@ module RestClient
 
   module AbstractResponse
 
-    attr_reader :net_http_res, :request
+    attr_reader :net_http_res, :request, :start_time, :end_time, :duration
 
     def inspect
       raise NotImplementedError.new('must override in subclass')
+    end
+
+    # Logger from the request, potentially nil.
+    def log
+      request.log
+    end
+
+    def log_response
+      return unless log
+
+      code = net_http_res.code
+      res_name = net_http_res.class.to_s.gsub(/\ANet::HTTP/, '')
+      content_type = (net_http_res['Content-type'] || '').gsub(/;.*\z/, '')
+
+      log << "# => #{code} #{res_name} | #{content_type} #{size} bytes, #{sprintf('%.2f', duration)}s\n"
     end
 
     # HTTP status code
@@ -31,9 +46,20 @@ module RestClient
       @raw_headers ||= @net_http_res.to_hash
     end
 
-    def response_set_vars(net_http_res, request)
+    # @param [Net::HTTPResponse] net_http_res
+    # @param [RestClient::Request] request
+    # @param [Time] start_time
+    def response_set_vars(net_http_res, request, start_time)
       @net_http_res = net_http_res
       @request = request
+      @start_time = start_time
+      @end_time = Time.now
+
+      if @start_time
+        @duration = @end_time - @start_time
+      else
+        @duration = nil
+      end
 
       # prime redirection history
       history
