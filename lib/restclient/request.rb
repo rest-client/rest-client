@@ -146,6 +146,7 @@ module RestClient
       @log = args[:log]
       @max_redirects = args[:max_redirects] || 10
       @processed_headers = make_headers headers
+      @processed_headers_lowercase = Hash[@processed_headers.map {|k, v| [k.downcase, v]}]
       @args = args
 
       @before_execution_proc = args[:before_execution_proc]
@@ -368,6 +369,13 @@ module RestClient
     #   - headers from the payload object (e.g. Content-Type, Content-Lenth)
     #   - cookie headers from #make_cookie_header
     #
+    # BUG: stringify_headers does not alter the capitalization of headers that
+    # are passed as strings, it only normalizes those passed as symbols. This
+    # behavior will probably remain for a while for compatibility, but it means
+    # that the warnings that attempt to detect accidental header overrides may
+    # not always work.
+    # https://github.com/rest-client/rest-client/issues/599
+    #
     # @param [Hash] user_headers User-provided headers to include
     #
     # @return [Hash<String, String>] A hash of HTTP headers => values
@@ -536,6 +544,12 @@ module RestClient
     end
 
     # Return a hash of headers whose keys are capitalized strings
+    #
+    # BUG: stringify_headers does not fix the capitalization of headers that
+    # are already Strings. Leaving this behavior as is for now for
+    # backwards compatibility.
+    # https://github.com/rest-client/rest-client/issues/599
+    #
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
         if key.is_a? Symbol
@@ -761,7 +775,9 @@ module RestClient
     end
 
     def setup_credentials(req)
-      req.basic_auth(user, password) if user && !headers.has_key?("Authorization")
+      if user && !@processed_headers_lowercase.include?('authorization')
+        req.basic_auth(user, password)
+      end
     end
 
     def fetch_body_to_tempfile(http_response)

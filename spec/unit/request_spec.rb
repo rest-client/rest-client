@@ -448,12 +448,13 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "does not attempt to send credentials if Authorization header is set" do
-      @request.headers['Authorization'] = 'Token abc123'
-      allow(@request).to receive(:user).and_return('joe')
-      allow(@request).to receive(:password).and_return('mypass')
-      req = double("request")
-      expect(req).not_to receive(:basic_auth)
-      @request.send(:setup_credentials, req)
+      ['Authorization', 'authorization', 'auTHORization', :authorization].each do |authorization|
+        headers = {authorization => 'Token abc123'}
+        request = RestClient::Request.new(method: :get, url: 'http://some/resource', headers: headers, user: 'joe', password: 'mypass')
+        req = double("net::http request")
+        expect(req).not_to receive(:basic_auth)
+        request.send(:setup_credentials, req)
+      end
     end
   end
 
