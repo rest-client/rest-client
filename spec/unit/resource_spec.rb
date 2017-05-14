@@ -129,6 +129,39 @@ describe RestClient::Resource do
       resource = RestClient::Resource.new('www.example.com') { |response, request| 'foo' }
       expect(resource.get { |response, request| 'bar' }).to eq 'bar'
     end
+  end
 
+  describe 'open_timeout' do
+    it 'returns effective default when unset' do
+      resource = RestClient::Resource.new('x')
+      expect(resource.open_timeout).to eq RestClient::Request::DefaultOpenTimeout
+    end
+
+    it 'returns set value' do
+      resource = RestClient::Resource.new('x', open_timeout: 10)
+      expect(resource.open_timeout).to eq 10
+    end
+
+    it 'can be set via :timeout' do
+      resource = RestClient::Resource.new('x', timeout: 30)
+      expect(resource.open_timeout).to eq 30
+    end
+  end
+
+  describe 'read_timeout' do
+    it 'returns effective default when unset' do
+      resource = RestClient::Resource.new('x')
+      expect(resource.read_timeout).to eq RestClient::Request::DefaultReadTimeout
+    end
+
+    it 'returns set value' do
+      resource = RestClient::Resource.new('x', read_timeout: 120)
+      expect(resource.read_timeout).to eq 120
+    end
+
+    it 'can be set via :timeout' do
+      resource = RestClient::Resource.new('x', timeout: 30)
+      expect(resource.read_timeout).to eq 30
+    end
   end
 end
