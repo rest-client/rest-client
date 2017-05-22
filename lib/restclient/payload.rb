@@ -121,6 +121,9 @@ module RestClient
         end
       end
 
+      # TODO (breaks compatibility): ought to use mime_for() to autodetect the
+      # Content-Type for stream objects that have a filename.
+
       alias :length :size
     end
 

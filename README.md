@@ -444,35 +444,105 @@ You can:
 - override cookies
 - manually handle the response (e.g. to operate on it as a stream rather than reading it all into memory)
 
-See `RestClient::Request`'s documentation for more information. 
+See `RestClient::Request`'s documentation for more information.
 
-### Streaming
+### Streaming request payload
+
+RestClient will try to stream any file-like payload rather than reading it into
+memory. This happens through `RestClient::Payload::Streamed`, which is
+automatically called internally by `RestClient::Payload.generate` on anything
+with a `read` method.
+
+```ruby
+>> r = RestClient.put('http://httpbin.org/put', File.open('/tmp/foo.txt', 'r'),
+                      content_type: 'text/plain')
+=> <RestClient::Response 200 "{\n  \"args\":...">
+```
+
+In Multipart requests, RestClient will also stream file handles passed as Hash
+(or __new in 2.1__ ParamsArray).
+
+```ruby
+>> r = RestClient.put('http://httpbin.org/put',
+                      {file_a: File.open('a.txt', 'r'),
+                       file_b: File.open('b.txt', 'r')})
+=> <RestClient::Response 200 "{\n  \"args\":...">
+
+# received by server as two file uploads with multipart/form-data
+>> JSON.parse(r)['files'].keys
+=> ['file_a', 'file_b']
+```
+
+### Streaming responses
 
 Normally, when you use `RestClient.get` or the lower level
 `RestClient::Request.execute method: :get` to retrieve data, the entire
 response is buffered in memory and returned as the response to the call.
 
 However, if you are retrieving a large amount of data, for example a Docker
-image, an iso or any other large file, you may want to stream the response
+image, an iso, or any other large file, you may want to stream the response
 directly to disk rather than loading it in memory. If you have a very large
 file, it may become *impossible* to load it into memory.
 
-If you want to stream the data from the `GET` to a file as it comes, rather
-than entirely in memory, you must pass `RestClient::Request.execute` a
-parameter `block_response` to which you pass a `block` that streams the
-request. That block, in turn, will receive the response and the ability to
-stream directly to file as each chunk comes across.
+There are two main ways to do this:
+
+#### `raw_response`, saves into Tempfile
+
+If you pass `raw_response: true` to `RestClient::Request.execute`, it will save
+the response body to a temporary file (using `Tempfile`) and return a
+`RestClient::RawResponse` object rather than a `RestClient::Response`.
+
+Note that the tempfile created by `Tempfile.new` will be in `Dir.tmpdir`
+(usually `/tmp/`), which you can override to store temporary files in a
+different location. This file will be unlinked when it is dereferenced.
+
+If logging is enabled, this will also print download progress.
+__New in 2.1:__ Customize the interval with `:stream_log_percent` (defaults to
+10 for printing a message every 10% complete).
+
+For example:
+
+```ruby
+>> raw = RestClient::Request.execute(
+           method: :get,
+           url: 'http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso',
+           raw_response: true)
+=> <RestClient::RawResponse @code=200, @file=#<Tempfile:/tmp/rest-client.20170522-5346-1pptjm1>, @request=<RestClient::Request @method="get", @url="http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso">>
+>> raw.file.size
+=> 1554186240
+>> raw.file.path
+=> "/tmp/rest-client.20170522-5346-1pptjm1"
+raw.file.path
+=> "/tmp/rest-client.20170522-5346-1pptjm1"
+
+>> require 'digest/sha1'
+>> Digest::SHA1.file(raw.file.path).hexdigest
+=> "4375b73e3a1aa305a36320ffd7484682922262b3"
+```
+
+#### `block_response`, receives raw Net::HTTPResponse
+
+If you want to stream the data from the response to a file as it comes, rather
+than entirely in memory, you can also pass `RestClient::Request.execute` a
+parameter `:block_response` to which you pass a block/proc. This block receives
+the raw unmodified Net::HTTPResponse object from Net::HTTP, which you can use
+to stream directly to a file as each chunk is received.
+
+Note that this bypasses all the usual HTTP status code handling, so you will
+want to do you own checking for HTTP 20x response codes, redirects, etc.
 
 The following is an example:
 
 ````ruby
 File.open('/some/output/file', 'w') {|f|
-    block = proc { |response|
-      response.read_body do |chunk|
-        f.write chunk
-      end
-    }
-    RestClient::Request.new(method: :get, url: 'http://somedomain.com/some/really/big/file.img', block_response: block).execute
+  block = proc { |response|
+    response.read_body do |chunk|
+      f.write chunk
+    end
+  }
+  RestClient::Request.execute(method: :get,
+                              url: 'http://example.com/some/really/big/file.img',
+                              block_response: block)
 }
 ````
 
