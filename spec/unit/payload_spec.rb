@@ -265,5 +265,10 @@ Content-Type: text/plain\r
       params = RestClient::ParamsArray.new([[:image, f]])
       expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::Multipart)
     end
+
+    it "should handle non-multipart payload wrapped in ParamsArray" do
+      params = RestClient::ParamsArray.new([[:arg, 'value1'], [:arg, 'value2']])
+      expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::UrlEncoded)
+    end
   end
 end

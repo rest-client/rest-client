@@ -17,6 +17,10 @@
 - The previous fix to avoid having Netrc username/password override an
   Authorization header was case-sensitive and incomplete. Fix this by
   respecting existing Authorization headers, regardless of letter case. (#550)
+- Handle ParamsArray payloads. Previously, rest-client would silently drop a
+  ParamsArray passed as the payload. Instead, automatically use
+  Payload::Multipart if the ParamsArray contains a file handle, or use
+  Payload::UrlEncoded if it doesn't. (#508)
 
 # 2.0.2
 
