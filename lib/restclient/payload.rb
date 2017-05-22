@@ -14,7 +14,10 @@ module RestClient
     extend self
 
     def generate(params)
-      if params.is_a?(String)
+      if params.is_a?(RestClient::Payload::Base)
+        # pass through Payload objects unchanged
+        params
+      elsif params.is_a?(String)
         Base.new(params)
       elsif params.is_a?(Hash)
         if params.delete(:multipart) == true || has_file?(params)
@@ -87,12 +90,20 @@ module RestClient
         @stream.close unless @stream.closed?
       end
 
+      def closed?
+        @stream.closed?
+      end
+
       def to_s_inspect
         to_s.inspect
       end
 
       def short_inspect
-        (size > 500 ? "#{size} byte(s) length" : to_s_inspect)
+        if size && size > 500
+          "#{size} byte(s) length"
+        else
+          to_s_inspect
+        end
       end
 
     end

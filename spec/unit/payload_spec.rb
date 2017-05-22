@@ -209,6 +209,14 @@ Content-Type: text/plain\r
         f.close
       end
     end
+
+    it "should have a closed? method" do
+      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      payload = RestClient::Payload.generate(f)
+      expect(payload.closed?).to be_falsey
+      payload.close
+      expect(payload.closed?).to be_truthy
+    end
   end
 
   context "Payload generation" do
@@ -269,6 +277,19 @@ Content-Type: text/plain\r
     it "should handle non-multipart payload wrapped in ParamsArray" do
       params = RestClient::ParamsArray.new([[:arg, 'value1'], [:arg, 'value2']])
       expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::UrlEncoded)
+    end
+
+    it "should pass through Payload::Base and subclasses unchanged" do
+      payloads = [
+        RestClient::Payload::Base.new('foobar'),
+        RestClient::Payload::UrlEncoded.new({:foo => 'bar'}),
+        RestClient::Payload::Streamed.new(File.new(File.dirname(__FILE__) + "/master_shake.jpg")),
+        RestClient::Payload::Multipart.new({myfile: File.new(File.dirname(__FILE__) + "/master_shake.jpg")}),
+      ]
+
+      payloads.each do |payload|
+        expect(RestClient::Payload.generate(payload)).to equal(payload)
+      end
     end
   end
 end
