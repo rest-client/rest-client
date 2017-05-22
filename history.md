@@ -21,6 +21,11 @@
   ParamsArray passed as the payload. Instead, automatically use
   Payload::Multipart if the ParamsArray contains a file handle, or use
   Payload::UrlEncoded if it doesn't. (#508)
+- Gracefully handle Payload objects (Payload::Base or subclasses) that are
+  passed as a payload argument. Previously, `Payload.generate` would wrap a
+  Payload object in Payload::Streamed, creating a pointlessly nested payload.
+  Also add a `closed?` method to Payload objects, and don't error in
+  `short_inspect` if `size` returns nil. (#603)
 
 # 2.0.2
 
