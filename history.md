@@ -11,6 +11,10 @@
   `log_response` a method on the Response object, and ensure the `size` method
   works on RawResponse objects. (#126)
   - `# => 200 OK | text/html 1270 bytes, 0.08s`
+  - Also add a new `:stream_log_percent` parameter, which is applicable only
+    when `:raw_response => true` is set. This causes progress logs to be
+    emitted only on every N% (default 10%) of the total download size rather
+    than on every chunk.
 - Drop custom handling of compression and use built-in Net::HTTP support for
   supported Content-Encodings like gzip and deflate. Don't set any explicit
   `Accept-Encoding` header, rely instead on Net::HTTP defaults. (#597)
