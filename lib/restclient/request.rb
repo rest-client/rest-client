@@ -28,6 +28,11 @@ module RestClient
   # * :user and :password for basic auth, will be replaced by a user/password available in the :url
   # * :block_response call the provided block with the HTTPResponse as parameter
   # * :raw_response return a low-level RawResponse instead of a Response
+  # * :log Set the log for this request only, overriding RestClient.log, if
+  #      any.
+  # * :stream_log_percent (Only relevant with :raw_response => true) Customize
+  #     the interval at which download progress is logged. Defaults to every
+  #     10% complete.
   # * :max_redirects maximum number of redirections (default to 10)
   # * :proxy An HTTP proxy URI to use for this request. Any value here
   #   (including nil) will override RestClient.proxy.
