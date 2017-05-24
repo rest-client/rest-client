@@ -15,40 +15,20 @@ module RestClient
   # call it directly if you'd like to use a method not supported by the
   # main API.  For example:
   #
-  #   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
+  #   RestClient::Request.execute(method: :head, url: 'http://example.com')
   #
-  # Mandatory parameters:
-  # * :method
-  # * :url
-  # Optional parameters (have a look at ssl and/or uri for some explanations):
-  # * :headers a hash containing the request headers
-  # * :cookies may be a Hash{String/Symbol => String} of cookie values, an
-  #     Array<HTTP::Cookie>, or an HTTP::CookieJar containing cookies. These
-  #     will be added to a cookie jar before the request is sent.
-  # * :user and :password for basic auth, will be replaced by a user/password available in the :url
-  # * :block_response call the provided block with the HTTPResponse as parameter
-  # * :raw_response return a low-level RawResponse instead of a Response
-  # * :log Set the log for this request only, overriding RestClient.log, if
-  #      any.
-  # * :stream_log_percent (Only relevant with :raw_response => true) Customize
-  #     the interval at which download progress is logged. Defaults to every
-  #     10% complete.
-  # * :max_redirects maximum number of redirections (default to 10)
-  # * :proxy An HTTP proxy URI to use for this request. Any value here
-  #   (including nil) will override RestClient.proxy.
-  # * :verify_ssl enable ssl verification, possible values are constants from
-  #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
-  # * :read_timeout and :open_timeout are how long to wait for a response and
-  #     to open a connection, in seconds. Pass nil to disable the timeout.
-  # * :timeout can be used to set both timeouts
-  # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
-  #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
-  # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
-  # * :ssl_ciphers sets SSL ciphers for the connection. See
-  #     OpenSSL::SSL::SSLContext#ciphers=
-  # * :before_execution_proc a Proc to call before executing the request. This
-  #      proc, like procs from RestClient.before_execution_procs, will be
-  #      called with the HTTP request and request params.
+  # The `:method` and `:url` parameters are required. All others are optional.
+  #
+  # @deprecated *Note:*
+  #   The RestClient API has a very ugly misfeature that dates to the original
+  #   design, where certain options are destructively pulled out of the
+  #   `:headers` hash that normally contains HTTP request headers. This is
+  #   because in the top-level helper shortcuts like {RestClient.get}, the only
+  #   hash argument permitted is the headers hash, so there is no place to put
+  #   options. For example, while it is currently allowed to pass options like
+  #   `:params` or `:cookies` as keys inside the `:headers` hash, this is
+  #   strongly discouraged.
+  #
   class Request
 
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
@@ -59,6 +39,15 @@ module RestClient
     # An array of previous redirection responses
     attr_accessor :redirection_history
 
+    # Shorthand for initializing a Request and executing it.
+    #
+    # RestClient::Request.execute is a great way to pass complex options.
+    #
+    # For example:
+    #     RestClient::Request.execute(method: get, url: 'http://example.com', timeout: 5)
+    #
+    # @see RestClient::Request
+    #
     def self.execute(args, & block)
       new(args).execute(& block)
     end
@@ -70,7 +59,86 @@ module RestClient
       "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
     end
 
-    def initialize args
+    # Create a new Request object. This will not make a connection to the
+    # server to send the request until {#execute} is called.
+    #
+    # The `:url` and `:method` are required parameters.
+    #
+    # @param [Hash] args
+    #
+    # @option args [String] :url *Required.* The HTTP URL to request.
+    # @option args [String, Symbol] :method *Required.* The HTTP request method
+    #   or verb, such as "GET", "HEAD", or "POST".
+    #
+    # @option args [Hash] :headers The HTTP request headers. Keys may be
+    #   Symbol or String. Symbol keys will be converted to String header names
+    #   by {#stringify_headers}. For backwards compatibility, this Hash
+    #   recognizes certain keys that will be pulled out as options, but relying
+    #   on this is deprecated and strongly discouraged.
+    # @option args :cookies [HTTP::CookieJar, Hash{String, Symbol => String},
+    #   Array<HTTP::Cookie>] The cookies to be sent with the request. This can
+    #   be passed as a Hash, an array of HTTP::Cookie objects, or as a full
+    #   HTTP::CookieJar. Regardless, they will be processed into a cookie jar
+    #   before the request is sent. {#cookie_jar}
+    # @option args [String] :user The username used for HTTP Basic
+    #   Authentication. A username/password in the `:url` takes precedence over
+    #   this option, which takes precedence over a netrc file.
+    # @option args [String] :password The password used for HTTP Basic
+    #   Authentication. A username/password in the `:url` takes precedence over
+    #   this option, which takes precedence over a netrc file.
+    # @option args [Proc] :block_response When this is passed, the normal HTTP
+    #   response / exception processing will be bypassed. The provided block
+    #   will be called with the raw {Net::HTTPResponse} object returned by
+    #   {Net::HTTP}, allowing for fully custom response handling.
+    # @option args [Boolean] :raw_response Return a low-level {RawResponse}
+    #   instead of a {Response}. This is good for streaming large response
+    #   downloads, because the response will be downloaded directly to a
+    #   {Tempfile} rather than loaded into memory. The normal error handling
+    #   and exceptions still run as usual.
+    # @option args [Logger, #<<] Set the log for this request only, overriding
+    #   RestClient.log (if any). Accepts any object that implements a `<<`
+    #   method, such as a Logger, file handle, or other IO.
+    # @option args [Integer] :stream_log_percent (10) Only relevant with
+    #   `:raw_response => true`. Customize the interval at which download
+    #   progress is logged.
+    # @option args [Integer] :max_redirects (10) Set the maximum number of
+    #   redirections to follow. Set this to 0 to disable following redirects or
+    #   to handle redirects manually.
+    # @option args [String, nil] :proxy An HTTP proxy URI to use for this
+    #   request. Any value here (including nil) will override
+    #   {RestClient.proxy}.
+    # @option args [Boolean, Integer] :verify_ssl (OpenSSL::SSL::VERIFY_PEER)
+    #   Enable ssl verification, possible values are constants from
+    #   OpenSSL::SSL::VERIFY_*, defaults to verifying SSL. There is little
+    #   point to using HTTPS at all without verifying certificates.
+    # @option args [Numeric, nil] :read_timeout Number of seconds to wait for server
+    #   to respond with data after establishing the connection. This sets a
+    #   timeout on an individual network read, but does not limit the overall
+    #   duration of the request so long as the server continues sending data at
+    #   a trickle. Pass nil to disable the timeout. See
+    #   {Net::HTTP#read_timeout}.
+    # @option args [Numeric, nil] :open_timeout Number of seconds to wait for
+    #   the connection to be established. Pass nil to disable the timeout. See
+    #   {Net::HTTP#open_timeout}.
+    # @option args [Numeric, nil] :timeout Set both `:read_timeout` and
+    #   `:open_timeout`
+    # @option args :ssl_client_cert
+    # @option args :ssl_client_key
+    # @option args :ssl_ca_file
+    # @option args :ssl_ca_path
+    # @option args :ssl_cert_store
+    # @option args :ssl_verify_callback
+    # @option args :ssl_verify_callback_warnings
+    # @option args :ssl_version Set the SSL version for the underlying
+    #   Net::HTTP connection.
+    # @option args :ssl_ciphers Set SSL ciphers for the connection. See
+    #     {OpenSSL::SSL::SSLContext#ciphers=}
+    # @option args [Proc] :before_execution_proc A Proc to call before
+    #   executing the request. This proc, like procs from
+    #   {RestClient.before_execution_procs}, will be called with the HTTP
+    #   request and request params.
+    #
+    def initialize(args)
       @method = normalize_method(args[:method])
       @headers = (args[:headers] || {}).dup
       if args[:url]

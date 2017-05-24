@@ -677,7 +677,7 @@ work, rest-client follows a similar convention to the one used by Rack / Rails
 servers for handling arrays, nested hashes, and null values.
 
 The implementation in
-[./lib/rest-client/utils.rb](RestClient::Utils.encode_query_string)
+[RestClient::Utils.encode_query_string](./lib/rest-client/utils.rb)
 closely follows
 [Rack::Utils.build_nested_query](http://www.rubydoc.info/gems/rack/Rack/Utils#build_nested_query-class_method),
 but treats empty arrays and hashes as `nil`. (Rack drops them entirely, which
