@@ -886,11 +886,10 @@ See AUTHORS for the full list.
 
 ## Legal
 
-Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+Released under the MIT License: https://opensource.org/licenses/MIT
 
-"Master Shake" photo (http://www.flickr.com/photos/solgrundy/924205581/) by
-"SolGrundy"; used under terms of the Creative Commons Attribution-ShareAlike 2.0
-Generic license (http://creativecommons.org/licenses/by-sa/2.0/)
+Photo of the International Space Station was produced by NASA and is in the
+public domain.
 
 Code for reading Windows root certificate store derived from work by Puppet;
 used under terms of the Apache License, Version 2.0.

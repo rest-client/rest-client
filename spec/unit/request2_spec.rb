@@ -1,6 +1,6 @@
 require_relative '_lib'
 
-describe RestClient::Request do
+describe RestClient::Request, :include_helpers do
 
   context 'params for GET requests' do
     it "manage params for get requests" do
@@ -43,7 +43,7 @@ describe RestClient::Request do
   end
 
   it 'closes payload if not nil' do
-    test_file = File.new(File.join( File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg'))
+    test_file = File.new(test_image_path)
 
     stub_request(:post, 'http://some/resource').with(:headers => {'Accept'=>'*/*'}).to_return(:body => 'foo', :status => 200)
     RestClient::Request.execute(:url => 'http://some/resource', :method => :post, :payload => {:file => test_file})
