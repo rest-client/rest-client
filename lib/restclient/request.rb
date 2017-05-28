@@ -13,9 +13,14 @@ end
 module RestClient
   # This class is used internally by RestClient to send the request, but you can also
   # call it directly if you'd like to use a method not supported by the
-  # main API.  For example:
+  # main API.
   #
+  # @example using {.execute} class method:
   #   RestClient::Request.execute(method: :head, url: 'http://example.com')
+  #
+  # @example initializing {#initialize} and then calling {#execute}:
+  #   req = RestClient::Request.new(method: :get, url: 'http://example.com', timeout: 5)
+  #   req.execute
   #
   # The `:method` and `:url` parameters are required. All others are optional.
   #
