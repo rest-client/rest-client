@@ -3,6 +3,17 @@ require 'http-cookie'
 
 module RestClient
 
+  # The AbstractResponse module provides common functionality for RestClient
+  # responses. It is included by {RestClient::Response} and
+  # {RestClient::RawResponse}.
+  #
+  # Classes that include AbstractResponse should call {response_set_vars} as
+  # part of their `#initialize` method.
+  #
+  # Ideally this would have been a parent class, not a module. But the original
+  # RestClient API made {Response} be a subclass of `String`, so we are
+  # stuck with that for backwards compatibility.
+  #
   module AbstractResponse
 
     attr_reader :net_http_res, :request, :start_time, :end_time, :duration
@@ -12,10 +23,17 @@ module RestClient
     end
 
     # Logger from the request, potentially nil.
+    #
+    # @see Request#log
+    #
     def log
       request.log
     end
 
+    # Write log information about the response.
+    #
+    # @return [void]
+    #
     def log_response
       return unless log
 
@@ -27,21 +45,39 @@ module RestClient
     end
 
     # HTTP status code
+    #
+    # @return [Integer]
+    #
     def code
       @code ||= @net_http_res.code.to_i
     end
 
+    # An array of prior responses in the redirection chain, if any. If
+    # RestClient followed any redirects, this provides a way to see each
+    # individual response in the chain.
+    #
+    # @return [Array<Response>]
+    #
+    # @see Request#redirection_history
+    #
     def history
       @history ||= request.redirection_history || []
     end
 
     # A hash of the headers, beautified with symbols and underscores.
-    # e.g. "Content-type" will become :content_type.
+    # e.g. `"Content-type"` will become `:content_type`.
+    #
+    # @see beautify_headers
+    #
+    # @return [Hash]
+    #
     def headers
       @headers ||= AbstractResponse.beautify_headers(@net_http_res.to_hash)
     end
 
     # The raw headers.
+    #
+    # @return [Hash]
     def raw_headers
       @raw_headers ||= @net_http_res.to_hash
     end
@@ -49,6 +85,9 @@ module RestClient
     # @param [Net::HTTPResponse] net_http_res
     # @param [RestClient::Request] request
     # @param [Time] start_time
+    #
+    # @return [void]
+    #
     def response_set_vars(net_http_res, request, start_time)
       @net_http_res = net_http_res
       @request = request
@@ -67,9 +106,9 @@ module RestClient
 
     # Hash of cookies extracted from response headers.
     #
-    # NB: This will return only cookies whose domain matches this request, and
-    # may not even return all of those cookies if there are duplicate names.
-    # Use the full cookie_jar for more nuanced access.
+    # **Note:** This will return only cookies whose domain matches this
+    # request, and may not even return all of those cookies if there are
+    # duplicate names. Use the full cookie_jar for more nuanced access.
     #
     # @see #cookie_jar
     #
@@ -104,11 +143,20 @@ module RestClient
     #
     # For 20x status codes: return the response itself
     #
-    # For 30x status codes:
-    #   301, 302, 307: redirect GET / HEAD if there is a Location header
-    #   303: redirect, changing method to GET, if there is a Location header
+    # For 30x status codes, if there is a `Location` header and we have not yet
+    # reached {Request#max_redirects}:
     #
-    # For all other responses, raise a response exception
+    # - 301, 302, 307: redirect GET / HEAD requests
+    # - 303: redirect, changing method to GET
+    #
+    # For all other responses, raise a response exception, a subclass of
+    # {ExceptionWithResponse} corresponding to the HTTP status code.
+    #
+    # For example, HTTP 404 => {RestClient::NotFound RestClient::NotFound}
+    #
+    # @raise [ExceptionWithResponse] for non-20x status codes, the exception
+    #   from {RestClient::Exceptions::EXCEPTIONS_MAP} based on
+    #   {RestClient::STATUSES} will be thrown.
     #
     def return!(&block)
       case code
@@ -130,11 +178,13 @@ module RestClient
       end
     end
 
+    # @deprecated Use {code} instead.
     def to_i
-      warn('warning: calling Response#to_i is not recommended')
+      warn('warning: calling Response#to_i is deprecated. Use .code instead.')
       super
     end
 
+    # @return [String]
     def description
       "#{code} #{STATUSES[code]} | #{(headers[:content_type] || '').gsub(/;.*$/, '')} #{size} bytes\n"
     end

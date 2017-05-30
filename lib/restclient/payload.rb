@@ -10,6 +10,9 @@ rescue LoadError
 end
 
 module RestClient
+
+  # The Payload module contains several different classes used to process and
+  # represent different types of HTTP bodies / payloads.
   module Payload
     extend self
 
@@ -56,6 +59,7 @@ module RestClient
       end
     end
 
+    # The base class for all the Payload classes.
     class Base
       def initialize(params)
         build_stream(params)

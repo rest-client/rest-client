@@ -18,47 +18,88 @@ require File.dirname(__FILE__) + '/restclient/windows'
 
 # This module's static methods are the entry point for using the REST client.
 #
-#   # GET
-#   xml = RestClient.get 'http://example.com/resource'
-#   jpg = RestClient.get 'http://example.com/resource', :accept => 'image/jpg'
+# These helpers provide a concise way to issue simple requests with headers. If
+# you need to set other options on a request (e.g. timeout, SSL options, etc.)
+# then use {RestClient::Request.execute}, which supports all of these options.
 #
-#   # authentication and SSL
-#   RestClient.get 'https://user:password@example.com/private/resource'
+# The {.get}, {.head}, {.delete}, and {.options} methods take a URL String and
+# optional HTTP headers Hash.
 #
-#   # POST or PUT with a hash sends parameters as a urlencoded form body
-#   RestClient.post 'http://example.com/resource', :param1 => 'one'
+# The {.post}, {.put}, and {.patch} methods take a URL String, a payload, and
+# an optional HTTP headers Hash.
 #
-#   # nest hash parameters
-#   RestClient.post 'http://example.com/resource', :nested => { :param1 => 'one' }
+# All of these helpers are just thin wrappers around
+# {RestClient::Request.execute RestClient::Request.execute}.
 #
-#   # POST and PUT with raw payloads
-#   RestClient.post 'http://example.com/resource', 'the post body', :content_type => 'text/plain'
-#   RestClient.post 'http://example.com/resource.xml', xml_doc
-#   RestClient.put 'http://example.com/resource.pdf', File.read('my.pdf'), :content_type => 'application/pdf'
 #
-#   # DELETE
-#   RestClient.delete 'http://example.com/resource'
+# ```ruby
+# # Simple GET request, potentially with headers.
+# RestClient.get('http://example.com/')
+# # => <RestClient::Response 200 "<!doctype h...">
 #
-#   # retreive the response http code and headers
-#   res = RestClient.get 'http://example.com/some.jpg'
-#   res.code                    # => 200
-#   res.headers[:content_type]  # => 'image/jpg'
+# RestClient.get('http://example.com/resource', accept: 'image/jpg')
 #
-#   # HEAD
-#   RestClient.head('http://example.com').headers
+# RestClient.get('http://example.com', 'If-Modified-Since': 'Sat, 10 Aug 2013 10:23:00 GMT')
+# # raises RestClient::NotModified: 304 Not Modified
+#
+# # Basic authentication and SSL
+# RestClient.get 'https://user:password@example.com/private/resource'
+#
+# # POST or PUT with a hash sends parameters as a urlencoded form body
+# RestClient.post 'http://example.com/resource', :param1 => 'one'
+#
+# # nest hash parameters
+# RestClient.post 'http://example.com/resource', :nested => { :param1 => 'one' }
+#
+# # POST and PUT with raw payloads
+# RestClient.post 'http://example.com/resource', 'the post body', :content_type => 'text/plain'
+# RestClient.post 'http://example.com/resource.xml', xml_doc
+# RestClient.put 'http://example.com/resource.pdf', File.read('my.pdf'), :content_type => 'application/pdf'
+#
+# # DELETE
+# RestClient.delete 'http://example.com/resource'
+#
+# # Retrieve the response http code and headers
+# res = RestClient.get 'http://example.com/some.jpg'
+# res.code                    # => 200
+# res.headers[:content_type]  # => 'image/jpg'
+#
+# # HEAD
+# RestClient.head('http://example.com').headers
+# ```
 #
 # To use with a proxy, just set RestClient.proxy to the proper http proxy:
 #
-#   RestClient.proxy = "http://proxy.example.com/"
+#     RestClient.proxy = "http://proxy.example.com/"
 #
-# Or inherit the proxy from the environment:
+# Proxies can also be set via the `http_proxy`/`https_proxy` environment
+# variables, or with the `:proxy` option on an individual {RestClient::Request}.
 #
-#   RestClient.proxy = ENV['http_proxy']
+# For live tests of RestClient, try using https://httpbin.org/. This service
+# echoes back information about the HTTP request.
 #
-# For live tests of RestClient, try using http://rest-test.heroku.com, which echoes back information about the rest call:
-#
-#   >> RestClient.put 'http://rest-test.heroku.com/resource', :foo => 'baz'
-#   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
+#     r =  RestClient.post('https://httpbin.org/post', foo: 'bar')
+#     # => <RestClient::Response 200 "{\n  \"args\":...">
+#     puts r.body
+#     {
+#       "args": {},
+#       "data": "",
+#       "files": {},
+#       "form": {
+#         "foo": "bar"
+#       },
+#       "headers": {
+#         "Accept": "*/*",
+#         "Accept-Encoding": "gzip;q=1.0,deflate;q=0.6,identity;q=0.3",
+#         "Connection": "close",
+#         "Content-Length": "7",
+#         "Content-Type": "application/x-www-form-urlencoded",
+#         "Host": "httpbin.org",
+#         "User-Agent": "rest-client/2.1.0 (linux-gnu x86_64) ruby/2.3.3p222"
+#       },
+#       "json": null,
+#       "url": "https://httpbin.org/post"
+#     }
 #
 module RestClient
 
@@ -96,6 +137,10 @@ module RestClient
     @proxy ||= nil
   end
 
+  # Set a proxy URL to use for all requests.
+  #
+  # @param value [String] The proxy URL.
+  #
   def self.proxy=(value)
     @proxy = value
     @proxy_set = true
@@ -113,12 +158,21 @@ module RestClient
   # Setup the log for RestClient calls.
   # Value should be a logger but can can be stdout, stderr, or a filename.
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
+  #
+  # @param log [Logger, #<<, String] The log to write to. See {.create_log}
+  #
   def self.log= log
     @@log = create_log log
   end
 
-  # Create a log that respond to << like a logger
-  # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
+  # Create a log that responds to `<<` like a Logger.
+  #
+  # @param param [Logger, #<<, String, nil] The log to write to. Should be a
+  #   Logger, IO, or other object with a `<<` method. If param is a String, it
+  #   will be treated as a filename and that file will be opened as a log file.
+  #   The special Strings `"stdout"` and `"stderr"` will log to `STDOUT` and
+  #   `STDERR`.
+  #
   def self.create_log param
     if param
       if param.is_a? String
@@ -158,10 +212,16 @@ module RestClient
 
   @@log = nil
 
-  def self.log # :nodoc:
+  # The RestClient global logger. This will be used for all requests unless a
+  # `:log` option is set on the individual request.
+  #
+  # @see log=
+  #
+  def self.log
     @@env_log || @@log
   end
 
+  # Array of procs executed prior to each request.
   @@before_execution_procs = []
 
   # Add a Proc to be called before each request in executed.
@@ -176,7 +236,8 @@ module RestClient
     @@before_execution_procs = []
   end
 
-  def self.before_execution_procs # :nodoc:
+  # Array of procs executed prior to each request.
+  def self.before_execution_procs
     @@before_execution_procs
   end
 

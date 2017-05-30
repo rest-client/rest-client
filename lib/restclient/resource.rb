@@ -4,34 +4,34 @@ module RestClient
   #
   # Example:
   #
-  #   resource = RestClient::Resource.new('http://some/resource')
-  #   jpg = resource.get(:accept => 'image/jpg')
+  #     resource = RestClient::Resource.new('http://some/resource')
+  #     jpg = resource.get(:accept => 'image/jpg')
   #
   # With HTTP basic authentication:
   #
-  #   resource = RestClient::Resource.new('http://protected/resource', :user => 'user', :password => 'password')
-  #   resource.delete
+  #     resource = RestClient::Resource.new('http://protected/resource', :user => 'user', :password => 'password')
+  #     resource.delete
   #
   # With a timeout (seconds):
   #
-  #   RestClient::Resource.new('http://slow', :read_timeout => 10)
+  #     RestClient::Resource.new('http://slow', :read_timeout => 10)
   #
   # With an open timeout (seconds):
   #
-  #   RestClient::Resource.new('http://behindfirewall', :open_timeout => 10)
+  #     RestClient::Resource.new('http://behindfirewall', :open_timeout => 10)
   #
   # You can also use resources to share common headers. For headers keys,
   # symbols are converted to strings. Example:
   #
-  #   resource = RestClient::Resource.new('http://some/resource', :headers => { :client_version => 1 })
+  #     resource = RestClient::Resource.new('http://some/resource', :headers => { :client_version => 1 })
   #
   # This header will be transported as X-Client-Version (notice the X prefix,
   # capitalization and hyphens)
   #
   # Use the [] syntax to allocate subresources:
   #
-  #   site = RestClient::Resource.new('http://example.com', :user => 'adam', :password => 'mypasswd')
-  #   site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
+  #     site = RestClient::Resource.new('http://example.com', :user => 'adam', :password => 'mypasswd')
+  #     site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
   #
   class Resource
     attr_reader :url, :options, :block

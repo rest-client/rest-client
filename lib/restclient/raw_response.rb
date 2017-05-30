@@ -1,14 +1,35 @@
 module RestClient
-  # The response from RestClient on a raw request looks like a string, but is
-  # actually one of these.  99% of the time you're making a rest call all you
-  # care about is the body, but on the occassion you want to fetch the
-  # headers you can:
+
+  # {RawResponse} is used to represent RestClient responses when
+  # `:raw_response => true` is passed to the {Request}.
   #
-  #   RestClient.get('http://example.com').headers[:content_type]
+  # Instead of processing the response data in various ways, the `RawResponse`
+  # downloads the response body to a `Tempfile` and does little processing of
+  # the underlying `Net::HTTPResponse` object. This is especially useful for
+  # large downloads when you don't want to load the entire response into
+  # memory.
   #
-  # In addition, if you do not use the response as a string, you can access
-  # a Tempfile object at res.file, which contains the path to the raw
-  # downloaded request body.
+  # Use {#file} to access the `Tempfile` containing the raw response body. The
+  # file path is accessible at `.file.path`.
+  #
+  # **Note that like all `Tempfile` objects, the {#file} will be deleted when
+  # the object is dereferenced.**
+  #
+  # This class brings in all the common functionality from {AbstractResponse},
+  # such as {AbstractResponse.headers}, etc.
+  #
+  # @example
+  #
+  #   r = RestClient::Request.execute(method: :get, url: 'http://example.com', raw_response: true)
+  #   r.code
+  #   # => 200
+  #   puts r.file.inspect
+  #   # => #<Tempfile:/tmp/rest-client.20170102-15213-b8kgcj>
+  #   r.file.path
+  #   # => "/tmp/rest-client.20170102-15213-b8kgcj"
+  #   r.size
+  #   # => 1270
+  #
   class RawResponse
 
     include AbstractResponse
@@ -36,11 +57,18 @@ module RestClient
       body
     end
 
+    # Read the response body from {#file} into memory and return as a String.
+    #
+    # @return [String]
+    #
     def body
       @file.rewind
       @file.read
     end
 
+    # Return the response body file size.
+    #
+    # @return [Integer]
     def size
       file.size
     end

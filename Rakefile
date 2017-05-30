@@ -123,3 +123,8 @@ end
 require 'yard'
 YARD::Rake::YardocTask.new do |t|
 end
+
+desc 'Run YARD documentation server, reload with changes'
+task :yardserver do
+  sh 'yard server --reload'
+end

@@ -2,17 +2,25 @@ module RestClient
 
   # Hash of HTTP status code => message.
   #
-  # 1xx: Informational - Request received, continuing process
-  # 2xx: Success - The action was successfully received, understood, and
-  #      accepted
-  # 3xx: Redirection - Further action must be taken in order to complete the
-  #      request
-  # 4xx: Client Error - The request contains bad syntax or cannot be fulfilled
-  # 5xx: Server Error - The server failed to fulfill an apparently valid
-  #      request
+  # ### HTTP status code families:
+  #
+  # - 1xx: Informational --- Request received, continuing process
+  # - 2xx: Success --- The action was successfully received, understood, and
+  #                    accepted
+  # - 3xx: Redirection --- Further action must be taken in order to complete
+  #                        the request
+  # - 4xx: Client Error --- The request contains bad syntax or cannot be
+  #                         fulfilled
+  # - 5xx: Server Error --- The server failed to fulfill an apparently valid
+  #                         request
+  #
+  # This hash is used to populate all of the individual response exception
+  # classes, which are collected in {RestClient::Exceptions::EXCEPTIONS_MAP}.
   #
   # @see
   #   http://www.iana.org/assignments/http-status-codes/http-status-codes.xhtml
+  #
+  # **TODO:** Move these out of the top-level namespace and into {Exceptions}.
   #
   STATUSES = {100 => 'Continue',
               101 => 'Switching Protocols',
@@ -84,6 +92,11 @@ module RestClient
               511 => 'Network Authentication Required', # RFC6585
   }
 
+  # This Hash contains a mapping of aliases for the canonical HTTP status code
+  # classes that are preserved for backwards compatibility. For example,
+  # `RestClient::ResourceNotFound` is an alias for `RestClient::NotFound`.
+  #
+  # **TODO:** Move this out of the top-level namespace and into {Exceptions}.
   STATUSES_COMPATIBILITY = {
     # The RFCs all specify "Not Found", but "Resource Not Found" was used in
     # earlier RestClient releases.
@@ -101,16 +114,22 @@ module RestClient
 
 
   # This is the base RestClient exception class. Rescue it if you want to
-  # catch any exception that your request might raise
-  # You can get the status code by e.http_code, or see anything about the
-  # response via e.response.
-  # For example, the entire result body (which is
-  # probably an HTML error page) is e.response.
+  # catch any exception that your request might raise. Note that the underlying
+  # network and socket libraries may raise other exceptions.
+  #
+  # You can get the status code with {#http_code}, or see anything about the
+  # response via {#response}.
+  #
+  # For more detailed information from the response, just call the
+  # corresponding methods on the response object (e.g. `e.response.history`).
+  #
   class Exception < RuntimeError
     attr_accessor :response
     attr_accessor :original_exception
     attr_writer :message
 
+    # @param response [RestClient::Response, RestClient::RawResponse]
+    #
     def initialize response = nil, initial_response_code = nil
       @response = response
       @message = nil
@@ -126,10 +145,14 @@ module RestClient
       end
     end
 
+    # @see Response#headers
+    # @return [Hash, nil]
     def http_headers
       @response.headers if @response
     end
 
+    # @see Response#body
+    # @return [String, nil]
     def http_body
       @response.body if @response
     end
@@ -169,7 +192,9 @@ module RestClient
   # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
   #
   module Exceptions
-    # Map http status codes to the corresponding exception class
+    # Map http status codes to the corresponding exception class.
+    # This Hash is populated when the library is loaded, so values won't appear
+    # in the YARD documentation.
     EXCEPTIONS_MAP = {}
   end
 

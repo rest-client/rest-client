@@ -15,24 +15,27 @@ module RestClient
   # call it directly if you'd like to use a method not supported by the
   # main API.
   #
-  # @example using {.execute} class method:
+  # @example Using {.execute} class method:
   #   RestClient::Request.execute(method: :head, url: 'http://example.com')
   #
-  # @example initializing {#initialize} and then calling {#execute}:
+  # @example Initializing {#initialize} and then calling {#execute}:
   #   req = RestClient::Request.new(method: :get, url: 'http://example.com', timeout: 5)
   #   req.execute
   #
   # The `:method` and `:url` parameters are required. All others are optional.
   #
-  # @deprecated *Note:*
-  #   The RestClient API has a very ugly misfeature that dates to the original
-  #   design, where certain options are destructively pulled out of the
-  #   `:headers` hash that normally contains HTTP request headers. This is
-  #   because in the top-level helper shortcuts like {RestClient.get}, the only
-  #   hash argument permitted is the headers hash, so there is no place to put
-  #   options. For example, while it is currently allowed to pass options like
-  #   `:params` or `:cookies` as keys inside the `:headers` hash, this is
-  #   strongly discouraged.
+  # **See {#initialize} for the full list of available options.**
+  #
+  # **Deprecation note:**
+  # Certain options are accepted as keys in the headers hash, but doing so is
+  # deprecated. This misfeature in the RestClient API dates to the original
+  # design, where certain options are destructively pulled out of the
+  # `:headers` hash that normally contains HTTP request headers. This is
+  # because in the top-level helper shortcuts like {RestClient.get}, the only
+  # hash argument permitted is the headers hash, so there is no place to put
+  # options. For example, while it is currently allowed to pass options like
+  # `:params` or `:cookies` as keys inside the `:headers` hash, this is
+  # strongly discouraged.
   #
   class Request
 
@@ -46,12 +49,18 @@ module RestClient
 
     # Shorthand for initializing a Request and executing it.
     #
-    # RestClient::Request.execute is a great way to pass complex options.
+    # `RestClient::Request.execute` is the recommended way to pass complex
+    # options. It is shorthand for `RestClient::Request.new(args).execute`.
     #
-    # For example:
-    #     RestClient::Request.execute(method: get, url: 'http://example.com', timeout: 5)
+    # @example
+    #   RestClient::Request.execute(method: :get, url: 'http://example.com', timeout: 5)
     #
-    # @see RestClient::Request
+    # @example
+    #   RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/2', max_redirects: 1)
+    #
+    # @see RestClient::Request#initialize
+    #
+    # @return [RestClient::Response, RestClient::RawResponse]
     #
     def self.execute(args, & block)
       new(args).execute(& block)
@@ -71,15 +80,15 @@ module RestClient
     #
     # @param [Hash] args
     #
-    # @option args [String] :url *Required.* The HTTP URL to request.
-    # @option args [String, Symbol] :method *Required.* The HTTP request method
-    #   or verb, such as "GET", "HEAD", or "POST".
+    # @option args [String] :url **Required.** The HTTP URL to request.
+    # @option args [String, Symbol] :method **Required.** The HTTP request method
+    #   or verb, such as `"GET"`, `"HEAD"`, or `"POST"`.
     #
     # @option args [Hash] :headers The HTTP request headers. Keys may be
     #   Symbol or String. Symbol keys will be converted to String header names
     #   by {#stringify_headers}. For backwards compatibility, this Hash
     #   recognizes certain keys that will be pulled out as options, but relying
-    #   on this is deprecated and strongly discouraged.
+    #   on this behavior is deprecated and strongly discouraged.
     # @option args :cookies [HTTP::CookieJar, Hash{String, Symbol => String},
     #   Array<HTTP::Cookie>] The cookies to be sent with the request. This can
     #   be passed as a Hash, an array of HTTP::Cookie objects, or as a full
@@ -121,10 +130,10 @@ module RestClient
     #   timeout on an individual network read, but does not limit the overall
     #   duration of the request so long as the server continues sending data at
     #   a trickle. Pass nil to disable the timeout. See
-    #   {Net::HTTP#read_timeout}.
+    #   `Net::HTTP#read_timeout`.
     # @option args [Numeric, nil] :open_timeout Number of seconds to wait for
     #   the connection to be established. Pass nil to disable the timeout. See
-    #   {Net::HTTP#open_timeout}.
+    #   `Net::HTTP#open_timeout`.
     # @option args [Numeric, nil] :timeout Set both `:read_timeout` and
     #   `:open_timeout`
     # @option args :ssl_client_cert
@@ -258,7 +267,7 @@ module RestClient
 
     # Extract the query parameters and append them to the url
     #
-    # Look through the headers hash for a :params option (case-insensitive,
+    # Look through the headers hash for a `:params` option (case-insensitive,
     # may be string or symbol). If present and the value is a Hash or
     # RestClient::ParamsArray, *delete* the key/value pair from the headers
     # hash and encode the value into a query string. Append this query string
@@ -266,9 +275,11 @@ module RestClient
     #
     # @param [String] url
     # @param [Hash] headers An options/headers hash to process. Mutation
-    #   warning: the params key may be removed if present!
+    #   warning: the `params` key may be removed if present!
     #
     # @return [String] resulting url with query string
+    #
+    # @api private
     #
     def process_url_params(url, headers)
       url_params = nil
@@ -342,19 +353,21 @@ module RestClient
     end
 
     # Process cookies passed as hash or as HTTP::CookieJar. For backwards
-    # compatibility, these may be passed as a :cookies option masquerading
-    # inside the headers hash. To avoid confusion, if :cookies is passed in
-    # both headers and Request#initialize, raise an error.
+    # compatibility, these may be passed as a `:cookies` option masquerading
+    # inside the headers hash. To avoid confusion, if `:cookies` is passed in
+    # both headers and {#initialize}, raise an error.
     #
-    # :cookies may be a:
-    # - Hash{String/Symbol => String}
-    # - Array<HTTP::Cookie>
-    # - HTTP::CookieJar
+    # `:cookies` may be a:
     #
-    # Passing as a hash:
+    # - `Hash{String/Symbol => String}`
+    # - `Array<HTTP::Cookie>`
+    # - `HTTP::CookieJar`
+    #
+    # **Passing as a hash:**
+    #
     #   Keys may be symbols or strings. Values must be strings.
     #   Infer the domain name from the request URI and allow subdomains (as
-    #   though '.example.com' had been set in a Set-Cookie header). Assume a
+    #   though '.example.com' had been set in a `Set-Cookie` header). Assume a
     #   path of '/'.
     #
     #     RestClient::Request.new(url: 'http://example.com', method: :get,
@@ -362,28 +375,30 @@ module RestClient
     #     )
     #
     # results in cookies as though set from the server by:
+    #
     #     Set-Cookie: foo=Value; Domain=.example.com; Path=/
     #     Set-Cookie: bar=123; Domain=.example.com; Path=/
     #
     # which yields a client cookie header of:
+    #
     #     Cookie: foo=Value; bar=123
     #
-    # Passing as HTTP::CookieJar, which will be passed through directly:
+    # **Passing as HTTP::CookieJar, which will be passed through directly:**
     #
     #     jar = HTTP::CookieJar.new
     #     jar.add(HTTP::Cookie.new('foo', 'Value', domain: 'example.com',
     #                              path: '/', for_domain: false))
     #
-    #     RestClient::Request.new(..., :cookies => jar)
+    #     RestClient::Request.new('...', :cookies => jar)
     #
     # @param [URI::HTTP] uri The URI for the request. This will be used to
-    # infer the domain name for cookies passed as strings in a hash. To avoid
-    # this implicit behavior, pass a full cookie jar or use HTTP::Cookie hash
-    # values.
-    # @param [Hash] headers The headers hash from which to pull the :cookies
-    #   option. MUTATION NOTE: This key will be deleted from the hash if
-    #   present.
-    # @param [Hash] args The options passed to Request#initialize. This hash
+    #   infer the domain name for cookies passed as strings in a hash. To avoid
+    #   this implicit behavior, pass a full cookie jar or use `HTTP::Cookie`
+    #   hash values.
+    # @param [Hash] headers The headers hash from which to pull the `:cookies`
+    #   option. **MUTATION NOTE:** This key will be deleted from the hash if
+    #   present. Passing cookies in this way is deprecated.
+    # @param [Hash] args The options passed to {Request#initialize}. This hash
     #   will be used as another potential source for the :cookies key.
     #   These args will not be mutated.
     #
@@ -439,19 +454,20 @@ module RestClient
     end
 
     # Generate headers for use by a request. Header keys will be stringified
-    # using `#stringify_headers` to normalize them as capitalized strings.
+    # using {#stringify_headers} to normalize them as capitalized strings.
     #
     # The final headers consist of:
-    #   - default headers from #default_headers
-    #   - user_headers provided here
-    #   - headers from the payload object (e.g. Content-Type, Content-Lenth)
-    #   - cookie headers from #make_cookie_header
     #
-    # BUG: stringify_headers does not alter the capitalization of headers that
-    # are passed as strings, it only normalizes those passed as symbols. This
-    # behavior will probably remain for a while for compatibility, but it means
-    # that the warnings that attempt to detect accidental header overrides may
-    # not always work.
+    #   - default headers from {#default_headers}
+    #   - `user_headers` provided here
+    #   - headers from the payload object (e.g. Content-Type, Content-Lenth)
+    #   - cookie headers from {#make_cookie_header}
+    #
+    # **BUG:** stringify_headers does not alter the capitalization of headers
+    # that are passed as strings, it only normalizes those passed as symbols.
+    # This behavior will probably remain for a while for compatibility, but it
+    # means that the warnings that attempt to detect accidental header
+    # overrides may not always work.
     # https://github.com/rest-client/rest-client/issues/599
     #
     # @param [Hash] user_headers User-provided headers to include
@@ -494,7 +510,7 @@ module RestClient
     end
 
     # The proxy URI for this request. If `:proxy` was provided on this request,
-    # use it over `RestClient.proxy`.
+    # use it over {RestClient.proxy}.
     #
     # Return false if a proxy was explicitly set and is falsy.
     #
@@ -518,6 +534,17 @@ module RestClient
       end
     end
 
+    # Create a new Net::HTTP object representing a connection to a server
+    # without actually opening the connection. This method will set up an HTTP
+    # proxy according to {#proxy_uri}.
+    #
+    # @param hostname [String]
+    # @param port [Integer]
+    #
+    # @return [Net::HTTP]
+    #
+    # @api private
+    #
     def net_http_object(hostname, port)
       p_uri = proxy_uri
 
@@ -534,10 +561,28 @@ module RestClient
       end
     end
 
+    # Find the Net::HTTPRequest subclass for a given HTTP method/verb.
+    #
+    # @param method [Symbol, String]
+    #
+    # @return [Class] A subclass of Net::HTTPRequest.
+    #
+    # @api private
+    #
     def net_http_request_class(method)
       Net::HTTP.const_get(method.capitalize, false)
     end
 
+    # Actually execute the request with Net::HTTP.
+    #
+    # @param http [Net::HTTP]
+    # @param req [Net::HTTPRequest]
+    # @param body [String, IO, nil]
+    #
+    # @see https://ruby-doc.org/stdlib-2.4.0/libdoc/net/http/rdoc/Net/HTTP.html#method-i-request
+    #   Net::HTTP#request
+    #
+    # @api private
     def net_http_do_request(http, req, body=nil, &block)
       if body && body.respond_to?(:read)
         req.body_stream = body
@@ -556,6 +601,8 @@ module RestClient
     # @param [String] url A URL string.
     #
     # @return [String]
+    #
+    # @api private
     #
     def normalize_url(url)
       url = 'http://' + url unless url.match(%r{\A[a-z][a-z0-9+.-]*://}i)
@@ -605,11 +652,20 @@ module RestClient
       redacted_uri.to_s
     end
 
-    # Default to the global logger if there's not a request-specific one
+    # The log used for this request.
+    #
+    # Defaults to the global logger {RestClient.log} if there was no `:log`
+    # option set on this request.
+    #
     def log
       @log || RestClient.log
     end
 
+    # Write log information about the request. Called just prior to sending the
+    # request to the server.
+    #
+    # @return [void]
+    #
     def log_request
       return unless log
 

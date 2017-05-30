@@ -29,10 +29,20 @@ module RestClient
       RUBY_ENGINE == 'jruby'
     end
 
+    # Return the host architecture and CPU from `RbConfig::CONFIG`.
+    #
+    # @return [String]
     def self.architecture
       "#{RbConfig::CONFIG['host_os']} #{RbConfig::CONFIG['host_cpu']}"
     end
 
+    # Return information about the ruby version from `RUBY_ENGINE`,
+    # `RUBY_VERSION`, and `RUBY_PATCHLEVEL`.
+    #
+    # When running in jruby, also return the jruby version.
+    #
+    # @return [String]
+    #
     def self.ruby_agent_version
       case RUBY_ENGINE
       when 'jruby'
@@ -42,6 +52,17 @@ module RestClient
       end
     end
 
+    # Return a reasonable string for the `User-Agent` HTTP header.
+    #
+    # @example
+    #   "rest-client/2.1.0 (linux-gnu x86_64) ruby/2.3.3p222"
+    #
+    # @return [String]
+    #
+    # @see VERSION RestClient::VERSION
+    # @see .architecture
+    # @see .ruby_agent_version
+    #
     def self.default_user_agent
       "rest-client/#{VERSION} (#{architecture}) #{ruby_agent_version}"
     end
