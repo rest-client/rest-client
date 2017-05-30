@@ -1,5 +1,6 @@
 require 'coveralls'
 Coveralls.wear!
+SimpleCov.add_filter('/spec')
 
 require 'webmock/rspec'
 require 'rest-client'
