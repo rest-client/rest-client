@@ -200,11 +200,10 @@ Style/Lambda:
 Layout/LeadingCommentSpace:
   Enabled: false
 
-# TODO
-# Offense count: 218
-# Configuration parameters: AllowURI.
 Metrics/LineLength:
-  Max: 340
+  Exclude:
+    - 'spec/**/*.rb'
+    - 'Rakefile'
 
 # TODO
 # Offense count: 28

@@ -70,8 +70,8 @@ namespace :all do
   task :build => ['ruby:build'] + \
     WindowsPlatforms.map {|p| "windows:#{p}:build"}
 
-  desc "Create tag v#{RestClient::VERSION} and for all platforms build and push " \
-    "rest-client #{RestClient::VERSION} to Rubygems"
+  desc "Create tag v#{RestClient::VERSION} and for all platforms build and " \
+    "push rest-client #{RestClient::VERSION} to Rubygems"
   task :release => ['build', 'ruby:release'] + \
     WindowsPlatforms.map {|p| "windows:#{p}:push"}
 
