@@ -38,12 +38,11 @@ desc 'Regenerate authors file'
 task :authors do
   Dir.chdir(File.dirname(__FILE__)) do
     File.open('AUTHORS', 'w') do |f|
-      f.write( <<-EOM
+      f.write <<-EOM
 The Ruby REST Client would not be what it is today without the help of
 the following kind souls:
 
       EOM
-      )
     end
 
     sh 'git shortlog -s | cut -f 2 >> AUTHORS'
@@ -130,3 +129,12 @@ Rake::RDocTask.new do |t|
   t.rdoc_files.include('README.md')
   t.rdoc_files.include('lib/*.rb')
 end
+
+############################
+
+require 'rubocop/rake_task'
+
+RuboCop::RakeTask.new(:rubocop) do |t|
+  t.options = ['--display-cop-names']
+end
+alias_task(:lint, :rubocop)

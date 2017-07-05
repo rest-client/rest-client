@@ -20,7 +20,8 @@ rvm:
 cache: bundler
 
 script:
-  bundle exec rake test
+  - bundle exec rake test
+  - bundle exec rake rubocop
 
 branches:
   except:
