@@ -110,10 +110,8 @@ Style/ConstantName:
 Metrics/CyclomaticComplexity:
   Max: 22
 
-# Offense count: 1
-# Cop supports --auto-correct.
-Style/DeprecatedHashMethods:
-  Enabled: false
+Style/PreferredHashMethods:
+  EnforcedStyle: verbose
 
 # TODO: docs
 # Offense count: 17
