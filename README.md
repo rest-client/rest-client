@@ -39,6 +39,7 @@ The rest-client gem depends on these other gems for usage at runtime:
 
 * [mime-types](http://rubygems.org/gems/mime-types)
 * [netrc](http://rubygems.org/gems/netrc)
+* [http-accept](https://rubygems.org/gems/http-accept)
 * [http-cookie](https://rubygems.org/gems/http-cookie)
 
 There are also several development dependencies. It's recommended to use
