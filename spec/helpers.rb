@@ -47,4 +47,8 @@ module Helpers
       cookie_jar: HTTP::CookieJar.new, redirection_history: nil,
       args: {url: url, method: method})
   end
+
+  def test_image_path
+    File.dirname(__FILE__) + "/ISS.jpg"
+  end
 end

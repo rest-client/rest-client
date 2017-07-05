@@ -2,7 +2,7 @@
 
 require_relative '_lib'
 
-describe RestClient::Payload do
+describe RestClient::Payload, :include_helpers do
   context "Base Payload" do
     it "should reset stream after to_s" do
       payload = RestClient::Payload::Base.new('foobar')
@@ -80,7 +80,7 @@ describe RestClient::Payload do
     end
 
     it 'should not error on close if stream already closed' do
-      m = RestClient::Payload::Multipart.new(:file => File.new(File.join(File.dirname(File.expand_path(__FILE__)), 'master_shake.jpg')))
+      m = RestClient::Payload::Multipart.new(:file => File.new(test_image_path))
       3.times {m.close}
     end
 
@@ -111,11 +111,11 @@ baz\r
     end
 
     it "should form properly separated multipart data" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       m = RestClient::Payload::Multipart.new({:foo => f})
       expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
-Content-Disposition: form-data; name="foo"; filename="master_shake.jpg"\r
+Content-Disposition: form-data; name="foo"; filename="ISS.jpg"\r
 Content-Type: image/jpeg\r
 \r
 #{File.open(f.path, 'rb'){|bin| bin.read}}\r
@@ -124,11 +124,11 @@ Content-Type: image/jpeg\r
     end
 
     it "should ignore the name attribute when it's not set" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       m = RestClient::Payload::Multipart.new({nil => f})
       expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
-Content-Disposition: form-data; filename="master_shake.jpg"\r
+Content-Disposition: form-data; filename="ISS.jpg"\r
 Content-Type: image/jpeg\r
 \r
 #{File.open(f.path, 'rb'){|bin| bin.read}}\r
@@ -137,9 +137,9 @@ Content-Type: image/jpeg\r
     end
 
     it "should detect optional (original) content type and filename" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
-      f.instance_eval "def content_type; 'text/plain'; end"
-      f.instance_eval "def original_filename; 'foo.txt'; end"
+      f = File.new(test_image_path)
+      expect(f).to receive(:content_type).and_return('text/plain')
+      expect(f).to receive(:original_filename).and_return('foo.txt')
       m = RestClient::Payload::Multipart.new({:foo => f})
       expect(m.to_s).to eq <<-EOS
 --#{m.boundary}\r
@@ -161,7 +161,7 @@ foo\r
 --#{m.boundary}--\r
       EOS
 
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       f.instance_eval "def content_type; 'text/plain'; end"
       f.instance_eval "def original_filename; 'foo.txt'; end"
       m = RestClient::Payload::Multipart.new({:foo => {:bar => f}})
@@ -177,7 +177,7 @@ Content-Type: text/plain\r
 
     it 'should correctly format hex boundary' do
       allow(SecureRandom).to receive(:base64).with(12).and_return('TGs89+ttw/xna6TV')
-      f = File.new(File.dirname(__FILE__) + '/master_shake.jpg')
+      f = File.new(test_image_path)
       m = RestClient::Payload::Multipart.new({:foo => f})
       expect(m.boundary).to eq('-' * 4 + 'RubyFormBoundary' + 'TGs89AttwBxna6TV')
     end
@@ -186,10 +186,10 @@ Content-Type: text/plain\r
 
   context "streamed payloads" do
     it "should properly determine the size of file payloads" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       payload = RestClient::Payload.generate(f)
-      expect(payload.size).to eq 76_988
-      expect(payload.length).to eq 76_988
+      expect(payload.size).to eq 72_463
+      expect(payload.length).to eq 72_463
     end
 
     it "should properly determine the size of other kinds of streaming payloads" do
@@ -211,7 +211,7 @@ Content-Type: text/plain\r
     end
 
     it "should have a closed? method" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       payload = RestClient::Payload.generate(f)
       expect(payload.closed?).to be_falsey
       payload.close
@@ -225,7 +225,7 @@ Content-Type: text/plain\r
     end
 
     it "should recognize multipart params" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       expect(RestClient::Payload.generate({"foo" => f})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
@@ -234,7 +234,7 @@ Content-Type: text/plain\r
     end
 
     it "should handle deeply nested multipart" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       params = {foo: RestClient::ParamsArray.new({nested: f})}
       expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::Multipart)
     end
@@ -245,17 +245,17 @@ Content-Type: text/plain\r
     end
 
     it "should recognize nested multipart payloads in hashes" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       expect(RestClient::Payload.generate({"foo" => {"file" => f}})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize nested multipart payloads in arrays" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       expect(RestClient::Payload.generate({"foo" => [f]})).to be_kind_of(RestClient::Payload::Multipart)
     end
 
     it "should recognize file payloads that can be streamed" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       expect(RestClient::Payload.generate(f)).to be_kind_of(RestClient::Payload::Streamed)
     end
 
@@ -269,7 +269,7 @@ Content-Type: text/plain\r
     end
 
     it "should recognize multipart payload wrapped in ParamsArray" do
-      f = File.new(File.dirname(__FILE__) + "/master_shake.jpg")
+      f = File.new(test_image_path)
       params = RestClient::ParamsArray.new([[:image, f]])
       expect(RestClient::Payload.generate(params)).to be_kind_of(RestClient::Payload::Multipart)
     end
@@ -283,8 +283,8 @@ Content-Type: text/plain\r
       payloads = [
         RestClient::Payload::Base.new('foobar'),
         RestClient::Payload::UrlEncoded.new({:foo => 'bar'}),
-        RestClient::Payload::Streamed.new(File.new(File.dirname(__FILE__) + "/master_shake.jpg")),
-        RestClient::Payload::Multipart.new({myfile: File.new(File.dirname(__FILE__) + "/master_shake.jpg")}),
+        RestClient::Payload::Streamed.new(File.new(test_image_path)),
+        RestClient::Payload::Multipart.new({myfile: File.new(test_image_path)}),
       ]
 
       payloads.each do |payload|
