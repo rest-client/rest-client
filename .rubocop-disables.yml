@@ -154,6 +154,9 @@ Layout/EmptyLinesAroundMethodBody:
 Layout/EmptyLinesAroundModuleBody:
   Enabled: false
 
+Layout/EmptyLinesAroundExceptionHandlingKeywords:
+  Enabled: false
+
 # Offense count: 31
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 Style/Encoding:

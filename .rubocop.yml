@@ -5,3 +5,4 @@ inherit_from:
 AllCops:
   Exclude:
     - 'tmp/*.rb'
+    - 'vendor/**/*'
