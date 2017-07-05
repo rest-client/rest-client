@@ -17,7 +17,7 @@ Lint/StringConversionInInterpolation:
 Lint/UnusedBlockArgument:
   Enabled: false
 
-Lint/Eval:
+Security/Eval:
   Exclude:
   - rest-client.windows.gemspec
 
@@ -120,7 +120,7 @@ Style/Documentation:
 
 # Offense count: 9
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/DotPosition:
+Layout/DotPosition:
   Enabled: false
 
 # Offense count: 1
@@ -134,24 +134,24 @@ Style/EachWithObject:
 
 # Offense count: 5
 # Cop supports --auto-correct.
-Style/EmptyLines:
+Layout/EmptyLines:
   Enabled: false
 
 # Offense count: 11
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/EmptyLinesAroundClassBody:
+Layout/EmptyLinesAroundClassBody:
   Enabled: false
 
 # Offense count: 1
 # Cop supports --auto-correct.
-Style/EmptyLinesAroundMethodBody:
+Layout/EmptyLinesAroundMethodBody:
   Enabled: false
 
 # Offense count: 9
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/EmptyLinesAroundModuleBody:
+Layout/EmptyLinesAroundModuleBody:
   Enabled: false
 
 # Offense count: 31
@@ -186,7 +186,7 @@ Style/IfUnlessModifier:
 # Offense count: 6
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/IndentHash:
+Layout/IndentHash:
   Enabled: false
 
 # NOTABUG
@@ -197,7 +197,7 @@ Style/Lambda:
 # TODO
 # Offense count: 14
 # Cop supports --auto-correct.
-Style/LeadingCommentSpace:
+Layout/LeadingCommentSpace:
   Enabled: false
 
 # TODO
@@ -296,47 +296,47 @@ Style/SignalException:
 # TODO
 # Offense count: 2
 # Cop supports --auto-correct.
-Style/SpaceAfterNot:
+Layout/SpaceAfterNot:
   Enabled: false
 
 # Offense count: 19
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/SpaceAroundEqualsInParameterDefault:
+Layout/SpaceAroundEqualsInParameterDefault:
   Enabled: false
 
 # Offense count: 20
 # Cop supports --auto-correct.
-Style/SpaceAroundOperators:
+Layout/SpaceAroundOperators:
   Enabled: false
 
 # Offense count: 9
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles.
-Style/SpaceBeforeBlockBraces:
+Layout/SpaceBeforeBlockBraces:
   Enabled: false
 
 # Offense count: 37
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, SupportedStyles, EnforcedStyleForEmptyBraces, SpaceBeforeBlockParameters.
-Style/SpaceInsideBlockBraces:
+Layout/SpaceInsideBlockBraces:
   Enabled: false
 
 # Offense count: 6
 # Cop supports --auto-correct.
-Style/SpaceInsideBrackets:
+Layout/SpaceInsideBrackets:
   Enabled: false
 
 # Offense count: 181
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SupportedStyles.
-Style/SpaceInsideHashLiteralBraces:
+Layout/SpaceInsideHashLiteralBraces:
   Enabled: false
 
 # TODO
 # Offense count: 9
 # Cop supports --auto-correct.
-Style/SpaceInsideParens:
+Layout/SpaceInsideParens:
   Enabled: false
 
 # Offense count: 414
