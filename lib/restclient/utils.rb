@@ -1,3 +1,5 @@
+require 'http/accept'
+
 module RestClient
   # Various utility methods
   module Utils
@@ -13,8 +15,8 @@ module RestClient
     #
     # @param headers [Hash<Symbol,String>]
     #
-    # @return [String, nil] encoding Return the string encoding or nil if no
-    #   header is found.
+    # @return [String, nil] Return the string encoding or nil if no header is
+    #   found.
     #
     # @example
     #   >> get_encoding_from_headers({:content_type => 'text/plain; charset=UTF-8'})
@@ -24,18 +26,51 @@ module RestClient
       type_header = headers[:content_type]
       return nil unless type_header
 
-      _content_type, params = cgi_parse_header(type_header)
+      # TODO: remove this hack once we drop support for Ruby 2.0
+      if RUBY_VERSION.start_with?('2.0')
+        _content_type, params = deprecated_cgi_parse_header(type_header)
 
-      if params.include?('charset')
-        return params.fetch('charset').gsub(/(\A["']*)|(["']*\z)/, '')
+        if params.include?('charset')
+          return params.fetch('charset').gsub(/(\A["']*)|(["']*\z)/, '')
+        end
+
+      else
+
+        begin
+          _content_type, params = cgi_parse_header(type_header)
+        rescue HTTP::Accept::ParseError
+          return nil
+        else
+          params['charset']
+        end
+      end
+    end
+
+    # Parse a Content-Type like header.
+    #
+    # Return the main content-type and a hash of params.
+    #
+    # @param [String] line
+    # @return [Array(String, Hash)]
+    #
+    def self.cgi_parse_header(line)
+      types = HTTP::Accept::MediaTypes.parse(line)
+
+      if types.empty?
+        raise HTTP::Accept::ParseError.new("Found no types in header line")
       end
 
-      nil
+      [types.first.mime_type, types.first.parameters]
     end
 
     # Parse semi-colon separated, potentially quoted header string iteratively.
     #
     # @private
+    #
+    # @deprecated This method is deprecated and only exists to support Ruby
+    #   2.0, which is not supported by HTTP::Accept.
+    #
+    # @todo remove this method when dropping support for Ruby 2.0
     #
     def self._cgi_parseparam(s)
       return enum_for(__method__, s) unless block_given?
@@ -66,11 +101,15 @@ module RestClient
     # probably doesn't read or perform particularly well in ruby.
     # https://github.com/python/cpython/blob/3.4/Lib/cgi.py#L301-L331
     #
-    #
     # @param [String] line
     # @return [Array(String, Hash)]
     #
-    def self.cgi_parse_header(line)
+    # @deprecated This method is deprecated and only exists to support Ruby
+    #   2.0, which is not supported by HTTP::Accept.
+    #
+    # @todo remove this method when dropping support for Ruby 2.0
+    #
+    def self.deprecated_cgi_parse_header(line)
       parts = _cgi_parseparam(';' + line)
       key = parts.next
       pdict = {}
