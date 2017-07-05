@@ -1,5 +1,8 @@
-# unreleased
+# 2.1.0.rc1
 
+- Add a dependency on http-accept for parsing Content-Type charset headers.
+  This works around a bad memory leak introduced in Ruby 2.4.x (the leak is
+  probably a bug in MRI). (#615)
 - Use mime/types/columnar from mime-types 2.6.1+, which is leaner in memory
   usage than the older storage model of mime-types. (#393)
 - Add `:log` option to individual requests. This allows users to set a log on a
@@ -26,6 +29,7 @@
   Payload object in Payload::Streamed, creating a pointlessly nested payload.
   Also add a `closed?` method to Payload objects, and don't error in
   `short_inspect` if `size` returns nil. (#603)
+- Test with an image in the public domain to avoid licensing complexity. (#607)
 
 # 2.0.2
 
