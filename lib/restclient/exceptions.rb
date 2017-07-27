@@ -148,7 +148,7 @@ module RestClient
   end
 
   # Compatibility
-  class ExceptionWithResponse < Exception
+  class ExceptionWithResponse < RestClient::Exception
   end
 
   # The request failed with an error code not managed by the code
@@ -228,14 +228,14 @@ module RestClient
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.
-  class ServerBrokeConnection < Exception
+  class ServerBrokeConnection < RestClient::Exception
     def initialize(message='Server broke connection', request=nil)
       super nil, nil, request
       self.message = message
     end
   end
 
-  class SSLCertificateNotVerified < Exception
+  class SSLCertificateNotVerified < RestClient::Exception
     def initialize(message='SSL certificate not verified', request=nil)
       super nil, nil, request
       self.message = message

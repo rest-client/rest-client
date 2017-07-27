@@ -2,7 +2,6 @@ require 'net/http'
 require 'openssl'
 require 'stringio'
 require 'uri'
-require 'zlib'
 
 require File.dirname(__FILE__) + '/restclient/version'
 require File.dirname(__FILE__) + '/restclient/platform'

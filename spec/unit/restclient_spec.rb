@@ -71,9 +71,10 @@ describe RestClient do
   end
 
   describe 'version' do
-    it 'has a version ~> 2.0.0.alpha' do
+    # test that there is a sane version number to avoid accidental 0.0.0 again
+    it 'has a version > 2.0.0.alpha, < 3.0' do
       ver = Gem::Version.new(RestClient.version)
-      expect(Gem::Requirement.new('~> 2.0.0.alpha')).to be_satisfied_by(ver)
+      expect(Gem::Requirement.new('> 2.0.0.alpha', '< 3.0')).to be_satisfied_by(ver)
     end
   end
 end

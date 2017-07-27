@@ -13,25 +13,36 @@ module RestClient
 
     include AbstractResponse
 
-    attr_reader :file, :request
+    attr_reader :file, :request, :start_time, :end_time
 
     def inspect
       "<RestClient::RawResponse @code=#{code.inspect}, @file=#{file.inspect}, @request=#{request.inspect}>"
     end
 
-    def initialize(tempfile, net_http_res, request)
-      @net_http_res = net_http_res
+    # @param [Tempfile] tempfile The temporary file containing the body
+    # @param [Net::HTTPResponse] net_http_res
+    # @param [RestClient::Request] request
+    # @param [Time] start_time
+    def initialize(tempfile, net_http_res, request, start_time=nil)
       @file = tempfile
-      @request = request
+
+      # reopen the tempfile so we can read it
+      @file.open
+
+      response_set_vars(net_http_res, request, start_time)
     end
 
     def to_s
-      @file.open
+      body
+    end
+
+    def body
+      @file.rewind
       @file.read
     end
 
     def size
-      File.size file
+      file.size
     end
 
   end

@@ -9,21 +9,26 @@ os:
 rvm:
   - "2.0.0"
   - "2.1" # latest 2.1.x
-  - "2.2.5" # TODO: switch to "2.2" once it works for OS X
-  - "2.3.1" # TODO: switch to "2.3" once travis fixes it
+  - "2.2.5"
+  - "2.3.3"
+  - "2.4.0"
   - "ruby-head"
   - "jruby-9.0.5.0"
   - "jruby-9.1.5.0"
   - "jruby-head"
 
+cache: bundler
+
 script:
-  bundle exec rake test
+  - bundle exec rake test
+  - bundle exec rake rubocop
 
 branches:
   except:
     - "readme-edits"
 
 before_install:
+  - gem update --system
   # bundler installation needed for jruby-head
   # https://github.com/travis-ci/travis-ci/issues/5861
   - gem install bundler

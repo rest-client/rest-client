@@ -1,8 +1,49 @@
-# Unreleased
+# 2.1.0.rc1
+
+- Add a dependency on http-accept for parsing Content-Type charset headers.
+  This works around a bad memory leak introduced in Ruby 2.4.x (the leak is
+  probably a bug in MRI). (#615)
+- Use mime/types/columnar from mime-types 2.6.1+, which is leaner in memory
+  usage than the older storage model of mime-types. (#393)
+- Add `:log` option to individual requests. This allows users to set a log on a
+  per-request / per-resource basis instead of the kludgy global log. (#538)
+- Log request duration by tracking request start and end times. Make
+  `log_response` a method on the Response object, and ensure the `size` method
+  works on RawResponse objects. (#126)
+  - `# => 200 OK | text/html 1270 bytes, 0.08s`
+- Drop custom handling of compression and use built-in Net::HTTP support for
+  supported Content-Encodings like gzip and deflate. Don't set any explicit
+  `Accept-Encoding` header, rely instead on Net::HTTP defaults. (#597)
+  - Note: this changes behavior for compressed responses when using
+    `:raw_response => true`. Previously the raw response would not have been
+    uncompressed by rest-client, but now Net::HTTP will uncompress it.
+- The previous fix to avoid having Netrc username/password override an
+  Authorization header was case-sensitive and incomplete. Fix this by
+  respecting existing Authorization headers, regardless of letter case. (#550)
+- Handle ParamsArray payloads. Previously, rest-client would silently drop a
+  ParamsArray passed as the payload. Instead, automatically use
+  Payload::Multipart if the ParamsArray contains a file handle, or use
+  Payload::UrlEncoded if it doesn't. (#508)
+- Gracefully handle Payload objects (Payload::Base or subclasses) that are
+  passed as a payload argument. Previously, `Payload.generate` would wrap a
+  Payload object in Payload::Streamed, creating a pointlessly nested payload.
+  Also add a `closed?` method to Payload objects, and don't error in
+  `short_inspect` if `size` returns nil. (#603)
+- Test with an image in the public domain to avoid licensing complexity. (#607)
+
+# 2.0.2
+
+- Suppress the header override warning introduced in 2.0.1 if the value is the
+  same. There's no conflict if the value is unchanged. (#578)
+
+# 2.0.1
 
 - Warn if auto-generated headers from the payload, such as Content-Type,
-  override headers set by the user. (This is usually not what the user wants to
-  happen, and can be surprising.)
+  override headers set by the user. This is usually not what the user wants to
+  happen, and can be surprising. (#554)
+- Drop the old check for weak default TLS ciphers, and use the built-in Ruby
+  defaults. Ruby versions from Oct. 2014 onward use sane defaults, so this is
+  no longer needed. (#573)
 
 # 2.0.0
 

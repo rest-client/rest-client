@@ -1,6 +1,8 @@
 require_relative '_lib'
 require 'json'
 
+require 'zlib'
+
 describe RestClient::Request do
   before(:all) do
     WebMock.disable!
@@ -13,7 +15,8 @@ describe RestClient::Request do
   def default_httpbin_url
     # add a hack to work around java/jruby bug
     # java.lang.RuntimeException: Could not generate DH keypair with backtrace
-    if ENV['TRAVIS_RUBY_VERSION'] == 'jruby-19mode'
+    # Also (2017-04-09) Travis Jruby versions have a broken CA keystore
+    if ENV['TRAVIS_RUBY_VERSION'] =~ /\Ajruby-/
       'http://httpbin.org/'
     else
       'https://httpbin.org/'
@@ -81,6 +84,45 @@ describe RestClient::Request do
       }.to raise_error(RestClient::Unauthorized) { |ex|
         expect(ex.http_code).to eq 401
       }
+    end
+
+    it 'handles gzipped/deflated responses' do
+      [['gzip', 'gzipped'], ['deflate', 'deflated']].each do |encoding, var|
+        raw = execute_httpbin(encoding, method: :get)
+
+        begin
+          data = JSON.parse(raw)
+        rescue
+          puts "Failed to parse: " + raw.inspect
+          raise
+        end
+
+        expect(data['method']).to eq 'GET'
+        expect(data.fetch(var)).to be true
+      end
+    end
+
+    it 'does not uncompress response when accept-encoding is set' do
+      # == gzip ==
+      raw = execute_httpbin('gzip', method: :get, headers: {accept_encoding: 'gzip, deflate'})
+
+      # check for gzip magic number
+      expect(raw.body).to start_with("\x1F\x8B".b)
+
+      decoded = Zlib::GzipReader.new(StringIO.new(raw.body)).read
+      parsed = JSON.parse(decoded)
+
+      expect(parsed['method']).to eq 'GET'
+      expect(parsed.fetch('gzipped')).to be true
+
+      # == delate ==
+      raw = execute_httpbin('deflate', method: :get, headers: {accept_encoding: 'gzip, deflate'})
+
+      decoded = Zlib::Inflate.new.inflate(raw.body)
+      parsed = JSON.parse(decoded)
+
+      expect(parsed['method']).to eq 'GET'
+      expect(parsed.fetch('deflated')).to be true
     end
   end
 end

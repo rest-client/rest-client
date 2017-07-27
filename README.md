@@ -39,6 +39,7 @@ The rest-client gem depends on these other gems for usage at runtime:
 
 * [mime-types](http://rubygems.org/gems/mime-types)
 * [netrc](http://rubygems.org/gems/netrc)
+* [http-accept](https://rubygems.org/gems/http-accept)
 * [http-cookie](https://rubygems.org/gems/http-cookie)
 
 There are also several development dependencies. It's recommended to use
@@ -359,7 +360,7 @@ RestClient.get('http://example.com/resource') { |response, request, result, &blo
   when 423
     raise SomeCustomExceptionIfYouWant
   else
-    response.return!(request, result, &block)
+    response.return!(&block)
   end
 }
 ```
@@ -446,6 +447,106 @@ You can:
 
 See `RestClient::Request`'s documentation for more information.
 
+### Streaming request payload
+
+RestClient will try to stream any file-like payload rather than reading it into
+memory. This happens through `RestClient::Payload::Streamed`, which is
+automatically called internally by `RestClient::Payload.generate` on anything
+with a `read` method.
+
+```ruby
+>> r = RestClient.put('http://httpbin.org/put', File.open('/tmp/foo.txt', 'r'),
+                      content_type: 'text/plain')
+=> <RestClient::Response 200 "{\n  \"args\":...">
+```
+
+In Multipart requests, RestClient will also stream file handles passed as Hash
+(or __new in 2.1__ ParamsArray).
+
+```ruby
+>> r = RestClient.put('http://httpbin.org/put',
+                      {file_a: File.open('a.txt', 'r'),
+                       file_b: File.open('b.txt', 'r')})
+=> <RestClient::Response 200 "{\n  \"args\":...">
+
+# received by server as two file uploads with multipart/form-data
+>> JSON.parse(r)['files'].keys
+=> ['file_a', 'file_b']
+```
+
+### Streaming responses
+
+Normally, when you use `RestClient.get` or the lower level
+`RestClient::Request.execute method: :get` to retrieve data, the entire
+response is buffered in memory and returned as the response to the call.
+
+However, if you are retrieving a large amount of data, for example a Docker
+image, an iso, or any other large file, you may want to stream the response
+directly to disk rather than loading it in memory. If you have a very large
+file, it may become *impossible* to load it into memory.
+
+There are two main ways to do this:
+
+#### `raw_response`, saves into Tempfile
+
+If you pass `raw_response: true` to `RestClient::Request.execute`, it will save
+the response body to a temporary file (using `Tempfile`) and return a
+`RestClient::RawResponse` object rather than a `RestClient::Response`.
+
+Note that the tempfile created by `Tempfile.new` will be in `Dir.tmpdir`
+(usually `/tmp/`), which you can override to store temporary files in a
+different location. This file will be unlinked when it is dereferenced.
+
+If logging is enabled, this will also print download progress.
+__New in 2.1:__ Customize the interval with `:stream_log_percent` (defaults to
+10 for printing a message every 10% complete).
+
+For example:
+
+```ruby
+>> raw = RestClient::Request.execute(
+           method: :get,
+           url: 'http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso',
+           raw_response: true)
+=> <RestClient::RawResponse @code=200, @file=#<Tempfile:/tmp/rest-client.20170522-5346-1pptjm1>, @request=<RestClient::Request @method="get", @url="http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso">>
+>> raw.file.size
+=> 1554186240
+>> raw.file.path
+=> "/tmp/rest-client.20170522-5346-1pptjm1"
+raw.file.path
+=> "/tmp/rest-client.20170522-5346-1pptjm1"
+
+>> require 'digest/sha1'
+>> Digest::SHA1.file(raw.file.path).hexdigest
+=> "4375b73e3a1aa305a36320ffd7484682922262b3"
+```
+
+#### `block_response`, receives raw Net::HTTPResponse
+
+If you want to stream the data from the response to a file as it comes, rather
+than entirely in memory, you can also pass `RestClient::Request.execute` a
+parameter `:block_response` to which you pass a block/proc. This block receives
+the raw unmodified Net::HTTPResponse object from Net::HTTP, which you can use
+to stream directly to a file as each chunk is received.
+
+Note that this bypasses all the usual HTTP status code handling, so you will
+want to do you own checking for HTTP 20x response codes, redirects, etc.
+
+The following is an example:
+
+````ruby
+File.open('/some/output/file', 'w') {|f|
+  block = proc { |response|
+    response.read_body do |chunk|
+      f.write chunk
+    end
+  }
+  RestClient::Request.execute(method: :get,
+                              url: 'http://example.com/some/really/big/file.img',
+                              block_response: block)
+}
+````
+
 ## Shell
 
 The restclient shell command gives an IRB session with RestClient already loaded:
@@ -498,7 +599,7 @@ $ restclient put http://example.com/resource < input_body
 
 ## Logging
 
-To enable logging you can:
+To enable logging globally you can:
 
 - set RestClient.log with a Ruby Logger, or
 - set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
@@ -506,7 +607,19 @@ To enable logging you can:
 ```ruby
 $ RESTCLIENT_LOG=stdout path/to/my/program
 ```
-Either produces logs like this:
+
+You can also set individual loggers when instantiating a Resource or making an
+individual request:
+
+```ruby
+resource = RestClient::Resource.new 'http://example.com/resource', log: Logger.new(STDOUT)
+```
+
+```ruby
+RestClient::Request.execute(method: :get, url: 'http://example.com/foo', log: Logger.new(STDERR))
+```
+
+All options produce logs like this:
 
 ```ruby
 RestClient.get "http://some/resource"
@@ -762,24 +875,22 @@ Need caching, more advanced logging or any ability provided by Rack middleware?
 Have a look at rest-client-components: http://github.com/crohr/rest-client-components
 
 ## Credits
-
-|||
-|---------------------|---------------------------------------------------------|
-| REST Client Team    | Andy Brody                                              |
-| Creator             | Adam Wiggins                                            |
-| Maintainers Emeriti | Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch |
-| Major contributions | Blake Mizerany, Julien Kirch                            |
+| | |
+|-------------------------|---------------------------------------------------------|
+| **REST Client Team**    | Andy Brody                                              |
+| **Creator**             | Adam Wiggins                                            |
+| **Maintainers Emeriti** | Lawrence Leonard Gilbert, Matthew Manning, Julien Kirch |
+| **Major contributions** | Blake Mizerany, Julien Kirch                            |
 
 A great many generous folks have contributed features and patches.
 See AUTHORS for the full list.
 
 ## Legal
 
-Released under the MIT License: http://www.opensource.org/licenses/mit-license.php
+Released under the MIT License: https://opensource.org/licenses/MIT
 
-"Master Shake" photo (http://www.flickr.com/photos/solgrundy/924205581/) by
-"SolGrundy"; used under terms of the Creative Commons Attribution-ShareAlike 2.0
-Generic license (http://creativecommons.org/licenses/by-sa/2.0/)
+Photo of the International Space Station was produced by NASA and is in the
+public domain.
 
 Code for reading Windows root certificate store derived from work by Puppet;
 used under terms of the Apache License, Version 2.0.

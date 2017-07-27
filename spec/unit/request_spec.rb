@@ -27,46 +27,22 @@ describe RestClient::Request, :include_helpers do
     expect(@request.default_headers[:accept]).to eq '*/*'
   end
 
-  describe "compression" do
-
-    it "decodes an uncompressed result body by passing it straight through" do
-      expect(RestClient::Request.decode(nil, 'xyz')).to eq 'xyz'
-    end
-
-    it "doesn't fail for nil bodies" do
-      expect(RestClient::Request.decode('gzip', nil)).to be_nil
-    end
-
-
-    it "decodes a gzip body" do
-      expect(RestClient::Request.decode('gzip', "\037\213\b\b\006'\252H\000\003t\000\313T\317UH\257\312,HM\341\002\000G\242(\r\v\000\000\000")).to eq "i'm gziped\n"
-    end
-
-    it "ingores gzip for empty bodies" do
-      expect(RestClient::Request.decode('gzip', '')).to be_empty
-    end
-
-    it "decodes a deflated body" do
-      expect(RestClient::Request.decode('deflate', "x\234+\316\317MUHIM\313I,IMQ(I\255(\001\000A\223\006\363")).to eq "some deflated text"
-    end
-  end
-
   it "processes a successful result" do
-    res = response_double
+    res = res_double
     allow(res).to receive(:code).and_return("200")
     allow(res).to receive(:body).and_return('body')
     allow(res).to receive(:[]).with('content-encoding').and_return(nil)
-    expect(@request.send(:process_result, res).body).to eq 'body'
-    expect(@request.send(:process_result, res).to_s).to eq 'body'
+    expect(@request.send(:process_result, res, Time.now).body).to eq 'body'
+    expect(@request.send(:process_result, res, Time.now).to_s).to eq 'body'
   end
 
   it "doesn't classify successful requests as failed" do
     203.upto(207) do |code|
-      res = response_double
+      res = res_double
       allow(res).to receive(:code).and_return(code.to_s)
       allow(res).to receive(:body).and_return("")
       allow(res).to receive(:[]).with('content-encoding').and_return(nil)
-      expect(@request.send(:process_result, res)).to be_empty
+      expect(@request.send(:process_result, res, Time.now)).to be_empty
     end
   end
 
@@ -280,6 +256,13 @@ describe RestClient::Request, :include_helpers do
     }).to match(/warning: Overriding "Content-Length" header/i)
   end
 
+  it "does not warn when overriding user header with header derived from payload if those header values were identical" do
+    expect(fake_stderr {
+      RestClient::Request.new(method: :post, url: 'example.com',
+                              payload: {'foo' => '123456'}, headers: { 'Content-Type' => 'application/x-www-form-urlencoded' })
+    }).not_to match(/warning: Overriding "Content-Type" header/i)
+  end
+
   it 'does not warn for a normal looking payload' do
     expect(fake_stderr {
       RestClient::Request.new(method: :post, url: 'example.com', payload: 'payload')
@@ -308,7 +291,7 @@ describe RestClient::Request, :include_helpers do
 
   describe "user headers" do
     it "merges user headers with the default headers" do
-      expect(@request).to receive(:default_headers).and_return({ :accept => '*/*', :accept_encoding => 'gzip, deflate' })
+      expect(@request).to receive(:default_headers).and_return({:accept => '*/*'})
       headers = @request.make_headers("Accept" => "application/json", :accept_encoding => 'gzip')
       expect(headers).to have_key "Accept-Encoding"
       expect(headers["Accept-Encoding"]).to eq "gzip"
@@ -465,12 +448,13 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "does not attempt to send credentials if Authorization header is set" do
-      @request.headers['Authorization'] = 'Token abc123'
-      allow(@request).to receive(:user).and_return('joe')
-      allow(@request).to receive(:password).and_return('mypass')
-      req = double("request")
-      expect(req).not_to receive(:basic_auth)
-      @request.send(:setup_credentials, req)
+      ['Authorization', 'authorization', 'auTHORization', :authorization].each do |authorization|
+        headers = {authorization => 'Token abc123'}
+        request = RestClient::Request.new(method: :get, url: 'http://some/resource', headers: headers, user: 'joe', password: 'mypass')
+        req = double("net::http request")
+        expect(req).not_to receive(:basic_auth)
+        request.send(:setup_credentials, req)
+      end
     end
   end
 
@@ -528,25 +512,25 @@ describe RestClient::Request, :include_helpers do
 
   describe "exception" do
     it "raises Unauthorized when the response is 401" do
-      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::Unauthorized)
+      res = res_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::Unauthorized)
     end
 
     it "raises ResourceNotFound when the response is 404" do
-      res = response_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::ResourceNotFound)
+      res = res_double(:code => '404', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::ResourceNotFound)
     end
 
     it "raises RequestFailed otherwise" do
-      res = response_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
-      expect { @request.send(:process_result, res) }.to raise_error(RestClient::InternalServerError)
+      res = res_double(:code => '500', :[] => ['content-encoding' => ''], :body => '' )
+      expect { @request.send(:process_result, res, Time.now) }.to raise_error(RestClient::InternalServerError)
     end
   end
 
   describe "block usage" do
     it "returns what asked to" do
-      res = response_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
-      expect(@request.send(:process_result, res){|response, request| "foo"}).to eq "foo"
+      res = res_double(:code => '401', :[] => ['content-encoding' => ''], :body => '' )
+      expect(@request.send(:process_result, res, Time.now){|response, request| "foo"}).to eq "foo"
     end
   end
 
@@ -637,64 +621,74 @@ describe RestClient::Request, :include_helpers do
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a small payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => 'foo', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"3", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.post "http://url", "foo", "Accept"=>"*/*", "Content-Length"=>"3", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a post request with a large payload" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :post, :url => 'http://url', :payload => ('x' * 1000), :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.post "http://url", 1000 byte(s) length, "Accept"=>"*/*", "Content-Length"=>"1000", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs input headers as a hash" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => { :accept => 'text/plain', :user_agent => 'rest-client' }).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"text/plain", "User-Agent"=>"rest-client"\n}
     end
 
     it "logs a response including the status code, content type, and result body size in bytes" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
       allow(res).to receive(:[]).with('Content-type').and_return('text/html')
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK | text/html 4 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK | text/html 4 bytes, 1.00s\n"]
     end
 
     it "logs a response with a nil Content-type" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+      res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
       allow(res).to receive(:[]).with('Content-type').and_return(nil)
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK |  4 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK |  4 bytes, 1.00s\n"]
     end
 
     it "logs a response with a nil body" do
       log = RestClient.log = []
-      res = double('result', :code => '200', :class => Net::HTTPOK, :body => nil)
+      res = res_double(code: '200', class: Net::HTTPOK, body: nil)
       allow(res).to receive(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-      @request.log_response res
-      expect(log[0]).to eq "# => 200 OK | text/html 0 bytes\n"
+      response = response_from_res_double(res, @request)
+      response.log_response
+      expect(log).to eq ["# => 200 OK | text/html 0 bytes, 1.00s\n"]
     end
 
     it 'does not log request password' do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://user:password@url', :headers => {:user_agent => 'rest-client'}).log_request
-      expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "Accept-Encoding"=>"gzip, deflate", "User-Agent"=>"rest-client"\n}
+      expect(log[0]).to eq %Q{RestClient.get "http://user:REDACTED@url", "Accept"=>"*/*", "User-Agent"=>"rest-client"\n}
+    end
+
+    it 'logs to a passed logger, if provided' do
+      logger = double('logger', '<<' => true)
+      expect(logger).to receive(:<<)
+      RestClient::Request.new(:method => :get, :url => 'http://user:password@url', log: logger).log_request
     end
   end
 
   it "strips the charset from the response content type" do
     log = RestClient.log = []
-    res = double('result', :code => '200', :class => Net::HTTPOK, :body => 'abcd')
+    res = res_double(code: '200', class: Net::HTTPOK, body: 'abcd')
     allow(res).to receive(:[]).with('Content-type').and_return('text/html; charset=utf-8')
-    @request.log_response res
-    expect(log[0]).to eq "# => 200 OK | text/html 4 bytes\n"
+    response = response_from_res_double(res, @request)
+    response.log_response
+    expect(log).to eq ["# => 200 OK | text/html 4 bytes, 1.00s\n"]
   end
 
   describe "timeout" do
@@ -926,56 +920,6 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', 'payload')
     end
 
-    it "should override ssl_ciphers with better defaults with weak default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"ALL:!ADH:!EXPORT:!SSLv2:RC4+RSA:+HIGH:+MEDIUM:+LOW",
-          :options=>-2147480577,
-        }
-      )
-
-      @request = RestClient::Request.new(
-        :method => :put,
-        :url => 'https://some/resource',
-        :payload => 'payload',
-      )
-
-      expect(@net).to receive(:ciphers=).with(RestClient::Request::DefaultCiphers)
-
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-      @request.send(:transmit, @uri, 'req', 'payload')
-    end
-
-    it "should not override ssl_ciphers with better defaults with different default ciphers" do
-      stub_const(
-        '::OpenSSL::SSL::SSLContext::DEFAULT_PARAMS',
-        {
-          :ssl_version=>"SSLv23",
-          :verify_mode=>1,
-          :ciphers=>"HIGH:!aNULL:!eNULL:!EXPORT:!LOW:!MEDIUM:!SSLv2",
-          :options=>-2147480577,
-        }
-      )
-
-      @request = RestClient::Request.new(
-        :method => :put,
-        :url => 'https://some/resource',
-        :payload => 'payload',
-      )
-
-      expect(@net).not_to receive(:ciphers=)
-
-      allow(@http).to receive(:request)
-      allow(@request).to receive(:process_result)
-      allow(@request).to receive(:response_log)
-      @request.send(:transmit, @uri, 'req', 'payload')
-    end
-
     it "should set the ssl_client_cert if provided" do
       @request = RestClient::Request.new(
               :method => :put,
@@ -1192,7 +1136,7 @@ describe RestClient::Request, :include_helpers do
     )
     net_http_res = Net::HTTPNoContent.new("", "204", "No Content")
     allow(net_http_res).to receive(:read_body).and_return(nil)
-    expect(@http).to receive(:request).and_return(@request.send(:fetch_body, net_http_res))
+    expect(@http).to receive(:request).and_return(net_http_res)
     response = @request.send(:transmit, @uri, 'req', 'payload')
     expect(response).not_to be_nil
     expect(response.code).to eq 204
@@ -1210,7 +1154,8 @@ describe RestClient::Request, :include_helpers do
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       allow(net_http_res).to receive(:read_body).and_return("body")
-      @request.send(:fetch_body, net_http_res)
+      received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res)
+      expect(received_tempfile).to eq tempfile
     end
   end
 

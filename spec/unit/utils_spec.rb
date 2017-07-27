@@ -34,11 +34,11 @@ describe RestClient::Utils do
   end
 
   describe '.cgi_parse_header' do
-    it 'parses headers' do
+    it 'parses headers', :unless => RUBY_VERSION.start_with?('2.0') do
       expect(RestClient::Utils.cgi_parse_header('text/plain')).
         to eq ['text/plain', {}]
 
-      expect(RestClient::Utils.cgi_parse_header('text/vnd.just.made.this.up ; ')).
+      expect(RestClient::Utils.cgi_parse_header('text/vnd.just.made.this.up')).
         to eq ['text/vnd.just.made.this.up', {}]
 
       expect(RestClient::Utils.cgi_parse_header('text/plain;charset=us-ascii')).
@@ -52,20 +52,20 @@ describe RestClient::Utils do
         to eq ['text/plain', {'charset' => 'us-ascii', 'another' => 'opt'}]
 
       expect(RestClient::Utils.cgi_parse_header(
-        'attachment; filename="silly.txt"')).
-        to eq ['attachment', {'filename' => 'silly.txt'}]
+        'foo/bar; filename="silly.txt"')).
+        to eq ['foo/bar', {'filename' => 'silly.txt'}]
 
       expect(RestClient::Utils.cgi_parse_header(
-        'attachment; filename="strange;name"')).
-        to eq ['attachment', {'filename' => 'strange;name'}]
+        'foo/bar; filename="strange;name"')).
+        to eq ['foo/bar', {'filename' => 'strange;name'}]
 
       expect(RestClient::Utils.cgi_parse_header(
-        'attachment; filename="strange;name";size=123;')).to eq \
-        ['attachment', {'filename' => 'strange;name', 'size' => '123'}]
+        'foo/bar; filename="strange;name";size=123')).to eq \
+        ['foo/bar', {'filename' => 'strange;name', 'size' => '123'}]
 
       expect(RestClient::Utils.cgi_parse_header(
-        'form-data; name="files"; filename="fo\\"o;bar"')).to eq \
-        ['form-data', {'name' => 'files', 'filename' => 'fo"o;bar'}]
+        'foo/bar; name="files"; filename="fo\\"o;bar"')).to eq \
+        ['foo/bar', {'name' => 'files', 'filename' => 'fo"o;bar'}]
     end
   end
 
