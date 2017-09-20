@@ -385,3 +385,9 @@ Style/WordArray:
 # Configuration parameters: EnforcedStyle, SupportedStyles.
 Style/BarePercentLiterals:
   Enabled: false
+
+
+Lint/RescueWithoutErrorClass:
+  Exclude:
+    - 'bin/restclient'
+    - 'lib/restclient/windows/root_certs.rb'

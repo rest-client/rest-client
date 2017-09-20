@@ -92,7 +92,7 @@ describe RestClient::Request do
 
         begin
           data = JSON.parse(raw)
-        rescue
+        rescue StandardError
           puts "Failed to parse: " + raw.inspect
           raise
         end
