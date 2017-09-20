@@ -1221,10 +1221,10 @@ describe RestClient::Request, :include_helpers do
       expect(@request.process_url_params('https://example.com/', params: {
         foo: [1,2,3],
         null: nil,
-        false: false,
+        falsy: false,
         math: '2+2=4',
         nested: {'key + escaped' => 'value + escaped', other: [], arr: [1,2]},
-      })).to eq 'https://example.com/?foo[]=1&foo[]=2&foo[]=3&null&false=false&math=2%2B2%3D4' \
+      })).to eq 'https://example.com/?foo[]=1&foo[]=2&foo[]=3&null&falsy=false&math=2%2B2%3D4' \
                    '&nested[key+%2B+escaped]=value+%2B+escaped&nested[other]' \
                    '&nested[arr][]=1&nested[arr][]=2'
     end

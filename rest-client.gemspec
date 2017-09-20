@@ -8,7 +8,7 @@ Gem::Specification.new do |s|
   s.authors = ['REST Client Team']
   s.description = 'A simple HTTP and REST client for Ruby, inspired by the Sinatra microframework style of specifying actions: get, put, post, delete.'
   s.license = 'MIT'
-  s.email = 'rest.client@librelist.com'
+  s.email = 'discuss@rest-client.groups.io'
   s.executables = ['restclient']
   s.extra_rdoc_files = ['README.md', 'history.md']
   s.files = `git ls-files -z`.split("\0")
