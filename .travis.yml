@@ -33,6 +33,9 @@ before_install:
   - gem install bundler
 
 matrix:
+  exclude:
+    - os: osx
+      rvm: "2.4.2"
   allow_failures:
     - rvm: 'ruby-head'
 
