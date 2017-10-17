@@ -2,7 +2,7 @@ require 'tempfile'
 require 'cgi'
 require 'netrc'
 require 'set'
-
+require 'socksify/http'
 begin
   # Use mime/types/columnar if available, for reduced memory usage
   require 'mime/types/columnar'
@@ -449,10 +449,11 @@ module RestClient
       elsif !p_uri
         # proxy explicitly set to none
         Net::HTTP.new(hostname, port, nil, nil, nil, nil)
+      elsif p_uri && p_uri.scheme =~ /^socks5?$/i
+        Net::HTTP.SOCKSProxy(p_uri.hostname, p_uri.port).new(hostname, port)
       else
         Net::HTTP.new(hostname, port,
                       p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
-
       end
     end
 
