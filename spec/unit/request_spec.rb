@@ -271,18 +271,43 @@ describe RestClient::Request, :include_helpers do
     }).to eq ''
   end
 
-  it "uses netrc credentials" do
-    expect(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
-    request = RestClient::Request.new(:method => :put, :url => 'http://example.com/', :payload => 'payload')
-    expect(request.user).to eq 'a'
-    expect(request.password).to eq 'b'
-  end
+  describe "with netrc credentials" do
+    context "when credentials exist in the url" do
+      it "uses credentials in the url" do
+        allow(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
+        request = RestClient::Request.new(:method => :put, :url =>  'http://joe%20:pass1@example.com/', :payload => 'payload')
+        expect(request.user).to eq 'joe '
+        expect(request.password).to eq 'pass1'
+      end
+    end
 
-  it "uses credentials in the url in preference to netrc" do
-    allow(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
-    request = RestClient::Request.new(:method => :put, :url =>  'http://joe%20:pass1@example.com/', :payload => 'payload')
-    expect(request.user).to eq 'joe '
-    expect(request.password).to eq 'pass1'
+    context "when credentials do not exist in the url" do
+      context "when netrc is disabled" do
+        it "uses netrc credentials" do
+          expect(Netrc).to receive(:read).and_return('example.com' => ['a', 'b'])
+          request = RestClient::Request.new(:method => :put, :url => 'http://example.com/', :payload => 'payload')
+          expect(request.user).to eq 'a'
+          expect(request.password).to eq 'b'
+        end
+      end
+
+      context "when netrc is disabled" do
+        before do
+          RestClient.class_variable_set(:@@env_netrc_auth, 'false')
+        end
+
+        after do
+          RestClient.class_variable_set(:@@env_netrc_auth, 'true')
+        end
+
+        it "does not use netrc credentials" do
+          expect(Netrc).not_to receive(:read)
+          request = RestClient::Request.new(:method => :put, :url => 'http://example.com/', :payload => 'payload')
+          expect(request.user).to eq nil
+          expect(request.password).to eq nil
+        end
+      end
+    end
   end
 
   it "determines the Net::HTTP class to instantiate by the method name" do

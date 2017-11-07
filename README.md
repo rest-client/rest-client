@@ -667,6 +667,11 @@ RestClient::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
 # => single request sent without a proxy
 ```
 
+## Netrc
+
+If you would like to prevent `.netrc` from being read, set `RESTCLIENT_NETRC` to
+`false` in your environment.
+
 ## Query parameters
 
 Rest-client can render a hash as HTTP query parameters for GET/HEAD/DELETE

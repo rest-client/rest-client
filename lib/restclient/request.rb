@@ -543,6 +543,10 @@ module RestClient
       log << out.join(', ') + "\n"
     end
 
+    def netrc_auth?
+      RestClient.netrc_auth?
+    end
+
     # Return a hash of headers whose keys are capitalized strings
     #
     # BUG: stringify_headers does not fix the capitalization of headers that
@@ -606,7 +610,7 @@ module RestClient
 
       @user = CGI.unescape(uri.user) if uri.user
       @password = CGI.unescape(uri.password) if uri.password
-      if !@user && !@password
+      if !@user && !@password && netrc_auth?
         @user, @password = Netrc.read[uri.hostname]
       end
 

@@ -162,6 +162,13 @@ module RestClient
     @@env_log || @@log
   end
 
+  @@env_netrc_auth = ENV['RESTCLIENT_NETRC']
+
+  def self.netrc_auth? # :nodoc:
+    return false if %w{false 0}.include? @@env_netrc_auth.to_s
+    true
+  end
+
   @@before_execution_procs = []
 
   # Add a Proc to be called before each request in executed.
