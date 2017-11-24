@@ -537,6 +537,8 @@ module RestClient
 
       out = []
 
+      time = Time.zone.now
+      out << "# " << time.strftime("%Y-%m-%dT%H:%M:%S.") << "%06d" % time.usec
       out << "RestClient.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
