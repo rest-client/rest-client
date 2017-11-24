@@ -536,7 +536,7 @@ module RestClient
       return unless log
 
       time = Time.zone.now
-      log << "# " + time.strftime("%Y-%m-%dT%H:%M:%S.") + "%06d" % time.usec
+      log << "# [" + time.strftime("%Y-%m-%dT%H:%M:%S.") + "%06d" % time.usec + "]   Started request:"
 
       out = []
       out << "RestClient.#{method} #{redacted_url.inspect}"
