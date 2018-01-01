@@ -323,6 +323,13 @@ describe RestClient::Request, :include_helpers do
       expect(headers['Content-Type']).to eq 'abc'
     end
 
+    it "converts header symbols from :'content-type' to 'Content-Type'" do
+      expect(@request).to receive(:default_headers).and_return({})
+      headers = @request.make_headers(:'content-type' => 'abc')
+      expect(headers).to have_key('Content-Type')
+      expect(headers['Content-Type']).to eq 'abc'
+    end
+
     it "converts content-type from extension to real content-type" do
       expect(@request).to receive(:default_headers).and_return({})
       headers = @request.make_headers(:content_type => 'json')
