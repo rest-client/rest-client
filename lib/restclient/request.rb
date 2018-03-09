@@ -728,7 +728,8 @@ module RestClient
           res = net_http_do_request(http, req, payload) { |http_response|
             if @raw_response
               # fetch body into tempfile
-              tempfile = fetch_body_to_tempfile(http_response)
+              file_extension = File.extname(@uri.path)
+              tempfile = fetch_body_to_tempfile(http_response, file_extension)
             else
               # fetch body
               http_response.read_body
@@ -780,11 +781,11 @@ module RestClient
       end
     end
 
-    def fetch_body_to_tempfile(http_response)
+    def fetch_body_to_tempfile(http_response, file_extension)
       # Taken from Chef, which as in turn...
       # Stolen from http://www.ruby-forum.com/topic/166423
       # Kudos to _why!
-      tf = Tempfile.new('rest-client.')
+      tf = Tempfile.new(['rest-client', file_extension])
       tf.binmode
 
       size = 0

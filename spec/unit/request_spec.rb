@@ -1144,17 +1144,21 @@ describe RestClient::Request, :include_helpers do
 
   describe "raw response" do
     it "should read the response into a binary-mode tempfile" do
-      @request = RestClient::Request.new(:method => "get", :url => "example.com", :raw_response => true)
+      @request = RestClient::Request.new(
+        :method => "get",
+        :url => "example.com/example.pdf?foo=bar",
+        :raw_response => true
+      )
 
       tempfile = double("tempfile")
       expect(tempfile).to receive(:binmode)
       allow(tempfile).to receive(:open)
       allow(tempfile).to receive(:close)
-      expect(Tempfile).to receive(:new).with("rest-client.").and_return(tempfile)
+      expect(Tempfile).to receive(:new).with(["rest-client", ".pdf"]).and_return(tempfile)
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       allow(net_http_res).to receive(:read_body).and_return("body")
-      received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res)
+      received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res, ".pdf")
       expect(received_tempfile).to eq tempfile
     end
   end
