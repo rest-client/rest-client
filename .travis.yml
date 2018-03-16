@@ -12,9 +12,10 @@ rvm:
   - "2.2.8"
   - "2.3.5"
   - "2.4.2"
+  - "2.5.0"
   - "ruby-head"
   - "jruby-9.0.5.0"
-  - "jruby-9.1.9.0"
+  - "jruby-9.1.16.0"
   - "jruby-head"
 
 cache: bundler
