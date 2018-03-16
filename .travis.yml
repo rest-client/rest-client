@@ -36,7 +36,7 @@ before_install:
 matrix:
   exclude:
     - os: osx
-      rvm: "2.4.2"
+      rvm: "2.4.3"
   allow_failures:
     - rvm: 'ruby-head'
 
