@@ -555,6 +555,18 @@ describe RestClient::Request, :include_helpers do
       expect(@proxy_req.net_http_object('host', 80).proxy_address).to eq('::1')
     end
 
+    it "decodes an encoded username in a proxy URL" do
+      allow(RestClient).to receive(:proxy).and_return("http://%24myuser:xxxx@myproxy.example.com:3128")
+      allow(RestClient).to receive(:proxy_set?).and_return(true)
+      expect(@proxy_req.net_http_object('host', 80).proxy_user).to eq("$myuser")
+    end
+
+    it "decodes an encoded password in a proxy URL" do
+      allow(RestClient).to receive(:proxy).and_return("http://myuser:%24%3Fpass@myproxy.example.com:3128")
+      allow(RestClient).to receive(:proxy_set?).and_return(true)
+      expect(@proxy_req.net_http_object('host', 80).proxy_pass).to eq("$?pass")
+    end
+
     it "creates a non-proxy class if a proxy url is not given" do
       expect(@proxy_req.net_http_object('host', 80).proxy?).to be_falsey
     end
