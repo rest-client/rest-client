@@ -394,6 +394,9 @@ module RestClient
         # also supplied by the user.
         payload_headers.each_pair do |key, val|
           if headers.include?(key) && headers[key] != val
+            # Don't warn, when the only change is adding boundary,
+            # which happens with multipart requests
+            next if key == 'Content-Type' && val.include?('boundary') && val.include?(headers[key])
             warn("warning: Overriding #{key.inspect} header " +
                  "#{headers.fetch(key).inspect} with #{val.inspect} " +
                  "due to payload")
