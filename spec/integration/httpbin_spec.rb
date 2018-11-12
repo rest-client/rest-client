@@ -3,7 +3,7 @@ require 'json'
 
 require 'zlib'
 
-describe RestClient::Request do
+describe RestClient2::Request do
   before(:all) do
     WebMock.disable!
   end
@@ -34,7 +34,7 @@ describe RestClient::Request do
 
   def execute_httpbin(suffix, opts={})
     opts = {url: httpbin(suffix)}.merge(opts)
-    RestClient::Request.execute(opts)
+    RestClient2::Request.execute(opts)
   end
 
   def execute_httpbin_json(suffix, opts={})
@@ -44,13 +44,13 @@ describe RestClient::Request do
   describe '.execute' do
     it 'sends a user agent' do
       data = execute_httpbin_json('user-agent', method: :get)
-      expect(data['user-agent']).to match(/rest-client/)
+      expect(data['user-agent']).to match(/rest_client2/)
     end
 
     it 'receives cookies on 302' do
       expect {
         execute_httpbin('cookies/set?foo=bar', method: :get, max_redirects: 0)
-      }.to raise_error(RestClient::Found) { |ex|
+      }.to raise_error(RestClient2::Found) { |ex|
         expect(ex.http_code).to eq 302
         expect(ex.response.cookies['foo']).to eq 'bar'
       }
@@ -66,7 +66,7 @@ describe RestClient::Request do
       expect {
         execute_httpbin('cookies/set?foo=' + CGI.escape('"bar:baz"'),
                         method: :get, max_redirects: 0)
-      }.to raise_error(RestClient::Found) { |ex|
+      }.to raise_error(RestClient2::Found) { |ex|
         expect(ex.http_code).to eq 302
         expect(ex.response.cookies['foo']).to eq '"bar:baz"'
       }
@@ -81,7 +81,7 @@ describe RestClient::Request do
 
       expect {
         execute_httpbin_json("basic-auth/#{user}/#{pass}", method: :get, user: user, password: 'badpass')
-      }.to raise_error(RestClient::Unauthorized) { |ex|
+      }.to raise_error(RestClient2::Unauthorized) { |ex|
         expect(ex.http_code).to eq 401
       }
     end

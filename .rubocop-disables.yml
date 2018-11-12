@@ -19,15 +19,15 @@ Lint/UnusedBlockArgument:
 
 Security/Eval:
   Exclude:
-  - rest-client.windows.gemspec
+  - rest_client2.windows.gemspec
 
 Lint/HandleExceptions:
   Exclude:
-  - lib/restclient/utils.rb
+  - lib/restclient2/utils.rb
 
 Lint/UselessAccessModifier:
   Exclude:
-  - lib/restclient/windows/root_certs.rb
+  - lib/restclient2/windows/root_certs.rb
 
 # Offense count: 4
 # Cop supports --auto-correct.
@@ -258,7 +258,7 @@ Style/PercentLiteralDelimiters:
     '%W': '{}'
     '%Q': '{}'
   Exclude:
-    - 'bin/restclient'
+    - 'bin/restclient2'
 
 # Offense count: 3
 # Configuration parameters: NamePrefixBlacklist.
@@ -286,7 +286,7 @@ Style/RedundantSelf:
 Style/RescueModifier:
   Enabled: false
   Exclude:
-    - 'bin/restclient'
+    - 'bin/restclient2'
 
 # TODO: configure
 # Offense count: 12
@@ -361,7 +361,7 @@ Style/TrailingCommaInArguments:
 # Configuration parameters: ExactNameMatch, AllowPredicates, AllowDSLWriters, Whitelist.
 Style/TrivialAccessors:
   Enabled: false
-  Exclude: ['lib/restclient/payload.rb']
+  Exclude: ['lib/restclient2/payload.rb']
 
 # TODO?
 # Offense count: 3
@@ -389,5 +389,5 @@ Style/BarePercentLiterals:
 
 Lint/RescueWithoutErrorClass:
   Exclude:
-    - 'bin/restclient'
-    - 'lib/restclient/windows/root_certs.rb'
+    - 'bin/restclient2'
+    - 'lib/restclient2/windows/root_certs.rb'

@@ -3,64 +3,64 @@ require 'openssl'
 require 'stringio'
 require 'uri'
 
-require File.dirname(__FILE__) + '/restclient/version'
-require File.dirname(__FILE__) + '/restclient/platform'
-require File.dirname(__FILE__) + '/restclient/exceptions'
-require File.dirname(__FILE__) + '/restclient/utils'
-require File.dirname(__FILE__) + '/restclient/request'
-require File.dirname(__FILE__) + '/restclient/abstract_response'
-require File.dirname(__FILE__) + '/restclient/response'
-require File.dirname(__FILE__) + '/restclient/raw_response'
-require File.dirname(__FILE__) + '/restclient/resource'
-require File.dirname(__FILE__) + '/restclient/params_array'
-require File.dirname(__FILE__) + '/restclient/payload'
-require File.dirname(__FILE__) + '/restclient/windows'
+require File.dirname(__FILE__) + '/restclient2/version'
+require File.dirname(__FILE__) + '/restclient2/platform'
+require File.dirname(__FILE__) + '/restclient2/exceptions'
+require File.dirname(__FILE__) + '/restclient2/utils'
+require File.dirname(__FILE__) + '/restclient2/request'
+require File.dirname(__FILE__) + '/restclient2/abstract_response'
+require File.dirname(__FILE__) + '/restclient2/response'
+require File.dirname(__FILE__) + '/restclient2/raw_response'
+require File.dirname(__FILE__) + '/restclient2/resource'
+require File.dirname(__FILE__) + '/restclient2/params_array'
+require File.dirname(__FILE__) + '/restclient2/payload'
+require File.dirname(__FILE__) + '/restclient2/windows'
 
 # This module's static methods are the entry point for using the REST client.
 #
 #   # GET
-#   xml = RestClient.get 'http://example.com/resource'
-#   jpg = RestClient.get 'http://example.com/resource', :accept => 'image/jpg'
+#   xml = RestClient2.get 'http://example.com/resource'
+#   jpg = RestClient2.get 'http://example.com/resource', :accept => 'image/jpg'
 #
 #   # authentication and SSL
-#   RestClient.get 'https://user:password@example.com/private/resource'
+#   RestClient2.get 'https://user:password@example.com/private/resource'
 #
 #   # POST or PUT with a hash sends parameters as a urlencoded form body
-#   RestClient.post 'http://example.com/resource', :param1 => 'one'
+#   RestClient2.post 'http://example.com/resource', :param1 => 'one'
 #
 #   # nest hash parameters
-#   RestClient.post 'http://example.com/resource', :nested => { :param1 => 'one' }
+#   RestClient2.post 'http://example.com/resource', :nested => { :param1 => 'one' }
 #
 #   # POST and PUT with raw payloads
-#   RestClient.post 'http://example.com/resource', 'the post body', :content_type => 'text/plain'
-#   RestClient.post 'http://example.com/resource.xml', xml_doc
-#   RestClient.put 'http://example.com/resource.pdf', File.read('my.pdf'), :content_type => 'application/pdf'
+#   RestClient2.post 'http://example.com/resource', 'the post body', :content_type => 'text/plain'
+#   RestClient2.post 'http://example.com/resource.xml', xml_doc
+#   RestClient2.put 'http://example.com/resource.pdf', File.read('my.pdf'), :content_type => 'application/pdf'
 #
 #   # DELETE
-#   RestClient.delete 'http://example.com/resource'
+#   RestClient2.delete 'http://example.com/resource'
 #
 #   # retreive the response http code and headers
-#   res = RestClient.get 'http://example.com/some.jpg'
+#   res = RestClient2.get 'http://example.com/some.jpg'
 #   res.code                    # => 200
 #   res.headers[:content_type]  # => 'image/jpg'
 #
 #   # HEAD
-#   RestClient.head('http://example.com').headers
+#   RestClient2.head('http://example.com').headers
 #
-# To use with a proxy, just set RestClient.proxy to the proper http proxy:
+# To use with a proxy, just set RestClient2.proxy to the proper http proxy:
 #
-#   RestClient.proxy = "http://proxy.example.com/"
+#   RestClient2.proxy = "http://proxy.example.com/"
 #
 # Or inherit the proxy from the environment:
 #
-#   RestClient.proxy = ENV['http_proxy']
+#   RestClient2.proxy = ENV['http_proxy']
 #
-# For live tests of RestClient, try using http://rest-test.heroku.com, which echoes back information about the rest call:
+# For live tests of RestClient2, try using http://rest-test.heroku.com, which echoes back information about the rest call:
 #
-#   >> RestClient.put 'http://rest-test.heroku.com/resource', :foo => 'baz'
+#   >> RestClient2.put 'http://rest-test.heroku.com/resource', :foo => 'baz'
 #   => "PUT http://rest-test.heroku.com/resource with a 7 byte payload, content type application/x-www-form-urlencoded {\"foo\"=>\"baz\"}"
 #
-module RestClient
+module RestClient2
 
   def self.get(url, headers={}, &block)
     Request.execute(:method => :get, :url => url, :headers => headers, &block)
@@ -91,7 +91,7 @@ module RestClient
   end
 
   # A global proxy URL to use for all requests. This can be overridden on a
-  # per-request basis by passing `:proxy` to RestClient::Request.
+  # per-request basis by passing `:proxy` to RestClient2::Request.
   def self.proxy
     @proxy ||= nil
   end
@@ -101,7 +101,7 @@ module RestClient
     @proxy_set = true
   end
 
-  # Return whether RestClient.proxy was set explicitly. We use this to
+  # Return whether RestClient2.proxy was set explicitly. We use this to
   # differentiate between no value being set and a value explicitly set to nil.
   #
   # @return [Boolean]
@@ -110,7 +110,7 @@ module RestClient
     @proxy_set ||= false
   end
 
-  # Setup the log for RestClient calls.
+  # Setup the log for RestClient2 calls.
   # Value should be a logger but can can be stdout, stderr, or a filename.
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
   def self.log= log

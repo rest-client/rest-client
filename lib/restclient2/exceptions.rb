@@ -1,4 +1,4 @@
-module RestClient
+module RestClient2
 
   # Hash of HTTP status code => message.
   #
@@ -86,7 +86,7 @@ module RestClient
 
   STATUSES_COMPATIBILITY = {
     # The RFCs all specify "Not Found", but "Resource Not Found" was used in
-    # earlier RestClient releases.
+    # earlier RestClient2 releases.
     404 => ['ResourceNotFound'],
 
     # HTTP 413 was renamed to "Payload Too Large" in RFC7231.
@@ -100,7 +100,7 @@ module RestClient
   }
 
 
-  # This is the base RestClient exception class. Rescue it if you want to
+  # This is the base RestClient2 exception class. Rescue it if you want to
   # catch any exception that your request might raise
   # You can get the status code by e.http_code, or see anything about the
   # response via e.response.
@@ -148,7 +148,7 @@ module RestClient
   end
 
   # Compatibility
-  class ExceptionWithResponse < RestClient::Exception
+  class ExceptionWithResponse < RestClient2::Exception
   end
 
   # The request failed with an error code not managed by the code
@@ -163,7 +163,7 @@ module RestClient
     end
   end
 
-  # RestClient exception classes. TODO: move all exceptions into this module.
+  # RestClient2 exception classes. TODO: move all exceptions into this module.
   #
   # We will a create an exception for each status code, see
   # http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html
@@ -193,13 +193,13 @@ module RestClient
   module Exceptions
     # We have to split the Exceptions module like we do here because the
     # EXCEPTIONS_MAP is under Exceptions, but we depend on
-    # RestClient::RequestTimeout below.
+    # RestClient2::RequestTimeout below.
 
     # Base class for request timeouts.
     #
-    # NB: Previous releases of rest-client would raise RequestTimeout both for
+    # NB: Previous releases of rest_client2 would raise RequestTimeout both for
     # HTTP 408 responses and for actual connection timeouts.
-    class Timeout < RestClient::RequestTimeout
+    class Timeout < RestClient2::RequestTimeout
       def initialize(message=nil, original_exception=nil)
         super(nil, nil)
         self.message = message if message
@@ -228,14 +228,14 @@ module RestClient
   # The server broke the connection prior to the request completing.  Usually
   # this means it crashed, or sometimes that your network connection was
   # severed before it could complete.
-  class ServerBrokeConnection < RestClient::Exception
+  class ServerBrokeConnection < RestClient2::Exception
     def initialize(message = 'Server broke connection')
       super nil, nil
       self.message = message
     end
   end
 
-  class SSLCertificateNotVerified < RestClient::Exception
+  class SSLCertificateNotVerified < RestClient2::Exception
     def initialize(message = 'SSL certificate not verified')
       super nil, nil
       self.message = message

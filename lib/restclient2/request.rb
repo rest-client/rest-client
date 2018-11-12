@@ -10,12 +10,12 @@ rescue LoadError
   require 'mime/types'
 end
 
-module RestClient
-  # This class is used internally by RestClient to send the request, but you can also
+module RestClient2
+  # This class is used internally by RestClient2 to send the request, but you can also
   # call it directly if you'd like to use a method not supported by the
   # main API.  For example:
   #
-  #   RestClient::Request.execute(:method => :head, :url => 'http://example.com')
+  #   RestClient2::Request.execute(:method => :head, :url => 'http://example.com')
   #
   # Mandatory parameters:
   # * :method
@@ -30,7 +30,7 @@ module RestClient
   # * :raw_response return a low-level RawResponse instead of a Response
   # * :max_redirects maximum number of redirections (default to 10)
   # * :proxy An HTTP proxy URI to use for this request. Any value here
-  #   (including nil) will override RestClient.proxy.
+  #   (including nil) will override RestClient2.proxy.
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
   # * :read_timeout and :open_timeout are how long to wait for a response and
@@ -42,7 +42,7 @@ module RestClient
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
   # * :before_execution_proc a Proc to call before executing the request. This
-  #      proc, like procs from RestClient.before_execution_procs, will be
+  #      proc, like procs from RestClient2.before_execution_procs, will be
   #      called with the HTTP request and request params.
   class Request
 
@@ -62,7 +62,7 @@ module RestClient
                        version ciphers verify_callback verify_callback_warnings}
 
     def inspect
-      "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
+      "<RestClient2::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
     end
 
     def initialize args
@@ -182,7 +182,7 @@ module RestClient
     #
     # Look through the headers hash for a :params option (case-insensitive,
     # may be string or symbol). If present and the value is a Hash or
-    # RestClient::ParamsArray, *delete* the key/value pair from the headers
+    # RestClient2::ParamsArray, *delete* the key/value pair from the headers
     # hash and encode the value into a query string. Append this query string
     # to the URL and return the resulting URL.
     #
@@ -198,7 +198,7 @@ module RestClient
       # find and extract/remove "params" key if the value is a Hash/ParamsArray
       headers.delete_if do |key, value|
         if key.to_s.downcase == 'params' &&
-            (value.is_a?(Hash) || value.is_a?(RestClient::ParamsArray))
+            (value.is_a?(Hash) || value.is_a?(RestClient2::ParamsArray))
           if url_params
             raise ArgumentError.new("Multiple 'params' options passed")
           end
@@ -211,7 +211,7 @@ module RestClient
 
       # build resulting URL with query string
       if url_params && !url_params.empty?
-        query_string = RestClient::Utils.encode_query_string(url_params)
+        query_string = RestClient2::Utils.encode_query_string(url_params)
 
         if url.include?('?')
           url + '&' + query_string
@@ -279,7 +279,7 @@ module RestClient
     #   though '.example.com' had been set in a Set-Cookie header). Assume a
     #   path of '/'.
     #
-    #     RestClient::Request.new(url: 'http://example.com', method: :get,
+    #     RestClient2::Request.new(url: 'http://example.com', method: :get,
     #       :cookies => {:foo => 'Value', 'bar' => '123'}
     #     )
     #
@@ -296,7 +296,7 @@ module RestClient
     #     jar.add(HTTP::Cookie.new('foo', 'Value', domain: 'example.com',
     #                              path: '/', for_domain: false))
     #
-    #     RestClient::Request.new(..., :cookies => jar)
+    #     RestClient2::Request.new(..., :cookies => jar)
     #
     # @param [URI::HTTP] uri The URI for the request. This will be used to
     # infer the domain name for cookies passed as strings in a hash. To avoid
@@ -315,7 +315,7 @@ module RestClient
 
       # Avoid ambiguity in whether options from headers or options from
       # Request#initialize should take precedence by raising ArgumentError when
-      # both are present. Prior versions of rest-client claimed to give
+      # both are present. Prior versions of rest_client2 claimed to give
       # precedence to init options, but actually gave precedence to headers.
       # Avoid that mess by erroring out instead.
       if headers[:cookies] && args[:cookies]
@@ -374,7 +374,7 @@ module RestClient
     # behavior will probably remain for a while for compatibility, but it means
     # that the warnings that attempt to detect accidental header overrides may
     # not always work.
-    # https://github.com/rest-client/rest-client/issues/599
+    # https://github.com/rest_client2/rest_client2/issues/599
     #
     # @param [Hash] user_headers User-provided headers to include
     #
@@ -388,7 +388,7 @@ module RestClient
         payload_headers = @payload.headers
 
         # Warn the user if we override any headers that were previously
-        # present. This usually indicates that rest-client was passed
+        # present. This usually indicates that rest_client2 was passed
         # conflicting information, e.g. if it was asked to render a payload as
         # x-www-form-urlencoded but a Content-Type application/json was
         # also supplied by the user.
@@ -416,7 +416,7 @@ module RestClient
     end
 
     # The proxy URI for this request. If `:proxy` was provided on this request,
-    # use it over `RestClient.proxy`.
+    # use it over `RestClient2.proxy`.
     #
     # Return false if a proxy was explicitly set and is falsy.
     #
@@ -429,9 +429,9 @@ module RestClient
         else
           false
         end
-      elsif RestClient.proxy_set?
-        if RestClient.proxy
-          URI.parse(RestClient.proxy)
+      elsif RestClient2.proxy_set?
+        if RestClient2.proxy
+          URI.parse(RestClient2.proxy)
         else
           false
         end
@@ -489,7 +489,7 @@ module RestClient
     # OS X, which monkey patches OpenSSL in terrible ways to insert its own
     # validation. On most *nix platforms, this will add the system certifcates
     # using OpenSSL::X509::Store#set_default_paths. On Windows, this will use
-    # RestClient::Windows::RootCerts to look up the CAs trusted by the system.
+    # RestClient2::Windows::RootCerts to look up the CAs trusted by the system.
     #
     # @return [OpenSSL::X509::Store]
     #
@@ -499,8 +499,8 @@ module RestClient
 
       # set_default_paths() doesn't do anything on Windows, so look up
       # certificates using the win32 API.
-      if RestClient::Platform.windows?
-        RestClient::Windows::RootCerts.instance.to_a.uniq.each do |cert|
+      if RestClient2::Platform.windows?
+        RestClient2::Windows::RootCerts.instance.to_a.uniq.each do |cert|
           begin
             cert_store.add_cert(cert)
           rescue OpenSSL::X509::StoreError => err
@@ -529,7 +529,7 @@ module RestClient
 
     # Default to the global logger if there's not a request-specific one
     def log
-      @log || RestClient.log
+      @log || RestClient2.log
     end
 
     def log_request
@@ -537,7 +537,7 @@ module RestClient
 
       out = []
 
-      out << "RestClient.#{method} #{redacted_url.inspect}"
+      out << "RestClient2.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
       log << out.join(', ') + "\n"
@@ -548,7 +548,7 @@ module RestClient
     # BUG: stringify_headers does not fix the capitalization of headers that
     # are already Strings. Leaving this behavior as is for now for
     # backwards compatibility.
-    # https://github.com/rest-client/rest-client/issues/599
+    # https://github.com/rest_client2/rest_client2/issues/599
     #
     def stringify_headers headers
       headers.inject({}) do |result, (key, value)|
@@ -574,14 +574,14 @@ module RestClient
       end
     end
 
-    # Default headers set by RestClient. In addition to these headers, servers
+    # Default headers set by RestClient2. In addition to these headers, servers
     # will receive headers set by Net::HTTP, such as Accept-Encoding and Host.
     #
     # @return [Hash<Symbol, String>]
     def default_headers
       {
         :accept => '*/*',
-        :user_agent => RestClient::Platform.default_user_agent,
+        :user_agent => RestClient2::Platform.default_user_agent,
       }
     end
 
@@ -615,11 +615,11 @@ module RestClient
 
     def print_verify_callback_warnings
       warned = false
-      if RestClient::Platform.mac_mri?
+      if RestClient2::Platform.mac_mri?
         warn('warning: ssl_verify_callback return code is ignored on OS X')
         warned = true
       end
-      if RestClient::Platform.jruby?
+      if RestClient2::Platform.jruby?
         warn('warning: SSL verify_callback may not work correctly in jruby')
         warn('see https://github.com/jruby/jruby/issues/597')
         warned = true
@@ -674,7 +674,7 @@ module RestClient
         # Hilariously, jruby only calls the callback when cert_store is set to
         # something, so make sure to set one.
         # https://github.com/jruby/jruby/issues/597
-        if RestClient::Platform.jruby?
+        if RestClient2::Platform.jruby?
           net.cert_store ||= OpenSSL::X509::Store.new
         end
 
@@ -706,7 +706,7 @@ module RestClient
         net.open_timeout = @open_timeout
       end
 
-      RestClient.before_execution_procs.each do |before_proc|
+      RestClient2.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
       end
 
@@ -739,30 +739,30 @@ module RestClient
         end
       end
     rescue EOFError
-      raise RestClient::ServerBrokeConnection
+      raise RestClient2::ServerBrokeConnection
     rescue Net::OpenTimeout => err
-      raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+      raise RestClient2::Exceptions::OpenTimeout.new(nil, err)
     rescue Net::ReadTimeout => err
-      raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+      raise RestClient2::Exceptions::ReadTimeout.new(nil, err)
     rescue Timeout::Error, Errno::ETIMEDOUT => err
       # handling for non-Net::HTTP timeouts
       if established_connection
-        raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+        raise RestClient2::Exceptions::ReadTimeout.new(nil, err)
       else
-        raise RestClient::Exceptions::OpenTimeout.new(nil, err)
+        raise RestClient2::Exceptions::OpenTimeout.new(nil, err)
       end
 
     rescue OpenSSL::SSL::SSLError => error
-      # TODO: deprecate and remove RestClient::SSLCertificateNotVerified and just
+      # TODO: deprecate and remove RestClient2::SSLCertificateNotVerified and just
       # pass through OpenSSL::SSL::SSLError directly.
       #
       # Exceptions in verify_callback are ignored [1], and jruby doesn't support
-      # it at all [2]. RestClient has to catch OpenSSL::SSL::SSLError and either
+      # it at all [2]. RestClient2 has to catch OpenSSL::SSL::SSLError and either
       # re-throw it as is, or throw SSLCertificateNotVerified based on the
       # contents of the message field of the original exception.
       #
       # The client has to handle OpenSSL::SSL::SSLError exceptions anyway, so
-      # we shouldn't make them handle both OpenSSL and RestClient exceptions.
+      # we shouldn't make them handle both OpenSSL and RestClient2 exceptions.
       #
       # [1] https://github.com/ruby/ruby/blob/89e70fe8e7/ext/openssl/ossl.c#L238
       # [2] https://github.com/jruby/jruby/issues/597
@@ -784,7 +784,7 @@ module RestClient
       # Taken from Chef, which as in turn...
       # Stolen from http://www.ruby-forum.com/topic/166423
       # Kudos to _why!
-      tf = Tempfile.new('rest-client.')
+      tf = Tempfile.new('rest_client2.')
       tf.binmode
 
       size = 0

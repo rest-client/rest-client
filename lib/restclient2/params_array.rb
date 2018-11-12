@@ -1,4 +1,4 @@
-module RestClient
+module RestClient2
 
   # The ParamsArray class is used to represent an ordered list of [key, value]
   # pairs. Use this when you need to include a key multiple times or want
@@ -7,8 +7,8 @@ module RestClient
   # Most of the request payload & parameter functions normally accept a Hash of
   # keys => values, which does not allow for duplicated keys.
   #
-  # @see RestClient::Utils.encode_query_string
-  # @see RestClient::Utils.flatten_params
+  # @see RestClient2::Utils.encode_query_string
+  # @see RestClient2::Utils.flatten_params
   #
   class ParamsArray
     include Enumerable

@@ -9,7 +9,7 @@ require 'ffi'
 # Represents a collection of trusted root certificates.
 #
 # @api public
-class RestClient::Windows::RootCerts
+class RestClient2::Windows::RootCerts
   include Enumerable
   extend FFI::Library
 
@@ -28,7 +28,7 @@ class RestClient::Windows::RootCerts
   end
 
   # Returns a new instance.
-  # @return [RestClient::Windows::RootCerts] object constructed from current root certificates
+  # @return [RestClient2::Windows::RootCerts] object constructed from current root certificates
   def self.instance
     new(self.load_certs)
   end

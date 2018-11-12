@@ -1,6 +1,6 @@
-module RestClient
+module RestClient2
 
-  # A Response from RestClient, you can access the response body, the code or the headers.
+  # A Response from RestClient2, you can access the response body, the code or the headers.
   #
   class Response < String
 
@@ -8,7 +8,7 @@ module RestClient
 
     # Return the HTTP response body.
     #
-    # Future versions of RestClient will deprecate treating response objects
+    # Future versions of RestClient2 will deprecate treating response objects
     # directly as strings, so it will be necessary to call `.body`.
     #
     # @return [String]
@@ -35,16 +35,16 @@ module RestClient
     end
 
     def inspect
-      "<RestClient::Response #{code.inspect} #{body_truncated(10).inspect}>"
+      "<RestClient2::Response #{code.inspect} #{body_truncated(10).inspect}>"
     end
 
-    # Initialize a Response object. Because RestClient::Response is
+    # Initialize a Response object. Because RestClient2::Response is
     # (unfortunately) a subclass of String for historical reasons,
     # Response.create is the preferred initializer.
     #
     # @param [String, nil] body The response body from the Net::HTTPResponse
     # @param [Net::HTTPResponse] net_http_res
-    # @param [RestClient::Request] request
+    # @param [RestClient2::Request] request
     # @param [Time] start_time
     def self.create(body, net_http_res, request, start_time=nil)
       result = self.new(body || '')
@@ -58,7 +58,7 @@ module RestClient
     # Set the String encoding according to the 'Content-Type: charset' header,
     # if possible.
     def self.fix_encoding(response)
-      charset = RestClient::Utils.get_encoding_from_headers(response.headers)
+      charset = RestClient2::Utils.get_encoding_from_headers(response.headers)
       encoding = nil
 
       begin

@@ -1,25 +1,25 @@
 # REST Client -- simple DSL for accessing HTTP and REST resources
 
-[![Gem Downloads](https://img.shields.io/gem/dt/rest-client.svg)](https://rubygems.org/gems/rest-client)
-[![Build Status](https://travis-ci.org/rest-client/rest-client.svg?branch=master)](https://travis-ci.org/rest-client/rest-client)
-[![Code Climate](https://codeclimate.com/github/rest-client/rest-client.svg)](https://codeclimate.com/github/rest-client/rest-client)
-[![Inline docs](http://inch-ci.org/github/rest-client/rest-client.svg?branch=master)](http://www.rubydoc.info/github/rest-client/rest-client/master)
+[![Gem Downloads](https://img.shields.io/gem/dt/rest_client2.svg)](https://rubygems.org/gems/rest_client2)
+[![Build Status](https://travis-ci.org/rest_client2/rest_client2.svg?branch=master)](https://travis-ci.org/rest_client2/rest_client2)
+[![Code Climate](https://codeclimate.com/github/rest_client2/rest_client2.svg)](https://codeclimate.com/github/rest_client2/rest_client2)
+[![Inline docs](http://inch-ci.org/github/rest_client2/rest_client2.svg?branch=master)](http://www.rubydoc.info/github/rest_client2/rest_client2/master)
 
 A simple HTTP and REST client for Ruby, inspired by the Sinatra's microframework style
 of specifying actions: get, put, post, delete.
 
-* Main page: https://github.com/rest-client/rest-client
-* Mailing list: https://groups.io/g/rest-client
+* Main page: https://github.com/rest_client2/rest_client2
+* Mailing list: https://groups.io/g/rest_client2
 
 ### New mailing list
 
 We have a new email list for announcements, hosted by Groups.io.
 
-* Subscribe on the web: https://groups.io/g/rest-client
+* Subscribe on the web: https://groups.io/g/rest_client2
 
-* Subscribe by sending an email: mailto:rest-client+subscribe@groups.io
+* Subscribe by sending an email: mailto:rest_client2+subscribe@groups.io
 
-* Open discussion subgroup: https://groups.io/g/rest-client+discuss
+* Open discussion subgroup: https://groups.io/g/rest_client2+discuss
 
 The old Librelist mailing list is *defunct*, as Librelist appears to be broken
 and not accepting new mail. The old archives are still up, but have been
@@ -35,7 +35,7 @@ Earlier Ruby versions such as 1.8.7, 1.9.2, and 1.9.3 are no longer supported. T
 versions no longer have any official support, and do not receive security
 updates.
 
-The rest-client gem depends on these other gems for usage at runtime:
+The rest_client2 gem depends on these other gems for usage at runtime:
 
 * [mime-types](http://rubygems.org/gems/mime-types)
 * [netrc](http://rubygems.org/gems/netrc)
@@ -44,21 +44,21 @@ The rest-client gem depends on these other gems for usage at runtime:
 
 There are also several development dependencies. It's recommended to use
 [bundler](http://bundler.io/) to manage these dependencies for hacking on
-rest-client.
+rest_client2.
 
-### Upgrading to rest-client 2.0 from 1.x
+### Upgrading to rest_client2 2.0 from 1.x
 
-Users are encouraged to upgrade to rest-client 2.0, which cleans up a number of
-API warts and wrinkles, making rest-client generally more useful. Usage is
+Users are encouraged to upgrade to rest_client2 2.0, which cleans up a number of
+API warts and wrinkles, making rest_client2 generally more useful. Usage is
 largely compatible, so many applications will be able to upgrade with no
 changes.
 
 Overview of significant changes:
 
 * requires Ruby >= 2.0
-* `RestClient::Response` objects are a subclass of `String` rather than a
+* `RestClient2::Response` objects are a subclass of `String` rather than a
   Frankenstein monster. And `#body` or `#to_s` return a true `String` object.
-* cleanup of exception classes, including new `RestClient::Exceptions::Timeout`
+* cleanup of exception classes, including new `RestClient2::Exceptions::Timeout`
 * improvements to handling of redirects: responses and history are properly
   exposed
 * major changes to cookie support: cookie jars are used for browser-like
@@ -70,8 +70,8 @@ Overview of significant changes:
   params
 * improved proxy support with per-request proxy configuration, plus the ability
   to disable proxies set by environment variables
-* default request headers: rest-client sets `Accept: */*` and
-  `User-Agent: rest-client/...`
+* default request headers: rest_client2 sets `Accept: */*` and
+  `User-Agent: rest_client2/...`
 
 See [history.md](./history.md) for a more complete description of changes.
 
@@ -80,36 +80,36 @@ See [history.md](./history.md) for a more complete description of changes.
 Basic usage:
 
 ```ruby
-require 'rest-client'
+require 'rest_client2'
 
-RestClient.get(url, headers={})
+RestClient2.get(url, headers={})
 
-RestClient.post(url, payload, headers={})
+RestClient2.post(url, payload, headers={})
 ```
 
 In the high level helpers, only POST, PATCH, and PUT take a payload argument.
 To pass a payload with other HTTP verbs or to pass more advanced options, use
-`RestClient::Request.execute` instead.
+`RestClient2::Request.execute` instead.
 
 More detailed examples:
 
 ```ruby
-require 'rest-client'
+require 'rest_client2'
 
-RestClient.get 'http://example.com/resource'
+RestClient2.get 'http://example.com/resource'
 
-RestClient.get 'http://example.com/resource', {params: {id: 50, 'foo' => 'bar'}}
+RestClient2.get 'http://example.com/resource', {params: {id: 50, 'foo' => 'bar'}}
 
-RestClient.get 'https://user:password@example.com/private/resource', {accept: :json}
+RestClient2.get 'https://user:password@example.com/private/resource', {accept: :json}
 
-RestClient.post 'http://example.com/resource', {param1: 'one', nested: {param2: 'two'}}
+RestClient2.post 'http://example.com/resource', {param1: 'one', nested: {param2: 'two'}}
 
-RestClient.post "http://example.com/resource", {'x' => 1}.to_json, {content_type: :json, accept: :json}
+RestClient2.post "http://example.com/resource", {'x' => 1}.to_json, {content_type: :json, accept: :json}
 
-RestClient.delete 'http://example.com/resource'
+RestClient2.delete 'http://example.com/resource'
 
->> response = RestClient.get 'http://example.com/resource'
-=> <RestClient::Response 200 "<!doctype h...">
+>> response = RestClient2.get 'http://example.com/resource'
+=> <RestClient2::Response 200 "<!doctype h...">
 >> response.code
 => 200
 >> response.cookies
@@ -119,7 +119,7 @@ RestClient.delete 'http://example.com/resource'
 >> response.body
 => "<!doctype html>\n<html>\n<head>\n    <title>Example Domain</title>\n\n ..."
 
-RestClient.post( url,
+RestClient2.post( url,
   {
     :transfer => {
       :path => '/foo/bar',
@@ -133,23 +133,23 @@ RestClient.post( url,
 ```
 ## Passing advanced options
 
-The top level helper methods like RestClient.get accept a headers hash as
+The top level helper methods like RestClient2.get accept a headers hash as
 their last argument and don't allow passing more complex options. But these
-helpers are just thin wrappers around `RestClient::Request.execute`.
+helpers are just thin wrappers around `RestClient2::Request.execute`.
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :get, url: 'http://example.com/resource',
                             timeout: 10)
 
-RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :get, url: 'http://example.com/resource',
                             ssl_ca_file: 'myca.pem',
                             ssl_ciphers: 'AESGCM:!aNULL')
 ```
 You can also use this to pass a payload for HTTP verbs like DELETE, where the
-`RestClient.delete` helper doesn't accept a payload.
+`RestClient2.delete` helper doesn't accept a payload.
 
 ```ruby
-RestClient::Request.execute(method: :delete, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :delete, url: 'http://example.com/resource',
                             payload: 'foo', headers: {myheader: 'bar'})
 ```
 
@@ -160,7 +160,7 @@ both the params hash and more complex options, use the special key
 release.
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :get, url: 'http://example.com/resource',
                             timeout: 10, headers: {params: {foo: 'bar'}})
 
 ➔ GET http://example.com/resource?foo=bar
@@ -171,7 +171,7 @@ RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
 Yeah, that's right!  This does multipart sends for you!
 
 ```ruby
-RestClient.post '/data', :myfile => File.new("/path/to/image.jpg", 'rb')
+RestClient2.post '/data', :myfile => File.new("/path/to/image.jpg", 'rb')
 ```
 
 This does two things for you:
@@ -182,86 +182,86 @@ This does two things for you:
 If you are sending params that do not contain a File object but the payload needs to be multipart then:
 
 ```ruby
-RestClient.post '/data', {:foo => 'bar', :multipart => true}
+RestClient2.post '/data', {:foo => 'bar', :multipart => true}
 ```
 
 ## Usage: ActiveResource-Style
 
 ```ruby
-resource = RestClient::Resource.new 'http://example.com/resource'
+resource = RestClient2::Resource.new 'http://example.com/resource'
 resource.get
 
-private_resource = RestClient::Resource.new 'https://example.com/private/resource', 'user', 'pass'
+private_resource = RestClient2::Resource.new 'https://example.com/private/resource', 'user', 'pass'
 private_resource.put File.read('pic.jpg'), :content_type => 'image/jpg'
 ```
 
-See RestClient::Resource module docs for details.
+See RestClient2::Resource module docs for details.
 
 ## Usage: Resource Nesting
 
 ```ruby
-site = RestClient::Resource.new('http://example.com')
+site = RestClient2::Resource.new('http://example.com')
 site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
 ```
-See `RestClient::Resource` docs for details.
+See `RestClient2::Resource` docs for details.
 
 ## Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
 
-- for result codes between `200` and `207`, a `RestClient::Response` will be returned
+- for result codes between `200` and `207`, a `RestClient2::Response` will be returned
 - for result codes `301`, `302` or `307`, the redirection will be followed if the request is a `GET` or a `HEAD`
 - for result code `303`, the redirection will be followed and the request transformed into a `GET`
-- for other cases, a `RestClient::ExceptionWithResponse` holding the Response will be raised; a specific exception class will be thrown for known error codes
+- for other cases, a `RestClient2::ExceptionWithResponse` holding the Response will be raised; a specific exception class will be thrown for known error codes
 - call `.response` on the exception to get the server's response
 
 ```ruby
->> RestClient.get 'http://example.com/nonexistent'
-Exception: RestClient::NotFound: 404 Not Found
+>> RestClient2.get 'http://example.com/nonexistent'
+Exception: RestClient2::NotFound: 404 Not Found
 
 >> begin
-     RestClient.get 'http://example.com/nonexistent'
-   rescue RestClient::ExceptionWithResponse => e
+     RestClient2.get 'http://example.com/nonexistent'
+   rescue RestClient2::ExceptionWithResponse => e
      e.response
    end
-=> <RestClient::Response 404 "<!doctype h...">
+=> <RestClient2::Response 404 "<!doctype h...">
 ```
 
 ### Other exceptions
 
-While most exceptions have been collected under `RestClient::RequestFailed` aka
-`RestClient::ExceptionWithResponse`, there are a few quirky exceptions that
+While most exceptions have been collected under `RestClient2::RequestFailed` aka
+`RestClient2::ExceptionWithResponse`, there are a few quirky exceptions that
 have been kept for backwards compatibility.
 
-RestClient will propagate up exceptions like socket errors without modification:
+RestClient2 will propagate up exceptions like socket errors without modification:
 
 ```ruby
->> RestClient.get 'http://localhost:12345'
+>> RestClient2.get 'http://localhost:12345'
 Exception: Errno::ECONNREFUSED: Connection refused - connect(2) for "localhost" port 12345
 ```
 
-RestClient handles a few specific error cases separately in order to give
+RestClient2 handles a few specific error cases separately in order to give
 better error messages. These will hopefully be cleaned up in a future major
 release.
 
-`RestClient::ServerBrokeConnection` is translated from `EOFError` to give a
+`RestClient2::ServerBrokeConnection` is translated from `EOFError` to give a
 better error message.
 
-`RestClient::SSLCertificateNotVerified` is raised when HTTPS validation fails.
+`RestClient2::SSLCertificateNotVerified` is raised when HTTPS validation fails.
 Other `OpenSSL::SSL::SSLError` errors are raised as is.
 
 ### Redirection
 
-By default, rest-client will follow HTTP 30x redirection requests.
+By default, rest_client2 will follow HTTP 30x redirection requests.
 
-__New in 2.0:__ `RestClient::Response` exposes a `#history` method that returns
+__New in 2.0:__ `RestClient2::Response` exposes a `#history` method that returns
 a list of each response received in a redirection chain.
 
 ```ruby
->> r = RestClient.get('http://httpbin.org/redirect/2')
-=> <RestClient::Response 200 "{\n  \"args\":...">
+>> r = RestClient2.get('http://httpbin.org/redirect/2')
+=> <RestClient2::Response 200 "{\n  \"args\":...">
 
 # see each response in the redirect chain
 >> r.history
-=> [<RestClient::Response 302 "<!DOCTYPE H...">, <RestClient::Response 302 "">]
+=> [<RestClient2::Response 302 "<!DOCTYPE H...">, <RestClient2::Response 302 "">]
 
 # see each requested URL
 >> r.request.url
@@ -274,45 +274,45 @@ a list of each response received in a redirection chain.
 
 To disable automatic redirection, set `:max_redirects => 0`.
 
-__New in 2.0:__ Prior versions of rest-client would raise
-`RestClient::MaxRedirectsReached`, with no easy way to access the server's
-response. In 2.0, rest-client raises the normal
-`RestClient::ExceptionWithResponse` as it would with any other non-HTTP-20x
+__New in 2.0:__ Prior versions of rest_client2 would raise
+`RestClient2::MaxRedirectsReached`, with no easy way to access the server's
+response. In 2.0, rest_client2 raises the normal
+`RestClient2::ExceptionWithResponse` as it would with any other non-HTTP-20x
 response.
 
 ```ruby
->> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1')
-=> RestClient::Response 200 "{\n  "args":..."
+>> RestClient2::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1')
+=> RestClient2::Response 200 "{\n  "args":..."
 
->> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
-RestClient::Found: 302 Found
+>> RestClient2::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+RestClient2::Found: 302 Found
 ```
 
 To manually follow redirection, you can call `Response#follow_redirection`. Or
 you could of course inspect the result and choose custom behavior.
 
 ```ruby
->> RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
-RestClient::Found: 302 Found
+>> RestClient2::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+RestClient2::Found: 302 Found
 >> begin
-       RestClient::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
-   rescue RestClient::ExceptionWithResponse => err
+       RestClient2::Request.execute(method: :get, url: 'http://httpbin.org/redirect/1', max_redirects: 0)
+   rescue RestClient2::ExceptionWithResponse => err
    end
 >> err
-=> #<RestClient::Found: 302 Found>
+=> #<RestClient2::Found: 302 Found>
 >> err.response
-=> RestClient::Response 302 "<!DOCTYPE H..."
+=> RestClient2::Response 302 "<!DOCTYPE H..."
 >> err.response.headers[:location]
 => "/get"
 >> err.response.follow_redirection
-=> RestClient::Response 200 "{\n  "args":..."
+=> RestClient2::Response 200 "{\n  "args":..."
 ```
 
 ## Result handling
 
-The result of a `RestClient::Request` is a `RestClient::Response` object.
+The result of a `RestClient2::Request` is a `RestClient2::Response` object.
 
-__New in 2.0:__ `RestClient::Response` objects are now a subclass of `String`.
+__New in 2.0:__ `RestClient2::Response` objects are now a subclass of `String`.
 Previously, they were a real String object with response functionality mixed
 in, which was very confusing to work with.
 
@@ -324,35 +324,35 @@ Response objects have several useful methods. (See the class rdoc for more detai
 - `Response#raw_headers`: A hash of HTTP response headers as unprocessed arrays
 - `Response#cookies`: A hash of HTTP cookies set by the server
 - `Response#cookie_jar`: <em>New in 1.8</em> An HTTP::CookieJar of cookies
-- `Response#request`: The RestClient::Request object used to make the request
+- `Response#request`: The RestClient2::Request object used to make the request
 - `Response#history`: <em>New in 2.0</em> If redirection was followed, a list of prior Response objects
 
 ```ruby
-RestClient.get('http://example.com')
-➔ <RestClient::Response 200 "<!doctype h...">
+RestClient2.get('http://example.com')
+➔ <RestClient2::Response 200 "<!doctype h...">
 
 begin
- RestClient.get('http://example.com/notfound')
-rescue RestClient::ExceptionWithResponse => err
+ RestClient2.get('http://example.com/notfound')
+rescue RestClient2::ExceptionWithResponse => err
   err.response
 end
-➔ <RestClient::Response 404 "<!doctype h...">
+➔ <RestClient2::Response 404 "<!doctype h...">
 ```
 
 ### Response callbacks, error handling
 
-A block can be passed to the RestClient method. This block will then be called with the Response.
+A block can be passed to the RestClient2 method. This block will then be called with the Response.
 Response.return! can be called to invoke the default response's behavior.
 
 ```ruby
 # Don't raise exceptions but return the response
->> RestClient.get('http://example.com/nonexistent') {|response, request, result| response }
-=> <RestClient::Response 404 "<!doctype h...">
+>> RestClient2.get('http://example.com/nonexistent') {|response, request, result| response }
+=> <RestClient2::Response 404 "<!doctype h...">
 ```
 
 ```ruby
 # Manage a specific error code
-RestClient.get('http://example.com/resource') { |response, request, result, &block|
+RestClient2.get('http://example.com/resource') { |response, request, result, &block|
   case response.code
   when 200
     p "It worked !"
@@ -370,11 +370,11 @@ different HTTP error response cases:
 
 ```ruby
 begin
-  resp = RestClient.get('http://example.com/resource')
-rescue RestClient::Unauthorized, RestClient::Forbidden => err
+  resp = RestClient2.get('http://example.com/resource')
+rescue RestClient2::Unauthorized, RestClient2::Forbidden => err
   puts 'Access denied'
   return err.response
-rescue RestClient::ImATeapot => err
+rescue RestClient2::ImATeapot => err
   puts 'The server is a teapot! # RFC 2324'
   return err.response
 else
@@ -383,7 +383,7 @@ else
 end
 ```
 
-For GET and HEAD requests, rest-client automatically follows redirection. For
+For GET and HEAD requests, rest_client2 automatically follows redirection. For
 other HTTP verbs, call `.follow_redirection` on the response object (works both
 in block form and in exception form).
 
@@ -394,7 +394,7 @@ in block form and in exception form).
 #        since this might change the conditions under which the request was issued."
 
 # block style
-RestClient.post('http://example.com/redirect', 'body') { |response, request, result|
+RestClient2.post('http://example.com/redirect', 'body') { |response, request, result|
   case response.code
   when 301, 302, 307
     response.follow_redirection
@@ -405,17 +405,17 @@ RestClient.post('http://example.com/redirect', 'body') { |response, request, res
 
 # exception style by explicit classes
 begin
-  RestClient.post('http://example.com/redirect', 'body')
-rescue RestClient::MovedPermanently,
-       RestClient::Found,
-       RestClient::TemporaryRedirect => err
+  RestClient2.post('http://example.com/redirect', 'body')
+rescue RestClient2::MovedPermanently,
+       RestClient2::Found,
+       RestClient2::TemporaryRedirect => err
   err.response.follow_redirection
 end
 
 # exception style by response code
 begin
-  RestClient.post('http://example.com/redirect', 'body')
-rescue RestClient::ExceptionWithResponse => err
+  RestClient2.post('http://example.com/redirect', 'body')
+rescue RestClient2::ExceptionWithResponse => err
   case err.http_code
   when 301, 302, 307
     err.response.follow_redirection
@@ -432,12 +432,12 @@ use the addressable gem (http://addressable.rubyforge.org/api/) in your code:
 
 ```ruby
   require 'addressable/uri'
-  RestClient.get(Addressable::URI.parse("http://www.詹姆斯.com/").normalize.to_str)
+  RestClient2.get(Addressable::URI.parse("http://www.詹姆斯.com/").normalize.to_str)
 ```
 
 ## Lower-level access
 
-For cases not covered by the general API, you can use the `RestClient::Request` class, which provides a lower-level API.
+For cases not covered by the general API, you can use the `RestClient2::Request` class, which provides a lower-level API.
 
 You can:
 
@@ -445,29 +445,29 @@ You can:
 - override cookies
 - manually handle the response (e.g. to operate on it as a stream rather than reading it all into memory)
 
-See `RestClient::Request`'s documentation for more information.
+See `RestClient2::Request`'s documentation for more information.
 
 ### Streaming request payload
 
-RestClient will try to stream any file-like payload rather than reading it into
-memory. This happens through `RestClient::Payload::Streamed`, which is
-automatically called internally by `RestClient::Payload.generate` on anything
+RestClient2 will try to stream any file-like payload rather than reading it into
+memory. This happens through `RestClient2::Payload::Streamed`, which is
+automatically called internally by `RestClient2::Payload.generate` on anything
 with a `read` method.
 
 ```ruby
->> r = RestClient.put('http://httpbin.org/put', File.open('/tmp/foo.txt', 'r'),
+>> r = RestClient2.put('http://httpbin.org/put', File.open('/tmp/foo.txt', 'r'),
                       content_type: 'text/plain')
-=> <RestClient::Response 200 "{\n  \"args\":...">
+=> <RestClient2::Response 200 "{\n  \"args\":...">
 ```
 
-In Multipart requests, RestClient will also stream file handles passed as Hash
+In Multipart requests, RestClient2 will also stream file handles passed as Hash
 (or __new in 2.1__ ParamsArray).
 
 ```ruby
->> r = RestClient.put('http://httpbin.org/put',
+>> r = RestClient2.put('http://httpbin.org/put',
                       {file_a: File.open('a.txt', 'r'),
                        file_b: File.open('b.txt', 'r')})
-=> <RestClient::Response 200 "{\n  \"args\":...">
+=> <RestClient2::Response 200 "{\n  \"args\":...">
 
 # received by server as two file uploads with multipart/form-data
 >> JSON.parse(r)['files'].keys
@@ -476,8 +476,8 @@ In Multipart requests, RestClient will also stream file handles passed as Hash
 
 ### Streaming responses
 
-Normally, when you use `RestClient.get` or the lower level
-`RestClient::Request.execute method: :get` to retrieve data, the entire
+Normally, when you use `RestClient2.get` or the lower level
+`RestClient2::Request.execute method: :get` to retrieve data, the entire
 response is buffered in memory and returned as the response to the call.
 
 However, if you are retrieving a large amount of data, for example a Docker
@@ -489,9 +489,9 @@ There are two main ways to do this:
 
 #### `raw_response`, saves into Tempfile
 
-If you pass `raw_response: true` to `RestClient::Request.execute`, it will save
+If you pass `raw_response: true` to `RestClient2::Request.execute`, it will save
 the response body to a temporary file (using `Tempfile`) and return a
-`RestClient::RawResponse` object rather than a `RestClient::Response`.
+`RestClient2::RawResponse` object rather than a `RestClient2::Response`.
 
 Note that the tempfile created by `Tempfile.new` will be in `Dir.tmpdir`
 (usually `/tmp/`), which you can override to store temporary files in a
@@ -504,17 +504,17 @@ __New in 2.1:__ Customize the interval with `:stream_log_percent` (defaults to
 For example:
 
 ```ruby
->> raw = RestClient::Request.execute(
+>> raw = RestClient2::Request.execute(
            method: :get,
            url: 'http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso',
            raw_response: true)
-=> <RestClient::RawResponse @code=200, @file=#<Tempfile:/tmp/rest-client.20170522-5346-1pptjm1>, @request=<RestClient::Request @method="get", @url="http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso">>
+=> <RestClient2::RawResponse @code=200, @file=#<Tempfile:/tmp/rest_client2.20170522-5346-1pptjm1>, @request=<RestClient2::Request @method="get", @url="http://releases.ubuntu.com/16.04.2/ubuntu-16.04.2-desktop-amd64.iso">>
 >> raw.file.size
 => 1554186240
 >> raw.file.path
-=> "/tmp/rest-client.20170522-5346-1pptjm1"
+=> "/tmp/rest_client2.20170522-5346-1pptjm1"
 raw.file.path
-=> "/tmp/rest-client.20170522-5346-1pptjm1"
+=> "/tmp/rest_client2.20170522-5346-1pptjm1"
 
 >> require 'digest/sha1'
 >> Digest::SHA1.file(raw.file.path).hexdigest
@@ -524,7 +524,7 @@ raw.file.path
 #### `block_response`, receives raw Net::HTTPResponse
 
 If you want to stream the data from the response to a file as it comes, rather
-than entirely in memory, you can also pass `RestClient::Request.execute` a
+than entirely in memory, you can also pass `RestClient2::Request.execute` a
 parameter `:block_response` to which you pass a block/proc. This block receives
 the raw unmodified Net::HTTPResponse object from Net::HTTP, which you can use
 to stream directly to a file as each chunk is received.
@@ -541,7 +541,7 @@ File.open('/some/output/file', 'w') {|f|
       f.write chunk
     end
   }
-  RestClient::Request.execute(method: :get,
+  RestClient2::Request.execute(method: :get,
                               url: 'http://example.com/some/really/big/file.img',
                               block_response: block)
 }
@@ -549,28 +549,28 @@ File.open('/some/output/file', 'w') {|f|
 
 ## Shell
 
-The restclient shell command gives an IRB session with RestClient already loaded:
+The restclient2 shell command gives an IRB session with RestClient2 already loaded:
 
 ```ruby
-$ restclient
->> RestClient.get 'http://example.com'
+$ restclient2
+>> RestClient2.get 'http://example.com'
 ```
 
 Specify a URL argument for get/post/put/delete on that resource:
 
 ```ruby
-$ restclient http://example.com
+$ restclient2 http://example.com
 >> put '/resource', 'data'
 ```
 
 Add a user and password for authenticated resources:
 
 ```ruby
-$ restclient https://example.com user pass
+$ restclient2 https://example.com user pass
 >> delete '/private/resource'
 ```
 
-Create ~/.restclient for named sessions:
+Create ~/.restclient2 for named sessions:
 
 ```ruby
   sinatra:
@@ -586,22 +586,22 @@ Create ~/.restclient for named sessions:
 Then invoke:
 
 ```ruby
-$ restclient private_site
+$ restclient2 private_site
 ```
 
 Use as a one-off, curl-style:
 
 ```ruby
-$ restclient get http://example.com/resource > output_body
+$ restclient2 get http://example.com/resource > output_body
 
-$ restclient put http://example.com/resource < input_body
+$ restclient2 put http://example.com/resource < input_body
 ```
 
 ## Logging
 
 To enable logging globally you can:
 
-- set RestClient.log with a Ruby Logger, or
+- set RestClient2.log with a Ruby Logger, or
 - set an environment variable to avoid modifying the code (in this case you can use a file name, "stdout" or "stderr"):
 
 ```ruby
@@ -612,33 +612,33 @@ You can also set individual loggers when instantiating a Resource or making an
 individual request:
 
 ```ruby
-resource = RestClient::Resource.new 'http://example.com/resource', log: Logger.new(STDOUT)
+resource = RestClient2::Resource.new 'http://example.com/resource', log: Logger.new(STDOUT)
 ```
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com/foo', log: Logger.new(STDERR))
+RestClient2::Request.execute(method: :get, url: 'http://example.com/foo', log: Logger.new(STDERR))
 ```
 
 All options produce logs like this:
 
 ```ruby
-RestClient.get "http://some/resource"
+RestClient2.get "http://some/resource"
 # => 200 OK | text/html 250 bytes
-RestClient.put "http://some/resource", "payload"
+RestClient2.put "http://some/resource", "payload"
 # => 401 Unauthorized | application/xml 340 bytes
 ```
 
-Note that these logs are valid Ruby, so you can paste them into the `restclient`
+Note that these logs are valid Ruby, so you can paste them into the `restclient2`
 shell or a script to replay your sequence of rest calls.
 
 ## Proxy
 
-All calls to RestClient, including Resources, will use the proxy specified by
-`RestClient.proxy`:
+All calls to RestClient2, including Resources, will use the proxy specified by
+`RestClient2.proxy`:
 
 ```ruby
-RestClient.proxy = "http://proxy.example.com/"
-RestClient.get "http://some/resource"
+RestClient2.proxy = "http://proxy.example.com/"
+RestClient2.get "http://some/resource"
 # => response from some/resource as proxied through proxy.example.com
 ```
 
@@ -646,15 +646,15 @@ Often the proxy URL is set in an environment variable, so you can do this to
 use whatever proxy the system is configured to use:
 
 ```ruby
-  RestClient.proxy = ENV['http_proxy']
+  RestClient2.proxy = ENV['http_proxy']
 ```
 
 __New in 2.0:__ Specify a per-request proxy by passing the :proxy option to
-RestClient::Request. This will override any proxies set by environment variable
-or by the global `RestClient.proxy` value.
+RestClient2::Request. This will override any proxies set by environment variable
+or by the global `RestClient2.proxy` value.
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com',
+RestClient2::Request.execute(method: :get, url: 'http://example.com',
                             proxy: 'http://proxy.example.com')
 # => single request proxied through the proxy
 ```
@@ -662,8 +662,8 @@ RestClient::Request.execute(method: :get, url: 'http://example.com',
 This can be used to disable the use of a proxy for a particular request.
 
 ```ruby
-RestClient.proxy = "http://proxy.example.com/"
-RestClient::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
+RestClient2.proxy = "http://proxy.example.com/"
+RestClient2::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
 # => single request sent without a proxy
 ```
 
@@ -674,11 +674,11 @@ requests or as HTTP post data in `x-www-form-urlencoded` format for POST
 requests.
 
 __New in 2.0:__ Even though there is no standard specifying how this should
-work, rest-client follows a similar convention to the one used by Rack / Rails
+work, rest_client2 follows a similar convention to the one used by Rack / Rails
 servers for handling arrays, nested hashes, and null values.
 
 The implementation in
-[./lib/rest-client/utils.rb](RestClient::Utils.encode_query_string)
+[./lib/rest_client2/utils.rb](RestClient2::Utils.encode_query_string)
 closely follows
 [Rack::Utils.build_nested_query](http://www.rubydoc.info/gems/rack/Rack/Utils#build_nested_query-class_method),
 but treats empty arrays and hashes as `nil`. (Rack drops them entirely, which
@@ -690,15 +690,15 @@ directly for GET parameters or pass the payload as a string for POST requests.
 
 Basic GET params:
 ```ruby
-RestClient.get('https://httpbin.org/get', params: {foo: 'bar', baz: 'qux'})
+RestClient2.get('https://httpbin.org/get', params: {foo: 'bar', baz: 'qux'})
 # GET "https://httpbin.org/get?foo=bar&baz=qux"
 ```
 
 Basic `x-www-form-urlencoded` POST params:
 ```ruby
->> r = RestClient.post('https://httpbin.org/post', {foo: 'bar', baz: 'qux'})
+>> r = RestClient2.post('https://httpbin.org/post', {foo: 'bar', baz: 'qux'})
 # POST "https://httpbin.org/post", data: "foo=bar&baz=qux"
-=> <RestClient::Response 200 "{\n  \"args\":...">
+=> <RestClient2::Response 200 "{\n  \"args\":...">
 >> JSON.parse(r.body)
 => {"args"=>{},
     "data"=>"",
@@ -714,19 +714,19 @@ Basic `x-www-form-urlencoded` POST params:
     "url"=>"https://httpbin.org/post"}
 ```
 
-JSON payload: rest-client does not speak JSON natively, so serialize your
-payload to a string before passing it to rest-client.
+JSON payload: rest_client2 does not speak JSON natively, so serialize your
+payload to a string before passing it to rest_client2.
 ```ruby
 >> payload = {'name' => 'newrepo', 'description': 'A new repo'}
->> RestClient.post('https://api.github.com/user/repos', payload.to_json, content_type: :json)
-=> <RestClient::Response 201 "{\"id\":75149...">
+>> RestClient2.post('https://api.github.com/user/repos', payload.to_json, content_type: :json)
+=> <RestClient2::Response 201 "{\"id\":75149...">
 ```
 
 Advanced GET params (arrays):
 ```ruby
->> r = RestClient.get('https://http-params.herokuapp.com/get', params: {foo: [1,2,3]})
+>> r = RestClient2.get('https://http-params.herokuapp.com/get', params: {foo: [1,2,3]})
 # GET "https://http-params.herokuapp.com/get?foo[]=1&foo[]=2&foo[]=3"
-=> <RestClient::Response 200 "Method: GET...">
+=> <RestClient2::Response 200 "Method: GET...">
 >> puts r.body
 query_string: "foo[]=1&foo[]=2&foo[]=3"
 decoded:      "foo[]=1&foo[]=2&foo[]=3"
@@ -737,9 +737,9 @@ GET:
 
 Advanced GET params (nested hashes):
 ```ruby
->> r = RestClient.get('https://http-params.herokuapp.com/get', params: {outer: {foo: 123, bar: 456}})
+>> r = RestClient2.get('https://http-params.herokuapp.com/get', params: {outer: {foo: 123, bar: 456}})
 # GET "https://http-params.herokuapp.com/get?outer[foo]=123&outer[bar]=456"
-=> <RestClient::Response 200 "Method: GET...">
+=> <RestClient2::Response 200 "Method: GET...">
 >> puts r.body
 ...
 query_string: "outer[foo]=123&outer[bar]=456"
@@ -749,22 +749,22 @@ GET:
   {"outer"=>{"foo"=>"123", "bar"=>"456"}}
 ```
 
-__New in 2.0:__ The new `RestClient::ParamsArray` class allows callers to
+__New in 2.0:__ The new `RestClient2::ParamsArray` class allows callers to
 provide ordering even to structured parameters. This is useful for unusual
 cases where the server treats the order of parameters as significant or you
 want to pass a particular key multiple times.
 
 Multiple fields with the same name using ParamsArray:
 ```ruby
->> RestClient.get('https://httpbin.org/get', params:
-                  RestClient::ParamsArray.new([[:foo, 1], [:foo, 2]]))
+>> RestClient2.get('https://httpbin.org/get', params:
+                  RestClient2::ParamsArray.new([[:foo, 1], [:foo, 2]]))
 # GET "https://httpbin.org/get?foo=1&foo=2"
 ```
 
 Nested ParamsArray:
 ```ruby
->> RestClient.get('https://httpbin.org/get', params:
-                  {foo: RestClient::ParamsArray.new([[:a, 1], [:a, 2]])})
+>> RestClient2.get('https://httpbin.org/get', params:
+                  {foo: RestClient2::ParamsArray.new([[:a, 1], [:a, 2]])})
 # GET "https://httpbin.org/get?foo[a]=1&foo[a]=2"
 ```
 
@@ -775,13 +775,13 @@ representing header names and values:
 
 ```ruby
 # GET request with modified headers
-RestClient.get 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+RestClient2.get 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
 
 # POST request with modified headers
-RestClient.post 'http://example.com/resource', {:foo => 'bar', :baz => 'qux'}, {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+RestClient2.post 'http://example.com/resource', {:foo => 'bar', :baz => 'qux'}, {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
 
 # DELETE request with modified headers
-RestClient.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
+RestClient2.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0febFoD5lxAlNAXHo6g'}
 ```
 
 ## Timeouts
@@ -791,14 +791,14 @@ be adjusted by setting the `timeout:` to the number of seconds that you would li
 the request to wait. Setting `timeout:` will override both `read_timeout:` and `open_timeout:`.
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :get, url: 'http://example.com/resource',
                             timeout: 120)
 ```
 
 Additionally, you can set `read_timeout:` and `open_timeout:` separately.
 
 ```ruby
-RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+RestClient2::Request.execute(method: :get, url: 'http://example.com/resource',
                             read_timeout: 120, open_timeout: 240)
 ```
 
@@ -808,11 +808,11 @@ Request and Response objects know about HTTP cookies, and will automatically
 extract and set headers for them as needed:
 
 ```ruby
-response = RestClient.get 'http://example.com/action_which_sets_session_id'
+response = RestClient2.get 'http://example.com/action_which_sets_session_id'
 response.cookies
 # => {"_applicatioN_session_id" => "1234"}
 
-response2 = RestClient.post(
+response2 = RestClient2.post(
   'http://localhost:3000/',
   {:param1 => "foo"},
   {:cookies => {:session_id => "1234"}}
@@ -830,8 +830,8 @@ of cookies, which supports full standards compliant behavior.
 
 ## SSL/TLS support
 
-Various options are supported for configuring rest-client's TLS settings. By
-default, rest-client will verify certificates using the system's CA store on
+Various options are supported for configuring rest_client2's TLS settings. By
+default, rest_client2 will verify certificates using the system's CA store on
 all platforms. (This is intended to be similar to how browsers behave.) You can
 specify an :ssl_ca_file, :ssl_ca_path, or :ssl_cert_store to customize the
 certificate authorities accepted.
@@ -839,7 +839,7 @@ certificate authorities accepted.
 ### SSL Client Certificates
 
 ```ruby
-RestClient::Resource.new(
+RestClient2::Resource.new(
   'https://example.com',
   :ssl_client_cert  =>  OpenSSL::X509::Certificate.new(File.read("cert.pem")),
   :ssl_client_key   =>  OpenSSL::PKey::RSA.new(File.read("key.pem"), "passphrase, if any"),
@@ -851,7 +851,7 @@ Self-signed certificates can be generated with the openssl command-line tool.
 
 ## Hook
 
-RestClient.add_before_execution_proc add a Proc to be called before each execution.
+RestClient2.add_before_execution_proc add a Proc to be called before each execution.
 It's handy if you need direct access to the HTTP request.
 
 Example:
@@ -861,18 +861,18 @@ Example:
 require 'oauth'
 access_token = ...
 
-RestClient.add_before_execution_proc do |req, params|
+RestClient2.add_before_execution_proc do |req, params|
   access_token.sign! req
 end
 
-RestClient.get 'http://example.com'
+RestClient2.get 'http://example.com'
 ```
 
 ## More
 
 Need caching, more advanced logging or any ability provided by Rack middleware?
 
-Have a look at rest-client-components: http://github.com/crohr/rest-client-components
+Have a look at rest_client2-components: http://github.com/crohr/rest_client2-components
 
 ## Credits
 | | |

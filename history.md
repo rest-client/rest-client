@@ -16,11 +16,11 @@
   `Accept-Encoding` header, rely instead on Net::HTTP defaults. (#597)
   - Note: this changes behavior for compressed responses when using
     `:raw_response => true`. Previously the raw response would not have been
-    uncompressed by rest-client, but now Net::HTTP will uncompress it.
+    uncompressed by rest_client2, but now Net::HTTP will uncompress it.
 - The previous fix to avoid having Netrc username/password override an
   Authorization header was case-sensitive and incomplete. Fix this by
   respecting existing Authorization headers, regardless of letter case. (#550)
-- Handle ParamsArray payloads. Previously, rest-client would silently drop a
+- Handle ParamsArray payloads. Previously, rest_client2 would silently drop a
   ParamsArray passed as the payload. Instead, automatically use
   Payload::Multipart if the ParamsArray contains a file handle, or use
   Payload::UrlEncoded if it doesn't. (#508)
@@ -52,19 +52,19 @@ This release is largely API compatible, but makes several breaking changes.
 - Drop support for Ruby 1.9
 - Allow mime-types as new as 3.x (requires ruby 2.0)
 - Respect Content-Type charset header provided by server. Previously,
-  rest-client would not override the string encoding chosen by Net::HTTP. Now
+  rest_client2 would not override the string encoding chosen by Net::HTTP. Now
   responses that specify a charset will yield a body string in that encoding.
   For example, `Content-Type: text/plain; charset=EUC-JP` will return a String
   encoded with `Encoding::EUC_JP`. (#361)
 - Change exceptions raised on request timeout. Instead of
-  `RestClient::RequestTimeout` (which is still used for HTTP 408), network
-  timeouts will now raise either `RestClient::Exceptions::ReadTimeout` or
-  `RestClient::Exceptions::OpenTimeout`, both of which inherit from
-  `RestClient::Exceptions::Timeout`. For backwards compatibility, this still
-  inherits from `RestClient::RequestTimeout` so existing uses will still work.
+  `RestClient2::RequestTimeout` (which is still used for HTTP 408), network
+  timeouts will now raise either `RestClient2::Exceptions::ReadTimeout` or
+  `RestClient2::Exceptions::OpenTimeout`, both of which inherit from
+  `RestClient2::Exceptions::Timeout`. For backwards compatibility, this still
+  inherits from `RestClient2::RequestTimeout` so existing uses will still work.
   This may change in a future major release. These new timeout classes also
   make the original wrapped exception available as `#original_exception`.
-- Unify request exceptions under `RestClient::RequestFailed`, which still
+- Unify request exceptions under `RestClient2::RequestFailed`, which still
   inherits from `ExceptionWithResponse`. Previously, HTTP 304, 401, and 404
   inherited directly from `ExceptionWithResponse` rather than from
   `RequestFailed`. Now _all_ HTTP status code exceptions inherit from both.
@@ -80,7 +80,7 @@ This release is largely API compatible, but makes several breaking changes.
 - `Response` objects are now a subclass of `String` rather than a `String` that
   mixes in the response functionality. Most of the methods remain unchanged,
   but this makes it much easier to understand what is happening when you look
-  at a RestClient response object. There are a few additional changes:
+  at a RestClient2 response object. There are a few additional changes:
   - Response objects now implement `.inspect` to make this distinction clearer.
   - `Response#to_i` will now behave like `String#to_i` instead of returning the
     HTTP response code, which was very surprising behavior.
@@ -99,7 +99,7 @@ This release is largely API compatible, but makes several breaking changes.
   complaints about the previously broken behavior: (#498)
   - The `:cookies` option may now be a Hash of Strings, an Array of
     HTTP::Cookie objects, or a full HTTP::CookieJar.
-  - Add `RestClient::Request#cookie_jar` and reimplement `Request#cookies` to
+  - Add `RestClient2::Request#cookie_jar` and reimplement `Request#cookies` to
     be a wrapper around the cookie jar.
   - Still support passing the `:cookies` option in the headers hash, but now
     raise ArgumentError if that option is also passed to `Request#initialize`.
@@ -111,17 +111,17 @@ This release is largely API compatible, but makes several breaking changes.
     by the cookie jar.
 - Don't set basic auth header if explicit `Authorization` header is specified
 - Add `:proxy` option to requests, which can be used for thread-safe
-  per-request proxy configuration, overriding `RestClient.proxy`
+  per-request proxy configuration, overriding `RestClient2.proxy`
 - Allow overriding `ENV['http_proxy']` to disable proxies by setting
-  `RestClient.proxy` to a falsey value. Previously there was no way in Ruby 2.x
+  `RestClient2.proxy` to a falsey value. Previously there was no way in Ruby 2.x
   to turn off a proxy specified in the environment without changing `ENV`.
-- Add actual support for streaming request payloads. Previously rest-client
-  would call `.to_s` even on RestClient::Payload::Streamed objects. Instead,
+- Add actual support for streaming request payloads. Previously rest_client2
+  would call `.to_s` even on RestClient2::Payload::Streamed objects. Instead,
   treat any object that responds to `.read` as a streaming payload and pass it
   through to `.body_stream=` on the Net:HTTP object. This massively reduces the
   memory required for large file uploads.
 - Changes to redirection behavior: (#381, #484)
-  - Remove `RestClient::MaxRedirectsReached` in favor of the normal
+  - Remove `RestClient2::MaxRedirectsReached` in favor of the normal
     `ExceptionWithResponse` subclasses. This makes the response accessible on
     the exception object as `.response`, making it possible for callers to tell
     what has actually happened when the redirect limit is reached.
@@ -129,10 +129,10 @@ This release is largely API compatible, but makes several breaking changes.
     the response object as `.history`. This makes it possible to access the
     original response headers and body before the redirection was followed.
   - Follow redirection consistently, regardless of whether the HTTP method was
-    passed as a symbol or string. Under the hood rest-client now normalizes the
+    passed as a symbol or string. Under the hood rest_client2 now normalizes the
     HTTP request method to a lowercase string.
-- Add `:before_execution_proc` option to `RestClient::Request`. This makes it
-  possible to add procs like `RestClient.add_before_execution_proc` to a single
+- Add `:before_execution_proc` option to `RestClient2::Request`. This makes it
+  possible to add procs like `RestClient2.add_before_execution_proc` to a single
   request without global state.
 - Run tests on Travis's beta OS X support.
 - Make `Request#transmit` a private method, along with a few others.
@@ -142,12 +142,12 @@ This release is largely API compatible, but makes several breaking changes.
   - Add new convention for handling URL params containing deeply nested arrays
     and hashes, unify handling of null/empty values, and use the same code for
     GET and POST params. (#437)
-  - Add the RestClient::ParamsArray class, a simple array-like container that
+  - Add the RestClient2::ParamsArray class, a simple array-like container that
     can be used to pass multiple keys with same name or keys where the ordering
     is significant.
 - Add a few more exception classes for obscure HTTP status codes.
 - Multipart: use a much more robust multipart boundary with greater entropy.
-- Make `RestClient::Payload::Base#inspect` stop pretending to be a String.
+- Make `RestClient2::Payload::Base#inspect` stop pretending to be a String.
 - Add `Request#redacted_uri` and `Request#redacted_url` to display the URI
   with any password redacted.
 
@@ -155,9 +155,9 @@ This release is largely API compatible, but makes several breaking changes.
 
 Changes in the release candidate that did not persist through the final 2.0.0
 release:
-- RestClient::Exceptions::Timeout was originally going to be a direct subclass
-  of RestClient::Exception in the release candidate. This exception tree was
-  made a subclass of RestClient::RequestTimeout prior to the final release.
+- RestClient2::Exceptions::Timeout was originally going to be a direct subclass
+  of RestClient2::Exception in the release candidate. This exception tree was
+  made a subclass of RestClient2::RequestTimeout prior to the final release.
 
 # 1.8.0
 
@@ -206,7 +206,7 @@ release:
   - Add support for SSL ciphers, and choose secure ones by default
 - Run tests under travis
 - Several other bugfixes and test improvements
-  - Convert Errno::ETIMEDOUT to RestClient::RequestTimeout
+  - Convert Errno::ETIMEDOUT to RestClient2::RequestTimeout
   - Handle more HTTP response codes from recent standards
   - Save raw responses to binary mode tempfile (#110)
   - Disable timeouts with :timeout => nil rather than :timeout => -1
@@ -217,7 +217,7 @@ release:
 - The 1.6.x series will be the last to support Ruby 1.8.7
 - Pin mime-types to < 2.0 to maintain Ruby 1.8.7 support
 - Add Gemfile, AUTHORS, add license to gemspec
-- Point homepage at https://github.com/rest-client/rest-client
+- Point homepage at https://github.com/rest_client2/rest_client2
 - Clean up and fix various tests and ruby warnings
 - Backport `ssl_verify_callback` functionality from 1.7.0
 
@@ -238,7 +238,7 @@ release:
 
 # 1.6.4
 
-- fix restclient script compatibility with 1.9.2
+- fix restclient2 script compatibility with 1.9.2
 - fix unlinking temp file (patch provided by Evan Smith)
 - monkeypatching ruby for http patch method (patch provided by Syl Turner)
 
@@ -256,14 +256,14 @@ release:
 - limit number of redirections (patch provided by Chris Dinn)
 - close and unlink the temp file created by playload (patch provided by Chris Green)
 - make gemspec Rubygems 1.8 compatible (patch provided by David Backeus)
-- added RestClient.reset_before_execution_procs (patch provided by Cloudify)
+- added RestClient2.reset_before_execution_procs (patch provided by Cloudify)
 - added PATCH method (patch provided by Jeff Remer)
 - hack for HTTP servers that use raw DEFLATE compression, see http://www.ruby-forum.com/topic/136825 (path provided by James Reeves)
 
 # 1.6.1
 
 - add response body in Exception#inspect
-- add support for RestClient.options
+- add support for RestClient2.options
 - fix tests for 1.9.2 (patch provided by Niko Dittmann)
 - block passing in Resource#[] (patch provided by Niko Dittmann)
 - cookies set in a response should be kept in a redirect
@@ -272,7 +272,7 @@ release:
 
 # 1.6.0
 
-- forgot to include rest-client.rb in the gem
+- forgot to include rest_client2.rb in the gem
 - user, password and user-defined headers should survive a redirect
 - added all missing status codes
 - added parameter passing for get request using the :param key in header
@@ -287,7 +287,7 @@ release:
 - only converts headers keys which are Symbols
 - use CGI for cookie parsing instead of custom code
 - unescape user and password before using them (patch provided by Lars Gierth)
-- expand ~ in ~/.restclientrc (patch provided by Mike Fletcher)
+- expand ~ in ~/.restclient2rc (patch provided by Mike Fletcher)
 - ssl verification raise an exception when the ca certificate is incorrect (patch provided by Braintree)
 
 # 1.5.0
@@ -303,7 +303,7 @@ release:
 
 # 1.4.2
 
-- fixed RestClient.add_before_execution_proc (patch provided by Nicholas Wieland)
+- fixed RestClient2.add_before_execution_proc (patch provided by Nicholas Wieland)
 - fixed error when an exception is raised without a response (patch provided by Caleb Land)
 
 # 1.4.1
@@ -313,11 +313,11 @@ release:
 # 1.4.0
 
 - Response is no more a String, and the mixin is replaced by an abstract_response, existing calls are redirected to response body with a warning.
-- enable repeated parameters  RestClient.post 'http://example.com/resource', :param1 => ['one', 'two', 'three'], => :param2 => 'foo' (patch provided by Rodrigo Panachi)
+- enable repeated parameters  RestClient2.post 'http://example.com/resource', :param1 => ['one', 'two', 'three'], => :param2 => 'foo' (patch provided by Rodrigo Panachi)
 - fixed the redirect code concerning relative path and query string combination (patch provided by Kevin Read)
 - redirection code moved to Response so redirection can be customized using the block syntax
 - only get and head redirections are now followed by default, as stated in the specification
-- added RestClient.add_before_execution_proc to hack the http request, like for oauth
+- added RestClient2.add_before_execution_proc to hack the http request, like for oauth
 
 The response change may be breaking in rare cases.
 
@@ -340,14 +340,14 @@ The only breaking change should be the exception classes, but as the new classes
 
 - formatting changed from tabs to spaces
 - logged requests now include generated headers
-- accept and content-type headers can now be specified using extentions: RestClient.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
+- accept and content-type headers can now be specified using extentions: RestClient2.post "http://example.com/resource", { 'x' => 1 }.to_json, :content_type => :json, :accept => :json
 - should be 1.1.1 but renamed to 1.2.0 because 1.1.X versions has already been packaged on Debian
 
 # 1.1.0
 
-- new maintainer: Archiloque, the working repo is now at http://github.com/archiloque/rest-client
-- a mailing list has been created at rest.client@librelist.com and an freenode irc channel #rest-client
-- François Beausoleil' multipart code from http://github.com/francois/rest-client has been merged
+- new maintainer: Archiloque, the working repo is now at http://github.com/archiloque/rest_client2
+- a mailing list has been created at rest.client@librelist.com and an freenode irc channel #rest_client2
+- François Beausoleil' multipart code from http://github.com/francois/rest_client2 has been merged
 - ability to use hash in hash as payload
 - the mime-type code now rely on the mime-types gem http://mime-types.rubyforge.org/ instead of an internal partial list
 - 204 response returns a Response instead of nil (patch provided by Elliott Draper)

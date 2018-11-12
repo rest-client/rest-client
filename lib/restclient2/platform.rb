@@ -1,6 +1,6 @@
 require 'rbconfig'
 
-module RestClient
+module RestClient2
   module Platform
     # Return true if we are running on a darwin-based Ruby platform. This will
     # be false for jruby even on OS X.
@@ -43,7 +43,7 @@ module RestClient
     end
 
     def self.default_user_agent
-      "rest-client/#{VERSION} (#{architecture}) #{ruby_agent_version}"
+      "rest_client2/#{VERSION} (#{architecture}) #{ruby_agent_version}"
     end
   end
 end

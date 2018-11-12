@@ -1,6 +1,6 @@
 require 'http/accept'
 
-module RestClient
+module RestClient2
   # Various utility methods
   module Utils
 
@@ -193,14 +193,14 @@ module RestClient
     #   => 'foo[string]=&foo[empty]'
     #
     # @example Multiple fields with the same name using ParamsArray
-    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]]))
+    #   >> encode_query_string(RestClient2::ParamsArray.new([[:foo, 1], [:foo, 2], [:foo, 3]]))
     #   => 'foo=1&foo=2&foo=3'
     #
     # @example Nested ParamsArray
-    #   >> encode_query_string({foo: RestClient::ParamsArray.new([[:a, 1], [:a, 2]])})
+    #   >> encode_query_string({foo: RestClient2::ParamsArray.new([[:a, 1], [:a, 2]])})
     #   => 'foo[a]=1&foo[a]=2'
     #
-    #   >> encode_query_string(RestClient::ParamsArray.new([[:foo, {a: 1}], [:foo, {a: 2}]]))
+    #   >> encode_query_string(RestClient2::ParamsArray.new([[:foo, {a: 1}], [:foo, {a: 2}]]))
     #   => 'foo[a]=1&foo[a]=2'
     #
     def self.encode_query_string(object)

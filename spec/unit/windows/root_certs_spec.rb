@@ -1,8 +1,8 @@
 require_relative '../_lib'
 
-describe 'RestClient::Windows::RootCerts',
-         :if => RestClient::Platform.windows? do
-  let(:x509_store) { RestClient::Windows::RootCerts.instance.to_a }
+describe 'RestClient2::Windows::RootCerts',
+         :if => RestClient2::Platform.windows? do
+  let(:x509_store) { RestClient2::Windows::RootCerts.instance.to_a }
 
   it 'should return at least one X509 certificate' do
     expect(x509_store.to_a.size).to be >= 1
