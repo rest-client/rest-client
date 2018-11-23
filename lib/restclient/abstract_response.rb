@@ -217,6 +217,7 @@ module RestClient
 
       new_args[:password] = request.password
       new_args[:user] = request.user
+      new_args[:payload] = request.payload
       new_args[:headers] = request.headers
       new_args[:max_redirects] = request.max_redirects - 1
 
