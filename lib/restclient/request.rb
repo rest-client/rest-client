@@ -39,6 +39,8 @@ module RestClient
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
+  # * :ssl_min_version specifies the minimum SSL version for the underlying Net::HTTP connection
+  #     (available with MRI 2.5)
   # * :ssl_ciphers sets SSL ciphers for the connection. See
   #     OpenSSL::SSL::SSLContext#ciphers=
   # * :before_execution_proc a Proc to call before executing the request. This
@@ -59,7 +61,8 @@ module RestClient
     end
 
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
-                       version ciphers verify_callback verify_callback_warnings}
+                       version min_version ciphers verify_callback
+                       verify_callback_warnings}
 
     def inspect
       "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
@@ -655,6 +658,7 @@ module RestClient
       net = net_http_object(uri.hostname, uri.port)
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
+      net.min_version = ssl_min_version if ssl_min_version
       net.ciphers = ssl_ciphers if ssl_ciphers
 
       net.verify_mode = verify_ssl
