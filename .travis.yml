@@ -9,13 +9,15 @@ os:
 rvm:
   - "2.0.0"
   - "2.1" # latest 2.1.x
-  - "2.2.9"
-  - "2.3.6"
-  - "2.4.3"
-  - "2.5.0"
+  - "2.2.10"
+  - "2.3.8"
+  - "2.4.6"
+  - "2.5.5"
+  - "2.6.2"
   - "ruby-head"
   - "jruby-9.0.5.0"
-  - "jruby-9.1.16.0"
+  - "jruby-9.1.17.0"
+  - "jruby-9.2.6.0"
   - "jruby-head"
 
 cache: bundler
@@ -36,11 +38,9 @@ before_install:
 matrix:
   exclude:
     - os: osx
-      rvm: "2.4.3"
+      rvm: "2.4.6"
   allow_failures:
     - rvm: 'ruby-head'
 
   # return results as soon as mandatory versions are done
   fast_finish: true
-
-sudo: false
