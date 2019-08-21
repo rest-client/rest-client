@@ -1,8 +1,8 @@
 # 2.1.0.rc1
 
 - Add a dependency on http-accept for parsing Content-Type charset headers.
-  This works around a bad memory leak introduced in Ruby 2.4.x (the leak is
-  probably a bug in MRI). (#615)
+  This works around a bad memory leak introduced in MRI Ruby 2.4.0 and fixed in
+  Ruby 2.4.2. (#615)
 - Use mime/types/columnar from mime-types 2.6.1+, which is leaner in memory
   usage than the older storage model of mime-types. (#393)
 - Add `:log` option to individual requests. This allows users to set a log on a
@@ -215,6 +215,22 @@ release:
   - Save raw responses to binary mode tempfile (#110)
   - Disable timeouts with :timeout => nil rather than :timeout => -1
   - Drop all Net::HTTP monkey patches
+
+# 1.6.14
+
+- This release is unchanged from 1.6.9. It was published in order to supersede
+  the malicious 1.6.10-13 versions, even for users who are still pinning to the
+  legacy 1.6.x series. All users are encouraged to upgrade to rest-client 2.x.
+
+# 1.6.10, 1.6.11, 1.6.12, 1.6.13 (CVE-2019-15224)
+
+- These versions were pushed by a malicious actor and included a backdoor permitting
+  remote code execution in Rails environments. (#713)
+- They were live for about five days before being yanked.
+
+# 1.6.9
+
+- Move rdoc to a development dependency
 
 # 1.6.8
 
