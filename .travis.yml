@@ -5,7 +5,7 @@ sudo: false
 
 os:
   - linux
-  - osx
+#  - osx
 
 rvm:
   - "2.1" # latest 2.1.x
@@ -37,12 +37,23 @@ before_install:
   # stick to bundler 1.x in order to support ruby < 2.3
   - gem install bundler -v '~> 1.17'
 
-# Travis OS X support is pretty janky. These are some hacks to include tests
-# only on versions that actually work.
-# (last tested: 2016-11)
+# Travis macOS support is pretty janky. These are some hacks to include tests
+# only on versions that actually work. We test on macOS because Apple monkey
+# patches OpenSSL to have different behavior, and we want to ensure that SSL
+# verification at least is broken in the expected ways on macOS.
+# (last tested: 2019-08)
 matrix:
   # exclude: {}
-  # include: {}
+  include:
+    # test only a few versions on mac
+    - os: osx
+      rvm: 2.6.3
+    - os: osx
+      rvm: ruby-head
+    - os: osx
+      rvm: jruby-9.1.9.0
+    - os: osx
+      rvm: jruby-head
 
   allow_failures:
     - rvm: 'ruby-head'
