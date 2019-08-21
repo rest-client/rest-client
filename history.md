@@ -1,3 +1,16 @@
+# 1.6.14
+
+- This release is unchanged from 1.6.9. It was published in order to supersede
+  the malicious 1.6.10-13 versions, even for users who are still pinning to the
+  legacy 1.6.x series. All users are encouraged to upgrade to rest-client 2.x.
+
+# 1.6.10, 1.6.11, 1.6.12, 1.6.13 (CVE-2019-15224)
+
+- These versions were pushed by a malicious actor and included a backdoor permitting
+  remote code execution in Rails environments.
+- They were live for about five days before being yanked.
+  https://github.com/rest-client/rest-client/issues/713
+
 # 1.6.9
 
 - Move rdoc to a development dependency
