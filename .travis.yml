@@ -34,7 +34,8 @@ before_install:
   - gem install rubygems-update -v '<3' && update_rubygems
   # bundler installation needed for jruby-head
   # https://github.com/travis-ci/travis-ci/issues/5861
-  - gem install bundler
+  # stick to bundler 1.x in order to support ruby < 2.3
+  - gem install bundler -v '~> 1.17'
 
 # Travis OS X support is pretty janky. These are some hacks to include tests
 # only on versions that actually work.
