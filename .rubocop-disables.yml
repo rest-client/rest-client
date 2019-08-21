@@ -184,12 +184,9 @@ Style/HashSyntax:
 Style/IfUnlessModifier:
   Enabled: false
 
-# TODO: configure
-# Offense count: 6
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, SupportedStyles.
-Layout/IndentHash:
-  Enabled: false
+Layout/IndentFirstHashElement:
+  Exclude:
+    - 'spec/**/*.rb'
 
 # NOTABUG
 # Offense count: 19
