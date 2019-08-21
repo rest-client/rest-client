@@ -1,4 +1,4 @@
-# 2.1.0.rc1
+# 2.1.0
 
 - Add a dependency on http-accept for parsing Content-Type charset headers.
   This works around a bad memory leak introduced in MRI Ruby 2.4.0 and fixed in
