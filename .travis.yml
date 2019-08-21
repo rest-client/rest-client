@@ -29,7 +29,9 @@ branches:
     - "readme-edits"
 
 before_install:
-  - gem update --system
+  # Install rubygems < 3.0 so that we can support ruby < 2.3
+  # https://github.com/rubygems/rubygems/issues/2534
+  - gem install rubygems-update -v '<3' && update_rubygems
   # bundler installation needed for jruby-head
   # https://github.com/travis-ci/travis-ci/issues/5861
   - gem install bundler
