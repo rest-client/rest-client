@@ -53,8 +53,9 @@ Style/BracesAroundHashParameters:
   Enabled: false
 
 # Offense count: 1
-Style/ClassAndModuleCamelCase:
-  Enabled: false
+Naming/ClassAndModuleCamelCase:
+  Exclude:
+    - lib/restclient/windows/root_certs.rb
 
 # Offense count: 2
 # Configuration parameters: EnforcedStyle, SupportedStyles.
@@ -102,7 +103,7 @@ Style/ConditionalAssignment:
   EnforcedStyle: assign_inside_condition
 
 # Offense count: 2
-Style/ConstantName:
+Naming/ConstantName:
   Enabled: false
 
 # TODO: eh?
@@ -162,11 +163,9 @@ Layout/EmptyLinesAroundExceptionHandlingKeywords:
 Style/Encoding:
   Enabled: false
 
-# TODO: exclude
-# Offense count: 1
-# Configuration parameters: Exclude.
-Style/FileName:
-  Enabled: false
+Naming/FileName:
+  Exclude:
+    - lib/rest-client.rb
 
 # Offense count: 3
 # Configuration parameters: EnforcedStyle, SupportedStyles.
@@ -185,12 +184,9 @@ Style/HashSyntax:
 Style/IfUnlessModifier:
   Enabled: false
 
-# TODO: configure
-# Offense count: 6
-# Cop supports --auto-correct.
-# Configuration parameters: EnforcedStyle, SupportedStyles.
-Layout/IndentHash:
-  Enabled: false
+Layout/IndentFirstHashElement:
+  Exclude:
+    - 'spec/**/*.rb'
 
 # NOTABUG
 # Offense count: 19
@@ -262,7 +258,7 @@ Style/PercentLiteralDelimiters:
 
 # Offense count: 3
 # Configuration parameters: NamePrefixBlacklist.
-Style/PredicateName:
+Naming/PredicateName:
   Enabled: false
 
 # TODO: configure
@@ -327,11 +323,6 @@ Layout/EmptyLinesAroundBlockBody:
 Layout/SpaceInsideBlockBraces:
   Enabled: false
 
-# Offense count: 6
-# Cop supports --auto-correct.
-Layout/SpaceInsideBrackets:
-  Enabled: false
-
 # Offense count: 181
 # Cop supports --auto-correct.
 # Configuration parameters: EnforcedStyle, EnforcedStyleForEmptyBraces, SupportedStyles.
@@ -350,8 +341,10 @@ Layout/SpaceInsideParens:
 Style/StringLiterals:
   Enabled: false
 
-Style/TrailingCommaInLiteral:
-  EnforcedStyleForMultiline: comma
+Style/TrailingCommaInArrayLiteral:
+  EnforcedStyleForMultiline: consistent_comma
+Style/TrailingCommaInHashLiteral:
+  EnforcedStyleForMultiline: consistent_comma
 Style/TrailingCommaInArguments:
   Enabled: false
 
@@ -387,7 +380,7 @@ Style/BarePercentLiterals:
   Enabled: false
 
 
-Lint/RescueWithoutErrorClass:
+Style/RescueStandardError:
   Exclude:
     - 'bin/restclient'
     - 'lib/restclient/windows/root_certs.rb'
