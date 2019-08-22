@@ -428,7 +428,7 @@ end
 ## Non-normalized URIs
 
 If you need to normalize URIs, e.g. to work with International Resource Identifiers (IRIs),
-use the addressable gem (http://addressable.rubyforge.org/api/) in your code:
+use the Addressable gem (https://github.com/sporkmonger/addressable/) in your code:
 
 ```ruby
   require 'addressable/uri'
