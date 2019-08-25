@@ -586,7 +586,7 @@ module RestClient
     def default_headers
       {
         :accept => '*/*',
-        :user_agent => RestClient::Platform.default_user_agent,
+        :user_agent => RestClient.user_agent,
       }
     end
 

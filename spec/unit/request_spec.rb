@@ -618,6 +618,22 @@ describe RestClient::Request, :include_helpers do
 
 
   describe "logging" do
+    it "logs custom user agent" do
+      log = RestClient.log = []
+      RestClient.user_agent = "Foo"
+      RestClient::Request.new(:method => :get, :url => 'http://url').log_request
+      RestClient.user_agent = nil
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "User-Agent"=>"Foo"\n}
+    end
+
+    it "logs custom user agent overwritten by headers" do
+      log = RestClient.log = []
+      RestClient.user_agent = "Foo"
+      RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'Bar'}).log_request
+      RestClient.user_agent = nil
+      expect(log[0]).to eq %Q{RestClient.get "http://url", "Accept"=>"*/*", "User-Agent"=>"Bar"\n}
+    end
+
     it "logs a get request" do
       log = RestClient.log = []
       RestClient::Request.new(:method => :get, :url => 'http://url', :headers => {:user_agent => 'rest-client'}).log_request

@@ -90,6 +90,16 @@ module RestClient
     Request.execute(:method => :options, :url => url, :headers => headers, &block)
   end
 
+  # Configure a custom user agent for all requests. This can be overridden on a
+  # per-request basis by passing `:user_agent` in the request's header.
+  def self.user_agent
+    @user_agent ||= Platform.default_user_agent
+  end
+
+  def self.user_agent=(value)
+    @user_agent = value
+  end
+
   # A global proxy URL to use for all requests. This can be overridden on a
   # per-request basis by passing `:proxy` to RestClient::Request.
   def self.proxy
