@@ -1,13 +1,7 @@
 require 'tempfile'
 require 'securerandom'
 require 'stringio'
-
-begin
-  # Use mime/types/columnar if available, for reduced memory usage
-  require 'mime/types/columnar'
-rescue LoadError
-  require 'mime/types'
-end
+require 'mini_mime'
 
 module RestClient
   module Payload
@@ -194,8 +188,8 @@ module RestClient
       end
 
       def mime_for(path)
-        mime = MIME::Types.type_for path
-        mime.empty? ? 'text/plain' : mime[0].content_type
+        mime = MiniMime.lookup_by_filename path
+        mime ? mime.content_type : 'text/plain'
       end
 
       def boundary
