@@ -455,8 +455,10 @@ module RestClient
         # proxy explicitly set to none
         Net::HTTP.new(hostname, port, nil, nil, nil, nil)
       else
+        pass = p_uri.password ? CGI.unescape(p_uri.password) : nil
+        user = p_uri.user     ? CGI.unescape(p_uri.user)     : nil
         Net::HTTP.new(hostname, port,
-                      p_uri.hostname, p_uri.port, p_uri.user, p_uri.password)
+                      p_uri.hostname, p_uri.port, user, pass)
 
       end
     end
