@@ -28,5 +28,5 @@ Gem::Specification.new do |s|
   s.add_dependency('mime-types', '>= 1.16', '< 4.0')
   s.add_dependency('netrc', '~> 0.8')
 
-  s.required_ruby_version = '>= 2.0.0'
+  s.required_ruby_version = '>= 2.3.0'
 end
