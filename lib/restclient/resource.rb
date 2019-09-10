@@ -20,6 +20,10 @@ module RestClient
   #
   #   RestClient::Resource.new('http://behindfirewall', :open_timeout => 10)
   #
+  # You can pass :timeout to set both open and read timeouts:
+  #
+  #   RestClient::Resource.new('http://behindfirewall', :timeout => 10)
+  #
   # You can also use resources to share common headers. For headers keys,
   # symbols are converted to strings. Example:
   #
@@ -120,11 +124,11 @@ module RestClient
     end
 
     def read_timeout
-      options[:read_timeout]
+      RestClient::Request.new(options.merge(:method => :get, :url => url)).read_timeout
     end
 
     def open_timeout
-      options[:open_timeout]
+      RestClient::Request.new(options.merge(:method => :get, :url => url)).open_timeout
     end
 
     def log

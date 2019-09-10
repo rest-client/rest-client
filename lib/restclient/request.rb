@@ -66,6 +66,9 @@ module RestClient
     SSLOptionList = %w{client_cert client_key ca_file ca_path cert_store
                        version ciphers verify_callback verify_callback_warnings}
 
+    DefaultOpenTimeout = Net::HTTP.new('127.0.0.1').open_timeout # depends on ruby version
+    DefaultReadTimeout = Net::HTTP.new('127.0.0.1').read_timeout
+
     def inspect
       "<RestClient::Request @method=#{@method.inspect}, @url=#{@url.inspect}>"
     end
@@ -90,6 +93,8 @@ module RestClient
       @user = args[:user] if args.include?(:user)
       @password = args[:password] if args.include?(:password)
 
+      @read_timeout = DefaultReadTimeout
+      @open_timeout = DefaultOpenTimeout
       if args.include?(:timeout)
         @read_timeout = args[:timeout]
         @open_timeout = args[:timeout]
@@ -696,20 +701,16 @@ module RestClient
         warn('Try passing :verify_ssl => false instead.')
       end
 
-      if defined? @read_timeout
-        if @read_timeout == -1
-          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
-          @read_timeout = nil
-        end
-        net.read_timeout = @read_timeout
+      if @read_timeout == -1
+        warn 'Deprecated: to disable timeouts, please use nil instead of -1'
+        @read_timeout = nil
       end
-      if defined? @open_timeout
-        if @open_timeout == -1
-          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
-          @open_timeout = nil
-        end
-        net.open_timeout = @open_timeout
+      net.read_timeout = @read_timeout
+      if @open_timeout == -1
+        warn 'Deprecated: to disable timeouts, please use nil instead of -1'
+        @open_timeout = nil
       end
+      net.open_timeout = @open_timeout
 
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
