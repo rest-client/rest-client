@@ -2,6 +2,7 @@
 /Gemfile.lock
 /.bundle
 /vendor
+/coverage
 /doc
 /pkg
 /rdoc

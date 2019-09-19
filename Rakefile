@@ -22,8 +22,8 @@ RSpec::Core::RakeTask.new('spec:integration') do |t|
 end
 
 desc "Print specdocs"
-RSpec::Core::RakeTask.new(:doc) do |t|
-  t.rspec_opts = ["--format", "specdoc", "--dry-run"]
+RSpec::Core::RakeTask.new(:specdoc) do |t|
+  t.rspec_opts = ["--format", "documentation", "--dry-run"]
   t.pattern = 'spec/**/*_spec.rb'
 end
 

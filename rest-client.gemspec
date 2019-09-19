@@ -16,6 +16,7 @@ Gem::Specification.new do |s|
   s.homepage = 'https://github.com/rest-client/rest-client'
   s.summary = 'Simple HTTP and REST client for Ruby, inspired by microframework syntax for specifying actions.'
 
+  s.add_development_dependency('coveralls', '~> 0.8')
   s.add_development_dependency('webmock', '~> 2.0')
   s.add_development_dependency('rspec', '~> 3.0')
   s.add_development_dependency('pry', '~> 0')
