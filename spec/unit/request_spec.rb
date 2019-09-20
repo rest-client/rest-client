@@ -891,6 +891,22 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', 'payload')
     end
 
+    # only run test on platforms with the parameter, but fail loudly if someone
+    # tries to use it without platform support
+    it "should set the ssl_min_version if provided", :if => Net::HTTP.public_instance_methods.include?(:min_version=) do
+      @request = RestClient::Request.new(
+        :method => :put,
+        :url => 'https://some/resource',
+        :payload => 'payload',
+        :ssl_min_version => :TLS1_2
+      )
+      expect(@net).to receive(:min_version=).with(:TLS1_2)
+      allow(@http).to receive(:request)
+      allow(@request).to receive(:process_result)
+      allow(@request).to receive(:response_log)
+      @request.send(:transmit, @uri, 'req', 'payload')
+    end
+
     it "should set the ssl_ciphers if provided" do
       ciphers = 'AESGCM:HIGH:!aNULL:!eNULL:RC4+RSA'
       @request = RestClient::Request.new(
