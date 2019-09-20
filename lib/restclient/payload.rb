@@ -125,6 +125,12 @@ module RestClient
       # Content-Type for stream objects that have a filename.
 
       alias :length :size
+
+      def close
+        if @stream.respond_to?(:closed?) && @stream.respond_to?(:close)
+          super
+        end
+      end
     end
 
     class UrlEncoded < Base
