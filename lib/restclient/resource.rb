@@ -47,7 +47,7 @@ module RestClient
     end
 
     def get(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :get,
               :url => url,
@@ -56,7 +56,7 @@ module RestClient
     end
 
     def head(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :head,
               :url => url,
@@ -65,7 +65,7 @@ module RestClient
     end
 
     def post(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :post,
               :url => url,
@@ -75,7 +75,7 @@ module RestClient
     end
 
     def put(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :put,
               :url => url,
@@ -85,7 +85,7 @@ module RestClient
     end
 
     def patch(payload, additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :patch,
               :url => url,
@@ -95,7 +95,7 @@ module RestClient
     end
 
     def delete(additional_headers={}, &block)
-      headers = (options[:headers] || {}).merge(additional_headers)
+      headers = merge_headers(additional_headers)
       Request.execute(options.merge(
               :method => :delete,
               :url => url,
@@ -173,6 +173,20 @@ module RestClient
       else
         "#{url}/#{suburl}"
       end
+    end
+
+    protected
+
+    # Merge additional request-specific headers to the Resource default headers
+    # Merge individual keys of headers.params hash
+    def merge_headers(additional_headers = {})
+      additional_headers = additional_headers.dup
+      additional_params  = additional_headers.delete(:params)
+
+      result = (options[:headers] || {}).merge(additional_headers)
+      result[:params] = (result[:params] || {}).merge(additional_params) if additional_params
+
+      result
     end
   end
 end

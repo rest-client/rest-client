@@ -131,4 +131,31 @@ describe RestClient::Resource do
     end
 
   end
+
+  describe "merging of :params header" do
+    before do
+      @resource = RestClient::Resource.new('http://some/resource')
+    end
+
+    def assert_execute_called_with_options(expected_values = {})
+      RestClient::Request.should_receive(:execute).with(hash_including(expected_values))
+    end
+
+    it "doesn't add a params key there is nothing to merge-in and resource doesn't have params" do
+      assert_execute_called_with_options(:method => :get, :url => 'http://some/resource')
+      @resource.get
+    end
+
+    it "passed through per-resource param keys" do
+      @resource.options.merge!(:headers  => {:params => {:key1 =>'val1'}})
+      assert_execute_called_with_options(:method => :get, :url => 'http://some/resource', :headers => {:params => {:key1 => 'val1'}})
+      @resource.get
+    end
+
+    it "overwrites request-specific param keys" do
+      @resource.options.merge!(:headers  => {:params => {:key1 =>'val1', :key2 => 'val2'}})
+      assert_execute_called_with_options(:method => :get, :url => 'http://some/resource', :headers => {:params => {:key1 => 'val1', :key2 => 'modified'}})
+      @resource.get(:params => {:key2 => 'modified'})
+    end
+  end
 end
