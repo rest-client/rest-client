@@ -141,5 +141,12 @@ describe RestClient::AbstractResponse, :include_helpers do
       expect(@response).to receive(:check_max_redirects).and_return('fake-check')
       expect { @response.return! }.to raise_error RestClient::Found
     end
+
+    it 'follows a 308 redirect' do
+      expect(@net_http_res).to receive(:code).and_return('308')
+      expect(@response).to receive(:check_max_redirects).and_return('fake-check')
+      expect(@response).to receive(:follow_redirection).and_return('fake-redirection')
+      expect(@response.return!).to eq 'fake-redirection'
+    end
   end
 end

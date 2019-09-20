@@ -107,6 +107,7 @@ module RestClient
     # For 30x status codes:
     #   301, 302, 307: redirect GET / HEAD if there is a Location header
     #   303: redirect, changing method to GET, if there is a Location header
+    #   308: redirects all methods if there is a location header
     #
     # For all other responses, raise a response exception
     #
@@ -125,6 +126,9 @@ module RestClient
       when 303
         check_max_redirects
         follow_get_redirection(&block)
+      when 308
+        check_max_redirects
+        follow_redirection(&block)
       else
         raise exception_with_response
       end
