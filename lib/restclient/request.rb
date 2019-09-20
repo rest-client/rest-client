@@ -540,8 +540,9 @@ module RestClient
     def log_request
       return unless log
 
-      out = []
+      log << "# [" + Time.now.strftime("%Y-%m-%dT%H:%M:%S.%6N %z".freeze)+ "]   Started request:"
 
+      out = []
       out << "RestClient.#{method} #{redacted_url.inspect}"
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
