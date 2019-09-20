@@ -555,6 +555,12 @@ describe RestClient::Request, :include_helpers do
       expect(@proxy_req.net_http_object('host', 80).proxy_address).to eq('::1')
     end
 
+    it "creates a socks proxy class if proxy's scheme is socks(5)" do
+      allow(RestClient).to receive(:proxy).and_return("socks5://localhost:8080")
+      allow(RestClient).to receive(:proxy_set?).and_return(true)
+      expect(@proxy_req.net_http_object('host', 80).class.methods.include?(:SOCKSProxy)).to be true
+    end
+
     it "creates a non-proxy class if a proxy url is not given" do
       expect(@proxy_req.net_http_object('host', 80).proxy?).to be_falsey
     end
