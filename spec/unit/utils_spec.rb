@@ -72,9 +72,9 @@ describe RestClient::Utils do
   describe '.encode_query_string' do
     it 'handles simple hashes' do
       {
-        {foo: 123, bar: 456} => 'foo=123&bar=456',
-        {'foo' => 123, 'bar' => 456} => 'foo=123&bar=456',
-        {foo: 'abc', bar: 'one two'} => 'foo=abc&bar=one+two',
+        {foo: 123, bar: 456} => 'bar=456&foo=123',
+        {'foo' => 123, 'bar' => 456} => 'bar=456&foo=123',
+        {foo: 'abc', bar: 'one two'} => 'bar=one+two&foo=abc',
         {escaped: '1+2=3'} => 'escaped=1%2B2%3D3',
         {'escaped + key' => 'foo'} => 'escaped+%2B+key=foo',
       }.each_pair do |input, expected|
@@ -85,8 +85,8 @@ describe RestClient::Utils do
     it 'handles simple arrays' do
       {
         {foo: [1, 2, 3]} => 'foo[]=1&foo[]=2&foo[]=3',
-        {foo: %w{a b c}, bar: [1, 2, 3]} => 'foo[]=a&foo[]=b&foo[]=c&bar[]=1&bar[]=2&bar[]=3',
-        {foo: ['one two', 3]} => 'foo[]=one+two&foo[]=3',
+        {foo: %w{a b c}, bar: [1, 2, 3]} => 'bar[]=1&bar[]=2&bar[]=3&foo[]=a&foo[]=b&foo[]=c',
+        {foo: ['one two', 3]} => 'foo[]=3&foo[]=one+two',
         {'a+b' => [1,2,3]} => 'a%2Bb[]=1&a%2Bb[]=2&a%2Bb[]=3',
       }.each_pair do |input, expected|
         expect(RestClient::Utils.encode_query_string(input)).to eq expected
@@ -95,8 +95,8 @@ describe RestClient::Utils do
 
     it 'handles nested hashes' do
       {
-        {outer: {foo: 123, bar: 456}} => 'outer[foo]=123&outer[bar]=456',
-        {outer: {foo: [1, 2, 3], bar: 'baz'}} => 'outer[foo][]=1&outer[foo][]=2&outer[foo][]=3&outer[bar]=baz',
+        {outer: {foo: 123, bar: 456}} => 'outer[bar]=456&outer[foo]=123',
+        {outer: {foo: [1, 2, 3], bar: 'baz'}} => 'outer[bar]=baz&outer[foo][]=1&outer[foo][]=2&outer[foo][]=3',
       }.each_pair do |input, expected|
         expect(RestClient::Utils.encode_query_string(input)).to eq expected
       end
@@ -105,7 +105,7 @@ describe RestClient::Utils do
     it 'handles null and empty values' do
       {
         {string: '', empty: nil, list: [], hash: {}, falsey: false } =>
-          'string=&empty&list&hash&falsey=false',
+          'empty&falsey=false&hash&list&string=',
       }.each_pair do |input, expected|
         expect(RestClient::Utils.encode_query_string(input)).to eq expected
       end
@@ -113,7 +113,7 @@ describe RestClient::Utils do
 
     it 'handles nested nulls' do
       {
-        {foo: {string: '', empty: nil}} => 'foo[string]=&foo[empty]',
+        {foo: {string: '', empty: nil}} => 'foo[empty]&foo[string]=',
       }.each_pair do |input, expected|
         expect(RestClient::Utils.encode_query_string(input)).to eq expected
       end
@@ -121,7 +121,7 @@ describe RestClient::Utils do
 
     it 'handles deep nesting' do
       {
-        {coords: [{x: 1, y: 0}, {x: 2}, {x: 3}]} => 'coords[][x]=1&coords[][y]=0&coords[][x]=2&coords[][x]=3',
+        {coords: [{x: 1, y: 0}, {x: 2}, {x: 3}]} => 'coords[][x]=1&coords[][x]=2&coords[][x]=3&coords[][y]=0',
       }.each_pair do |input, expected|
         expect(RestClient::Utils.encode_query_string(input)).to eq expected
       end
