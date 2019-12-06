@@ -1209,7 +1209,7 @@ describe RestClient::Request, :include_helpers do
 
       expect(@request.process_url_params('https://example.com/path',
                                   params: {foo: 'one two', bar: 'three + four == seven'})).
-        to eq 'https://example.com/path?foo=one+two&bar=three+%2B+four+%3D%3D+seven'
+        to eq 'https://example.com/path?bar=three+%2B+four+%3D%3D+seven&foo=one+two'
     end
 
     it 'should combine with & when URL params already exist' do
@@ -1224,9 +1224,9 @@ describe RestClient::Request, :include_helpers do
         falsy: false,
         math: '2+2=4',
         nested: {'key + escaped' => 'value + escaped', other: [], arr: [1,2]},
-      })).to eq 'https://example.com/?foo[]=1&foo[]=2&foo[]=3&null&falsy=false&math=2%2B2%3D4' \
-                   '&nested[key+%2B+escaped]=value+%2B+escaped&nested[other]' \
-                   '&nested[arr][]=1&nested[arr][]=2'
+      })).to eq 'https://example.com/?falsy=false&foo[]=1&foo[]=2&foo[]=3&math=2%2B2%3D4' \
+                   '&nested[arr][]=1&nested[arr][]=2' \
+                   '&nested[key+%2B+escaped]=value+%2B+escaped&nested[other]&null'
     end
 
     it 'should handle ParamsArray objects' do

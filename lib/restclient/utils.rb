@@ -204,7 +204,7 @@ module RestClient
     #   => 'foo[a]=1&foo[a]=2'
     #
     def self.encode_query_string(object)
-      flatten_params(object, true).map {|k, v| v.nil? ? k : "#{k}=#{v}" }.join('&')
+      flatten_params(object, true).sort.map {|k, v| v.nil? ? k : "#{k}=#{v}" }.join('&')
     end
 
     # Transform deeply nested param containers into a flat array of [key,
