@@ -8,7 +8,7 @@
 # TODO
 # Offense count: 1
 # Cop supports --auto-correct.
-Lint/StringConversionInInterpolation:
+Lint/RedundantStringCoercion:
   Enabled: false
 
 # Tests only
@@ -21,7 +21,7 @@ Security/Eval:
   Exclude:
   - rest-client.windows.gemspec
 
-Lint/HandleExceptions:
+Lint/SuppressedException:
   Exclude:
   - lib/restclient/utils.rb
 
@@ -184,7 +184,7 @@ Style/HashSyntax:
 Style/IfUnlessModifier:
   Enabled: false
 
-Layout/IndentFirstHashElement:
+Layout/FirstHashElementIndentation:
   Exclude:
     - 'spec/**/*.rb'
 
@@ -199,7 +199,7 @@ Style/Lambda:
 Layout/LeadingCommentSpace:
   Enabled: false
 
-Metrics/LineLength:
+Layout/LineLength:
   Exclude:
     - 'spec/**/*.rb'
     - 'Rakefile'
@@ -364,7 +364,7 @@ Style/UnlessElse:
 # TODO?
 # Offense count: 6
 # Cop supports --auto-correct.
-Style/UnneededPercentQ:
+Style/RedundantPercentQ:
   Enabled: false
 
 # Offense count: 5
