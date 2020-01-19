@@ -54,7 +54,7 @@ module RestClient
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :max_retries
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -102,6 +102,14 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
+
+      if args[:max_retries]
+        begin
+          @max_retries = Integer(args[:max_retries] || 1)
+        rescue ArgumentError
+          raise ArgumentError, 'max_retries should be non-negative integer number'
+        end
+      end
 
       @stream_log_percent = args[:stream_log_percent] || 10
       if @stream_log_percent <= 0 || @stream_log_percent > 100
@@ -661,6 +669,8 @@ module RestClient
       net.use_ssl = uri.is_a?(URI::HTTPS)
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
+
+      net.max_retries = max_retries
 
       net.verify_mode = verify_ssl
 

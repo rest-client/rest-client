@@ -20,6 +20,9 @@ describe RestClient::Request, :include_helpers do
     allow(@net).to receive(:verify_callback=)
     allow(@net).to receive(:ciphers=)
     allow(@net).to receive(:cert_store=)
+    allow(@net).to receive(:max_retries=)
+    allow(@net).to receive(:max_retries)
+
     RestClient.log = nil
   end
 
@@ -74,6 +77,48 @@ describe RestClient::Request, :include_helpers do
       expect {
         RestClient::Request.new(method: :get, url: 'http://::')
       }.to raise_error(URI::InvalidURIError)
+    end
+  end
+
+  describe 'max_retries' do
+    let(:request) do
+      RestClient::Request.new(
+        :method => :put,
+        :url => 'http://some/resource',
+        :payload => 'payload',
+        :max_retries => max_retries
+      )
+    end
+
+    let(:max_retries) { 1 }
+
+    before do
+      allow(@http).to receive(:request)
+      allow(request).to receive(:process_result)
+    end
+
+    it "must be raise error if max_retries not integer value" do
+      expect {
+        RestClient::Request.new(method: :get, url: 'http://example.com/resource', max_retries: 'zero')
+      }.to raise_error(ArgumentError, 'max_retries should be non-negative integer number')
+    end
+
+    context 'when value is string like integer' do
+      let(:max_retries) { '5' }
+
+      it 'must be set value' do
+        expect(@net).to receive(:max_retries=).with(max_retries.to_i)
+        request.execute
+      end
+    end
+
+    context 'when value is integer' do
+      let(:max_retries) { 5 }
+
+      it 'must be set value' do
+        expect(@net).to receive(:max_retries=).with(max_retries)
+        request.execute
+      end
     end
   end
 
