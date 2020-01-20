@@ -104,6 +104,10 @@ module RestClient
       @raw_response = args[:raw_response] || false
 
       if args[:max_retries]
+        if ruby_version(RUBY_VERSION) < ruby_version('2.5')
+          raise ArgumentError, 'max_retries support from ruby 2.5 version'
+        end
+
         begin
           @max_retries = Integer(args[:max_retries] || 1)
         rescue ArgumentError
@@ -670,7 +674,7 @@ module RestClient
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
 
-      net.max_retries = max_retries
+      net.max_retries = max_retries if ruby_version(RUBY_VERSION) >= ruby_version('2.5')
 
       net.verify_mode = verify_ssl
 
@@ -885,6 +889,10 @@ module RestClient
       else
         types.first.content_type
       end
+    end
+
+    def ruby_version(version)
+      Gem::Version.new(version)
     end
   end
 end

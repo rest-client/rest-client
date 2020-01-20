@@ -97,6 +97,14 @@ describe RestClient::Request, :include_helpers do
       allow(request).to receive(:process_result)
     end
 
+    it 'must raise error if ruby version < 2.5' do
+      stub_const('RUBY_VERSION', '2.4')
+
+      expect {
+        RestClient::Request.new(method: :get, url: 'http://example.com/resource', max_retries: '1')
+      }.to raise_error(ArgumentError, 'max_retries support from ruby 2.5 version')
+    end
+
     it "must be raise error if max_retries not integer value" do
       expect {
         RestClient::Request.new(method: :get, url: 'http://example.com/resource', max_retries: 'zero')
