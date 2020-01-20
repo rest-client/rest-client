@@ -674,7 +674,7 @@ module RestClient
       net.ssl_version = ssl_version if ssl_version
       net.ciphers = ssl_ciphers if ssl_ciphers
 
-      net.max_retries = max_retries if ruby_version(RUBY_VERSION) >= ruby_version('2.5')
+      net.max_retries = max_retries || 1 if ruby_version(RUBY_VERSION) >= ruby_version('2.5')
 
       net.verify_mode = verify_ssl
 
