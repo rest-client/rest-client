@@ -102,7 +102,7 @@ describe RestClient::Request, :include_helpers do
 
       expect {
         RestClient::Request.new(method: :get, url: 'http://example.com/resource', max_retries: '1')
-      }.to raise_error(ArgumentError, 'max_retries support from ruby 2.5 version')
+      }.to output("max_retries support from ruby 2.5 version\n").to_stderr
     end
 
     it "must be raise error if max_retries not integer value" do

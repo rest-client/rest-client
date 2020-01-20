@@ -105,7 +105,7 @@ module RestClient
 
       if args[:max_retries]
         if ruby_version(RUBY_VERSION) < ruby_version('2.5')
-          raise ArgumentError, 'max_retries support from ruby 2.5 version'
+          warn('max_retries support from ruby 2.5 version')
         end
 
         begin
