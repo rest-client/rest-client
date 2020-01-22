@@ -111,21 +111,46 @@ describe RestClient::Request, :include_helpers do
       }.to raise_error(ArgumentError, 'max_retries should be non-negative integer number')
     end
 
-    context 'when value is string like integer' do
-      let(:max_retries) { '5' }
+    context 'when ruby version less then 2.5' do
+      before { stub_const('RUBY_VERSION', '2.4') }
 
-      it 'must be set value' do
-        expect(@net).to receive(:max_retries=).with(max_retries.to_i)
-        request.execute
+      context 'when value is string like integer' do
+        let(:max_retries) { '5' }
+
+        it 'must be set value if ruby version equal or more then 2.5' do
+          expect(@net).to_not receive(:max_retries=)
+          request.execute
+        end
+      end
+
+      context 'when value is integer' do
+        let(:max_retries) { 5 }
+
+        it 'must be set value if ruby version equal or more then 2.5' do
+          expect(@net).to_not receive(:max_retries=)
+          request.execute
+        end
       end
     end
+    context 'when ruby version equal or more then 2.5' do
+      before { stub_const('RUBY_VERSION', '2.6') }
 
-    context 'when value is integer' do
-      let(:max_retries) { 5 }
+      context 'when value is string like integer' do
+        let(:max_retries) { '5' }
 
-      it 'must be set value' do
-        expect(@net).to receive(:max_retries=).with(max_retries)
-        request.execute
+        it 'must be set value if ruby version equal or more then 2.5' do
+          expect(@net).to receive(:max_retries=).with(max_retries.to_i)
+          request.execute
+        end
+      end
+
+      context 'when value is integer' do
+        let(:max_retries) { 5 }
+
+        it 'must be set value if ruby version equal or more then 2.5' do
+          expect(@net).to receive(:max_retries=).with(max_retries)
+          request.execute
+        end
       end
     end
   end
