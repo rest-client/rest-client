@@ -275,6 +275,10 @@ a list of each response received in a redirection chain.
 
 To disable automatic redirection, set `:max_redirects => 0`.
 
+#### Manually max retries option
+
+Ruby Net::HTTP by default use max_retries by 1, sometimes need disable retries or to set more, set `:max_retries => 0`
+
 __New in 2.0:__ Prior versions of rest-client would raise
 `RestClient::MaxRedirectsReached`, with no easy way to access the server's
 response. In 2.0, rest-client raises the normal
