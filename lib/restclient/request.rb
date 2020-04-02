@@ -102,6 +102,7 @@ module RestClient
       end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
+      @raw_response_extension = args[:raw_response_extension]
 
       @stream_log_percent = args[:stream_log_percent] || 10
       if @stream_log_percent <= 0 || @stream_log_percent > 100
@@ -789,7 +790,7 @@ module RestClient
       # Taken from Chef, which as in turn...
       # Stolen from http://www.ruby-forum.com/topic/166423
       # Kudos to _why!
-      tf = Tempfile.new('rest-client.')
+      tf = Tempfile.new(['rest-client.', @raw_response_extension].compact)
       tf.binmode
 
       size = 0
