@@ -1,4 +1,5 @@
 require_relative './_lib'
+require 'securerandom'
 
 describe RestClient::Request, :include_helpers do
   before do
@@ -1150,12 +1151,33 @@ describe RestClient::Request, :include_helpers do
       expect(tempfile).to receive(:binmode)
       allow(tempfile).to receive(:open)
       allow(tempfile).to receive(:close)
-      expect(Tempfile).to receive(:new).with("rest-client.").and_return(tempfile)
+      expect(Tempfile).to receive(:new).with(%w[rest-client.]).and_return(tempfile)
 
       net_http_res = Net::HTTPOK.new(nil, "200", "body")
       allow(net_http_res).to receive(:read_body).and_return("body")
       received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res)
       expect(received_tempfile).to eq tempfile
+    end
+
+    it 'should give the tempfile an extension if raw_response_extension is provided' do
+      @request = RestClient::Request.new(
+        method: :get,
+        url: 'example.com',
+        raw_response: true,
+        raw_response_extension: '.pdf'
+      )
+
+      tempfile = double("tempfile")
+      expect(tempfile).to receive(:binmode)
+      allow(tempfile).to receive(:open)
+      allow(tempfile).to receive(:close)
+      allow(tempfile).to receive(:path).and_return("/tmp/rest-client.#{SecureRandom.hex(10)}.pdf")
+      expect(Tempfile).to receive(:new).with(%w[rest-client. .pdf]).and_return(tempfile)
+
+      net_http_res = Net::HTTPOK.new(nil, "200", "body")
+      allow(net_http_res).to receive(:read_body).and_return("body")
+      received_tempfile = @request.send(:fetch_body_to_tempfile, net_http_res)
+      expect(received_tempfile.path).to match(/\A(\/tmp\/rest-client\.).+(\.pdf)\z/)
     end
   end
 
