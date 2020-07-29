@@ -553,19 +553,6 @@ module RestClient
       end
     end
 
-    def log_response res
-      return unless RestClient.log
-
-      size = if @raw_response
-               File.size(@tf.path)
-             else
-               res.body.nil? ? 0 : res.body.size
-             end
-
-      RestClient.log << "# => #{res.code} #{res.class.to_s.gsub(/^Net::HTTP/, '')} | #{(res['Content-type'] || '').gsub(/;.*$/, '')} #{size} bytes\n"
->>>>>>> 224e59d... Modify log request so that it honors log formatters.
-    end
-
     # Return a hash of headers whose keys are capitalized strings
     #
     # BUG: stringify_headers does not fix the capitalization of headers that
