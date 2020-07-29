@@ -546,10 +546,10 @@ module RestClient
       out << payload.short_inspect if payload
       out << processed_headers.to_a.sort.map { |(k, v)| [k.inspect, v.inspect].join("=>") }.join(", ")
 
-      if RestClient.log.respond_to?(:add)
-        RestClient.log.add(RestClient.log.level, out.join(', ') + "\n")
+      if log.respond_to?(:add)
+        log.add(log.level, out.join(', ') + "\n")
       else
-        RestClient.log << out.join(', ') + "\n"
+        log << out.join(', ') + "\n"
       end
     end
 
