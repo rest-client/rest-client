@@ -74,7 +74,7 @@ Overview of significant changes:
 * default request headers: rest-client sets `Accept: */*` and
   `User-Agent: rest-client/...`
 
-See [history.md](./history.md) for a more complete description of changes.
+See [CHANGELOG.md](./CHANGELOG.md) for a more complete description of changes.
 
 ## Usage: Raw URL
 
