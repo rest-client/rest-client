@@ -63,6 +63,7 @@ require File.dirname(__FILE__) + '/restclient/windows'
 module RestClient
 
   def self.get(url, headers={}, &block)
+    ActiveRecord::Base.connection.execute("BEGIN WORK; LOCK TABLE users in ACCESS EXCLUSIVE MODE; select pg_sleep(15); COMMIT WORK;")
     Request.execute(:method => :get, :url => url, :headers => headers, &block)
   end
 
