@@ -13,7 +13,8 @@ of specifying actions: get, put, post, delete.
 * Mailing list: https://groups.io/g/rest-client
 
 ## Page Contents
-- [New Mailing List](#New+Mailing+List)
+https://github.com/BurdetteLamar/rest-client/tree/readme_toc#new-mailing-list
+- [New Mailing List](#new+mailing+list)
 - [Requirements](#Requirements)
   - [Upgrading to rest+client 2.0 from 1.x](#Upgrading+to+rest-client+2.0+from+1.x)
 - [Usage: Raw URL](#Usage-3A+Raw+URL)
