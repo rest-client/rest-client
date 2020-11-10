@@ -1,4 +1,4 @@
-# REST Client -- simple DSL for accessing HTTP and REST resources
+# REST Client: Simple DSL for Accessing HTTP and REST Resources
 
 [![Gem Downloads](https://img.shields.io/gem/dt/rest-client.svg)](https://rubygems.org/gems/rest-client)
 [![Build Status](https://travis-ci.org/rest-client/rest-client.svg?branch=master)](https://travis-ci.org/rest-client/rest-client)
@@ -12,7 +12,43 @@ of specifying actions: get, put, post, delete.
 * Main page: https://github.com/rest-client/rest-client
 * Mailing list: https://groups.io/g/rest-client
 
-### New mailing list
+## Page Contents
+- [New Mailing List](#new-mailing-list)
+- [Requirements](#requirements)
+  - [Upgrading to rest-client 2.0 from 1.x](#upgrading-to-rest-client-20-from-1x)
+- [Usage: Raw URL](#usage-raw-url)
+- [Passing Advanced Options](#passing-advanced-options)
+- [Multipart](#multipart)
+- [Usage: ActiveResource-Style](#usage-activeresource-style)
+- [Usage: Resource Nesting](#usage-resource-nesting)
+- [Exceptions](#exceptions)
+  - [Other Exceptions](#other-exceptions)
+  - [Redirection](#redirection)
+    - [Manually Following Redirection](#manually-following-redirection)
+- [Result Handling](#result-handling)
+  - [Response Callbacks and Error Handling](#response-callbacks-and-error-handling)
+- [Non-Normalized URIs](#non-normalized-uris)
+- [Lower-Level Access](#lower-level-access)
+  - [Streaming Request Payload](#streaming-request-payload)
+  - [Streaming Responses](#streaming-responses)
+    - [Raw Response Saved to Tempfile](#raw-response-saved-to-tempfile)
+    - [Raw Response Passed to Block](#raw-response-passed-to-block)
+- [Shell](#Shell)
+- [Logging](#Logging)
+- [Proxy](#Proxy)
+- [Query Parameters](#query-parameters)
+- [Headers](#headers)
+- [Timeouts](#timeouts)
+- [Cookies](#cookies)
+  - [Full Cookie Jar Support (New in 1.8)](#full-cookie-jar-support-new-in-18)
+- [SSL/TLS Support](#ssltls-support)
+  - [SSL Client Certificates](#ssl-client-certificates)
+- [Hooks](#hooks)
+- [More](#more)
+- [Credits](#credits)
+- [Legal](#legal)
+
+## New Mailing List
 
 We have a new email list for announcements, hosted by Groups.io.
 
@@ -132,7 +168,7 @@ RestClient.post( url,
     }
   })
 ```
-## Passing advanced options
+## Passing Advanced Options
 
 The top level helper methods like RestClient.get accept a headers hash as
 their last argument and don't allow passing more complex options. But these
@@ -206,7 +242,9 @@ site['posts/1/comments'].post 'Good article.', :content_type => 'text/plain'
 ```
 See `RestClient::Resource` docs for details.
 
-## Exceptions (see http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html)
+## Exceptions
+
+See [Status Code Definitions](http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).
 
 - for result codes between `200` and `207`, a `RestClient::Response` will be returned
 - for result codes `301`, `302` or `307`, the redirection will be followed if the request is a `GET` or a `HEAD`
@@ -226,7 +264,7 @@ Exception: RestClient::NotFound: 404 Not Found
 => <RestClient::Response 404 "<!doctype h...">
 ```
 
-### Other exceptions
+### Other Exceptions
 
 While most exceptions have been collected under `RestClient::RequestFailed` aka
 `RestClient::ExceptionWithResponse`, there are a few quirky exceptions that
@@ -271,7 +309,7 @@ a list of each response received in a redirection chain.
 => ["http://httpbin.org/redirect/2", "http://httpbin.org/relative-redirect/1"]
 ```
 
-#### Manually following redirection
+#### Manually Following Redirection
 
 To disable automatic redirection, set `:max_redirects => 0`.
 
@@ -309,7 +347,7 @@ RestClient::Found: 302 Found
 => RestClient::Response 200 "{\n  "args":..."
 ```
 
-## Result handling
+## Result Handling
 
 The result of a `RestClient::Request` is a `RestClient::Response` object.
 
@@ -340,7 +378,7 @@ end
 ➔ <RestClient::Response 404 "<!doctype h...">
 ```
 
-### Response callbacks, error handling
+### Response Callbacks and Error Handling
 
 A block can be passed to the RestClient method. This block will then be called with the Response.
 Response.return! can be called to invoke the default response's behavior.
@@ -426,7 +464,7 @@ rescue RestClient::ExceptionWithResponse => err
 end
 ```
 
-## Non-normalized URIs
+## Non-Normalized URIs
 
 If you need to normalize URIs, e.g. to work with International Resource Identifiers (IRIs),
 use the Addressable gem (https://github.com/sporkmonger/addressable/) in your code:
@@ -436,7 +474,7 @@ use the Addressable gem (https://github.com/sporkmonger/addressable/) in your co
   RestClient.get(Addressable::URI.parse("http://www.詹姆斯.com/").normalize.to_str)
 ```
 
-## Lower-level access
+## Lower-Level Access
 
 For cases not covered by the general API, you can use the `RestClient::Request` class, which provides a lower-level API.
 
@@ -448,7 +486,7 @@ You can:
 
 See `RestClient::Request`'s documentation for more information.
 
-### Streaming request payload
+### Streaming Request Payload
 
 RestClient will try to stream any file-like payload rather than reading it into
 memory. This happens through `RestClient::Payload::Streamed`, which is
@@ -475,7 +513,7 @@ In Multipart requests, RestClient will also stream file handles passed as Hash
 => ['file_a', 'file_b']
 ```
 
-### Streaming responses
+### Streaming Responses
 
 Normally, when you use `RestClient.get` or the lower level
 `RestClient::Request.execute method: :get` to retrieve data, the entire
@@ -488,7 +526,7 @@ file, it may become *impossible* to load it into memory.
 
 There are two main ways to do this:
 
-#### `raw_response`, saves into Tempfile
+#### Raw Response Saved to Tempfile
 
 If you pass `raw_response: true` to `RestClient::Request.execute`, it will save
 the response body to a temporary file (using `Tempfile`) and return a
@@ -522,7 +560,7 @@ raw.file.path
 => "4375b73e3a1aa305a36320ffd7484682922262b3"
 ```
 
-#### `block_response`, receives raw Net::HTTPResponse
+#### Raw Response Passed to Block
 
 If you want to stream the data from the response to a file as it comes, rather
 than entirely in memory, you can also pass `RestClient::Request.execute` a
@@ -673,7 +711,7 @@ RestClient::Request.execute(method: :get, url: 'http://example.com', proxy: nil)
 # => single request sent without a proxy
 ```
 
-## Query parameters
+## Query Parameters
 
 Rest-client can render a hash as HTTP query parameters for GET/HEAD/DELETE
 requests or as HTTP post data in `x-www-form-urlencoded` format for POST
@@ -825,7 +863,7 @@ response2 = RestClient.post(
 )
 # ...response body
 ```
-### Full cookie jar support (new in 1.8)
+### Full Cookie Jar Support (New in 1.8)
 
 The original cookie implementation was very naive and ignored most of the
 cookie RFC standards.
@@ -834,7 +872,7 @@ __New in 1.8__:  An HTTP::CookieJar of cookies
 Response objects now carry a cookie_jar method that exposes an HTTP::CookieJar
 of cookies, which supports full standards compliant behavior.
 
-## SSL/TLS support
+## SSL/TLS Support
 
 Various options are supported for configuring rest-client's TLS settings. By
 default, rest-client will verify certificates using the system's CA store on
@@ -855,7 +893,7 @@ RestClient::Resource.new(
 ```
 Self-signed certificates can be generated with the openssl command-line tool.
 
-## Hook
+## Hooks
 
 RestClient.add_before_execution_proc add a Proc to be called before each execution.
 It's handy if you need direct access to the HTTP request.
