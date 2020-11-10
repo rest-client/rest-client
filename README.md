@@ -15,7 +15,7 @@ of specifying actions: get, put, post, delete.
 ## Page Contents
 - [New Mailing List](#new-mailing-list)
 - [Requirements](#requirements)
-  - [Upgrading to rest+client 2.0 from 1.x](#upgrading-to-rest-client-2.0-from-1.x)
+  - [Upgrading to rest+client 2.0 from 1.x](#upgrading-to-rest-client-20-from-1x)
 - [Usage: Raw URL](#Usage-3A+Raw+URL)
 - [Passing Advanced Options](#Passing+Advanced+Options)
 - [Multipart](#Multipart)
