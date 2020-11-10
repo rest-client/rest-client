@@ -244,7 +244,7 @@ See `RestClient::Resource` docs for details.
 
 ## Exceptions
 
-See {Status Code Definitions}[http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html].
+See [Status Code Definitions}[http://www.w3.org/Protocols/rfc2616/rfc2616-sec10.html).
 
 - for result codes between `200` and `207`, a `RestClient::Response` will be returned
 - for result codes `301`, `302` or `307`, the redirection will be followed if the request is a `GET` or a `HEAD`
