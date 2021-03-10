@@ -1,0 +1,50 @@
+---
+name: CI
+
+on:
+  - push
+  - pull_request
+
+jobs:
+  rspec:
+    runs-on: ubuntu-20.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ruby:
+          - '3.0'
+          - '2.7'
+          - '2.6'
+          - '2.5'
+          - '2.4'
+          - '2.3'
+          - head
+          - jruby
+          - jruby-head
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v2
+
+      - name: Setup Ruby
+        uses: ruby/setup-ruby@v1
+        with:
+          ruby-version: ${{ matrix.ruby }}
+
+      - name: Setup Ruby cache
+        uses: actions/cache@v2
+        with:
+          path: vendor/bundle
+          key: ${{ runner.os }}-gems-${{ matrix.ruby }}-${{ hashFiles('**/Gemfile.lock') }}
+          restore-keys: |
+            ${{ runner.os }}-gems-${{ matrix.ruby }}-
+
+      - name: Bundle
+        run: |
+          gem install bundler
+          bundle config path vendor/bundle
+          bundle install --jobs 4 --retry 3
+
+      - name: RSpec
+        run: |
+          bundle exec rake test
