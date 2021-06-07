@@ -38,9 +38,9 @@ module RestClient
   #   (including nil) will override RestClient.proxy.
   # * :verify_ssl enable ssl verification, possible values are constants from
   #     OpenSSL::SSL::VERIFY_*, defaults to OpenSSL::SSL::VERIFY_PEER
-  # * :read_timeout and :open_timeout are how long to wait for a response and
+  # * :read_timeout, :open_timeout and :write_timeout are how long to wait for a response and
   #     to open a connection, in seconds. Pass nil to disable the timeout.
-  # * :timeout can be used to set both timeouts
+  # * :timeout can be used to set: read_timeout, open_timeout and write_timeout
   # * :ssl_client_cert, :ssl_client_key, :ssl_ca_file, :ssl_ca_path,
   #     :ssl_cert_store, :ssl_verify_callback, :ssl_verify_callback_warnings
   # * :ssl_version specifies the SSL version for the underlying Net::HTTP connection
@@ -53,8 +53,8 @@ module RestClient
 
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
-                :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :open_timeout, :write_timeout, :raw_response,
+                :processed_headers, :args, :ssl_opts
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -93,6 +93,7 @@ module RestClient
       if args.include?(:timeout)
         @read_timeout = args[:timeout]
         @open_timeout = args[:timeout]
+        @write_timeout = args[:timeout]
       end
       if args.include?(:read_timeout)
         @read_timeout = args[:read_timeout]
@@ -100,6 +101,10 @@ module RestClient
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
       end
+      if args.include?(:write_timeout)
+        @write_timeout = args[:write_timeout]
+      end
+
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
 
@@ -711,6 +716,14 @@ module RestClient
         net.open_timeout = @open_timeout
       end
 
+      if defined?(@write_timeout) && net.respond_to?(:write_timeout=)
+        if @write_timeout == -1
+          warn 'Deprecated: to disable timeouts, please use nil instead of -1'
+          @write_timeout = nil
+        end
+        net.write_timeout = @write_timeout
+      end
+
       RestClient.before_execution_procs.each do |before_proc|
         before_proc.call(req, args)
       end
@@ -749,6 +762,8 @@ module RestClient
       raise RestClient::Exceptions::OpenTimeout.new(nil, err)
     rescue Net::ReadTimeout => err
       raise RestClient::Exceptions::ReadTimeout.new(nil, err)
+    rescue Net::WriteTimeout => err
+      raise RestClient::Exceptions::WriteTimeout.new(nil, err)
     rescue Timeout::Error, Errno::ETIMEDOUT => err
       # handling for non-Net::HTTP timeouts
       if established_connection

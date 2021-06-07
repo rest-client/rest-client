@@ -222,6 +222,14 @@ module RestClient
         'Timed out reading data from server'
       end
     end
+
+    # Timeout when writting to a server. Typically wraps Net::WriteTimeout (in
+    # ruby 2.6 or greater).
+    class WriteTimeout < Timeout
+      def default_message
+        'Timed out writting data to server'
+      end
+    end
   end
 
 

@@ -794,18 +794,18 @@ RestClient.delete 'http://example.com/resource', {:Authorization => 'Bearer cT0f
 
 By default the timeout for a request is 60 seconds. Timeouts for your request can
 be adjusted by setting the `timeout:` to the number of seconds that you would like
-the request to wait. Setting `timeout:` will override both `read_timeout:` and `open_timeout:`.
+the request to wait. Setting `timeout:` will override `read_timeout:`, `open_timeout:` and `write_timeout:`.
 
 ```ruby
 RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
                             timeout: 120)
 ```
 
-Additionally, you can set `read_timeout:` and `open_timeout:` separately.
+Additionally, you can set `read_timeout:`, `open_timeout:` and `write_timeout:` separately.
 
 ```ruby
 RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
-                            read_timeout: 120, open_timeout: 240)
+                            read_timeout: 120, open_timeout: 240, write_timeout: 480)
 ```
 
 ## Cookies
