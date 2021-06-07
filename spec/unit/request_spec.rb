@@ -484,6 +484,12 @@ describe RestClient::Request, :include_helpers do
     expect { @request.send(:transmit, @uri, 'req', nil) }.to raise_error(RestClient::Exceptions::ReadTimeout)
   end
 
+  it "catches Net::WriteTimeout and raises RestClient's WriteTimeout",
+     :if => defined?(Net::WriteTimeout) do
+    allow(@http).to receive(:request).and_raise(Net::WriteTimeout)
+    expect { @request.send(:transmit, @uri, 'req', nil) }.to raise_error(RestClient::Exceptions::WriteTimeout)
+  end
+
   it "catches Net::OpenTimeout and raises RestClient's OpenTimeout",
      :if => defined?(Net::OpenTimeout) do
     allow(@http).to receive(:request).and_raise(Net::OpenTimeout)
@@ -494,6 +500,12 @@ describe RestClient::Request, :include_helpers do
      :if => defined?(Net::ReadTimeout) do
     allow(@http).to receive(:request).and_raise(Net::ReadTimeout)
     expect { @request.send(:transmit, @uri, 'req', nil) }.to raise_error(RestClient::Exceptions::ReadTimeout, 'Timed out reading data from server')
+  end
+
+  it "uses correct error message for WriteTimeout",
+     :if => defined?(Net::WriteTimeout) do
+    allow(@http).to receive(:request).and_raise(Net::WriteTimeout)
+    expect { @request.send(:transmit, @uri, 'req', nil) }.to raise_error(RestClient::Exceptions::WriteTimeout, 'Timed out writting data to server')
   end
 
   it "uses correct error message for OpenTimeout",
@@ -700,6 +712,7 @@ describe RestClient::Request, :include_helpers do
 
       expect(@net).not_to receive(:read_timeout=)
       expect(@net).not_to receive(:open_timeout=)
+      expect(@net).not_to receive(:write_timeout=)
 
       @request.send(:transmit, @uri, 'req', nil)
     end
@@ -726,6 +739,17 @@ describe RestClient::Request, :include_helpers do
       @request.send(:transmit, @uri, 'req', nil)
     end
 
+    it 'sets write_timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :write_timeout => 123)
+      allow(@http).to receive(:request)
+      allow(@request).to receive(:process_result)
+      allow(@request).to receive(:response_log)
+
+      expect(@net).to receive(:write_timeout=).with(123)
+
+      @request.send(:transmit, @uri, 'req', nil)
+    end
+
     it 'sets both timeouts with :timeout' do
       @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123)
       allow(@http).to receive(:request)
@@ -734,31 +758,34 @@ describe RestClient::Request, :include_helpers do
 
       expect(@net).to receive(:open_timeout=).with(123)
       expect(@net).to receive(:read_timeout=).with(123)
+      expect(@net).to receive(:write_timeout=).with(123)
 
       @request.send(:transmit, @uri, 'req', nil)
     end
 
-    it 'supersedes :timeout with open/read_timeout' do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34, :read_timeout => 56)
+    it 'supersedes :timeout with open/read_timeout/write_timeout' do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :timeout => 123, :open_timeout => 34, :read_timeout => 56, :write_timeout => 78)
       allow(@http).to receive(:request)
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
       expect(@net).to receive(:open_timeout=).with(34)
       expect(@net).to receive(:read_timeout=).with(56)
+      expect(@net).to receive(:write_timeout=).with(78)
 
       @request.send(:transmit, @uri, 'req', nil)
     end
 
 
     it "disable timeout by setting it to nil" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => nil, :open_timeout => nil)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => nil, :open_timeout => nil, :write_timeout => nil)
       allow(@http).to receive(:request)
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
 
       expect(@net).to receive(:read_timeout=).with(nil)
       expect(@net).to receive(:open_timeout=).with(nil)
+      expect(@net).to receive(:write_timeout=).with(nil)
 
       @request.send(:transmit, @uri, 'req', nil)
     end
@@ -777,7 +804,7 @@ describe RestClient::Request, :include_helpers do
     end
 
     it "deprecated: disable timeout by setting it to -1" do
-      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1, :open_timeout => -1)
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :read_timeout => -1, :open_timeout => -1, :write_timeout => -1)
       allow(@http).to receive(:request)
       allow(@request).to receive(:process_result)
       allow(@request).to receive(:response_log)
@@ -787,6 +814,9 @@ describe RestClient::Request, :include_helpers do
 
       expect(@request).to receive(:warn)
       expect(@net).to receive(:open_timeout=).with(nil)
+
+      expect(@request).to receive(:warn)
+      expect(@net).to receive(:write_timeout=).with(nil)
 
       @request.send(:transmit, @uri, 'req', nil)
     end
