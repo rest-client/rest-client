@@ -20,6 +20,9 @@ describe RestClient::Request, :include_helpers do
     allow(@net).to receive(:verify_callback=)
     allow(@net).to receive(:ciphers=)
     allow(@net).to receive(:cert_store=)
+  end
+
+  after do
     RestClient.log = nil
   end
 
