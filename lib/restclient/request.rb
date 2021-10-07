@@ -100,6 +100,9 @@ module RestClient
       if args.include?(:open_timeout)
         @open_timeout = args[:open_timeout]
       end
+      if args.include?(:max_retries)
+        @max_retries = args[:max_retries]
+      end
       @block_response = args[:block_response]
       @raw_response = args[:raw_response] || false
 
@@ -709,6 +712,9 @@ module RestClient
           @open_timeout = nil
         end
         net.open_timeout = @open_timeout
+      end
+      if defined? @max_retries
+        net.max_retries = @max_retries
       end
 
       RestClient.before_execution_procs.each do |before_proc|

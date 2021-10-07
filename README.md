@@ -808,6 +808,14 @@ RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
                             read_timeout: 120, open_timeout: 240)
 ```
 
+The underlying `Net::HTTP` library will by default retry HEAD and GET requests once.
+You can adjust this by specifying `max_retries`, where a value of zero means "no retry".
+
+```ruby
+RestClient::Request.execute(method: :get, url: 'http://example.com/resource',
+                            max_retries: 0)
+```
+
 ## Cookies
 
 Request and Response objects know about HTTP cookies, and will automatically

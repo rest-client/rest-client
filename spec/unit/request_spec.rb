@@ -790,6 +790,17 @@ describe RestClient::Request, :include_helpers do
 
       @request.send(:transmit, @uri, 'req', nil)
     end
+
+    it "sets max_retries" do
+      @request = RestClient::Request.new(:method => :put, :url => 'http://some/resource', :payload => 'payload', :max_retries => 0)
+      allow(@http).to receive(:request)
+      allow(@request).to receive(:process_result)
+      allow(@request).to receive(:response_log)
+
+      expect(@net).to receive(:max_retries=).with(0)
+
+      @request.send(:transmit, @uri, 'req', nil)
+    end
   end
 
   describe "ssl" do
