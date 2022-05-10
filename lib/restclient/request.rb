@@ -54,7 +54,7 @@ module RestClient
     attr_reader :method, :uri, :url, :headers, :payload, :proxy,
                 :user, :password, :read_timeout, :max_redirects,
                 :open_timeout, :raw_response, :processed_headers, :args,
-                :ssl_opts
+                :ssl_opts, :ipaddr
 
     # An array of previous redirection responses
     attr_accessor :redirection_history
@@ -146,6 +146,10 @@ module RestClient
         if !ssl_ca_file && !ssl_ca_path && !@ssl_opts.include?(:cert_store)
           @ssl_opts[:cert_store] = self.class.default_ssl_cert_store
         end
+      end
+
+      if args.include?(:ipaddr)
+        @ipaddr = args[:ipaddr]
       end
 
       @log = args[:log]
@@ -669,6 +673,8 @@ module RestClient
       net.ca_file = ssl_ca_file if ssl_ca_file
       net.ca_path = ssl_ca_path if ssl_ca_path
       net.cert_store = ssl_cert_store if ssl_cert_store
+
+      net.ipaddr = ipaddr if ipaddr
 
       # We no longer rely on net.verify_callback for the main SSL verification
       # because it's not well supported on all platforms (see comments below).
