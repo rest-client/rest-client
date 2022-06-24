@@ -61,7 +61,7 @@ alias_task(:test, :spec)
 
 ############################
 
-WindowsPlatforms = %w{x86-mingw32 x64-mingw32 x86-mswin32}
+WindowsPlatforms = %w{x86-mingw32 x64-mingw32 x64-mingw-ucrt x86-mswin32}
 
 namespace :all do
 
