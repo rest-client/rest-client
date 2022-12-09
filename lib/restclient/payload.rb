@@ -158,7 +158,7 @@ module RestClient
         last_index = x.length - 1
         x.each_with_index do |a, index|
           k, v = * a
-          if v.respond_to?(:read) && v.respond_to?(:path)
+          if v.respond_to?(:read) && (v.respond_to?(:original_filename) || v.respond_to?(:path))
             create_file_field(@stream, k, v)
           else
             create_regular_field(@stream, k, v)
@@ -180,10 +180,11 @@ module RestClient
 
       def create_file_field(s, k, v)
         begin
+          filename = v.respond_to?(:original_filename) = v.original_filename : File.basename(v.path)
           s.write("Content-Disposition: form-data;")
           s.write(" name=\"#{k}\";") unless (k.nil? || k=='')
-          s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
-          s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
+          s.write(" filename=\"#{filename}\"#{EOL}")
+          s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(filename)}#{EOL}")
           s.write(EOL)
           while (data = v.read(8124))
             s.write(data)
