@@ -85,7 +85,7 @@ describe RestClient::Resource do
     expect(parent['posts'].block).to eq block
   end
 
-  it "the block should be overrideable" do
+  it "the block should be overridable" do
     block1 = proc {|r| r}
     block2 = proc {|r| }
     parent = RestClient::Resource.new('http://example.com', &block1)
@@ -96,7 +96,7 @@ describe RestClient::Resource do
 
   # Test fails on jruby 9.1.[0-5].* due to
   # https://github.com/jruby/jruby/issues/4217
-  it "the block should be overrideable in ruby 1.9 syntax",
+  it "the block should be overridable in ruby 1.9 syntax",
       :unless => (RUBY_ENGINE == 'jruby' && JRUBY_VERSION =~ /\A9\.1\.[0-5]\./) \
   do
     block1 = proc {|r| r}

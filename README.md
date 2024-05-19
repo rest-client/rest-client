@@ -816,7 +816,7 @@ extract and set headers for them as needed:
 ```ruby
 response = RestClient.get 'http://example.com/action_which_sets_session_id'
 response.cookies
-# => {"_applicatioN_session_id" => "1234"}
+# => {"_application_session_id" => "1234"}
 
 response2 = RestClient.post(
   'http://localhost:3000/',

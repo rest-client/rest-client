@@ -115,7 +115,7 @@ describe RestClient::Request do
       expect(parsed['method']).to eq 'GET'
       expect(parsed.fetch('gzipped')).to be true
 
-      # == delate ==
+      # == deflate ==
       raw = execute_httpbin('deflate', method: :get, headers: {accept_encoding: 'gzip, deflate'})
 
       decoded = Zlib::Inflate.new.inflate(raw.body)

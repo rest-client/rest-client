@@ -492,7 +492,7 @@ module RestClient
     # Return a certificate store that can be used to validate certificates with
     # the system certificate authorities. This will probably not do anything on
     # OS X, which monkey patches OpenSSL in terrible ways to insert its own
-    # validation. On most *nix platforms, this will add the system certifcates
+    # validation. On most *nix platforms, this will add the system certificates
     # using OpenSSL::X509::Store#set_default_paths. On Windows, this will use
     # RestClient::Windows::RootCerts to look up the CAs trusted by the system.
     #
