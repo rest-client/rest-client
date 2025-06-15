@@ -2,6 +2,8 @@
 
 require File.expand_path('../lib/restclient/version', __FILE__)
 
+platform = ENV['BUILD_PLATFORM'] || RUBY_PLATFORM
+
 Gem::Specification.new do |s|
   s.name = 'rest-client'
   s.version = RestClient::VERSION
@@ -27,6 +29,13 @@ Gem::Specification.new do |s|
   s.add_dependency('http-cookie', '>= 1.0.2', '< 2.0')
   s.add_dependency('mime-types', '>= 1.16', '< 4.0')
   s.add_dependency('netrc', '~> 0.8')
+
+  case platform
+  when /(mingw32|mswin32)/
+    # ffi is needed for RestClient::Windows::RootCerts
+    s.add_dependency('ffi', '~> 1.9')
+    s.platform = platform
+  end
 
   s.required_ruby_version = '>= 2.0.0'
 end

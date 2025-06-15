@@ -505,7 +505,7 @@ describe RestClient::Request, :include_helpers do
 
   it "class method execute wraps constructor" do
     req = double("rest request")
-    expect(RestClient::Request).to receive(:new).with(1 => 2).and_return(req)
+    expect(RestClient::Request).to receive(:new).with({1 => 2}).and_return(req)
     expect(req).to receive(:execute)
     RestClient::Request.execute(1 => 2)
   end
@@ -1184,12 +1184,22 @@ describe RestClient::Request, :include_helpers do
   end
 
   describe 'constructor' do
-    it 'should reject valid URIs with no hostname' do
-      expect(URI.parse('http:///').hostname).to be_nil
+    if URI::DEFAULT_PARSER == URI::RFC2396_PARSER # generates invalid URI only on old parser
+      it 'should reject valid URIs with no hostname' do
+        expect(URI::RFC2396_PARSER.parse('http:///').hostname).to be_nil
 
-      expect {
-        RestClient::Request.new(method: :get, url: 'http:///')
-      }.to raise_error(URI::InvalidURIError, /\Abad URI/)
+        expect {
+          RestClient::Request.new(method: :get, url: 'http:///')
+        }.to raise_error(URI::InvalidURIError, /\Abad URI/)
+      end
+    else
+      it 'should accept valid URIs with no hostname' do
+        expect(URI.parse('http:///').hostname).to be_empty
+
+        expect {
+          RestClient::Request.new(method: :get, url: 'http:///')
+        }.not_to raise_error
+      end
     end
 
     it 'should reject invalid URIs' do

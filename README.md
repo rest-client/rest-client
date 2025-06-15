@@ -855,6 +855,10 @@ RestClient::Resource.new(
 ```
 Self-signed certificates can be generated with the openssl command-line tool.
 
+### Integration Testing with ISRG Root CA
+
+For SSL-related integration tests, we use the ISRG Root X1 certificate (from Let's Encrypt) located in spec/integration/certs/ and capath_isrgrootx1/. The .0 hash-suffixed file is generated from the PEM using openssl x509 -hash to satisfy OpenSSL's ssl_ca_path lookup mechanism. Certificates are manually fetched and maintained to ensure test stability.
+
 ## Hook
 
 RestClient.add_before_execution_proc add a Proc to be called before each execution.

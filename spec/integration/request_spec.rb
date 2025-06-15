@@ -13,8 +13,8 @@ describe RestClient::Request do
     it "is successful with the correct ca_file" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.org',
-        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "digicert.crt")
+        :url => 'https://valid-isrgrootx1.letsencrypt.org/',
+        :ssl_ca_file => File.join(File.dirname(__FILE__), "certs", "isrgrootx1.pem")
       )
       expect { request.execute }.to_not raise_error
     end
@@ -22,8 +22,8 @@ describe RestClient::Request do
     it "is successful with the correct ca_path" do
       request = RestClient::Request.new(
         :method => :get,
-        :url => 'https://www.mozilla.org',
-        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_digicert")
+        :url => 'https://valid-isrgrootx1.letsencrypt.org/',
+        :ssl_ca_path => File.join(File.dirname(__FILE__), "capath_isrgrootx1")
       )
       expect { request.execute }.to_not raise_error
     end
