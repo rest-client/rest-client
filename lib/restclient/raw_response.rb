@@ -23,7 +23,7 @@ module RestClient
     # @param [Net::HTTPResponse] net_http_res
     # @param [RestClient::Request] request
     # @param [Time] start_time
-    def initialize(tempfile, net_http_res, request, start_time=nil)
+    def initialize(tempfile, net_http_res, request, start_time = nil)
       @file = tempfile
 
       # reopen the tempfile so we can read it

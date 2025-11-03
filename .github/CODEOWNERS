@@ -1,0 +1,4 @@
+# Order is important. The last matching pattern has the most precedence
+
+/                 @chef/chef-infra-reviewers @chef/chef-infra-approvers @chef/chef-infra-owners
+*.md              @chef/docs-team

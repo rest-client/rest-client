@@ -1,5 +1,5 @@
-require 'openssl'
-require 'ffi'
+require "openssl" unless defined?(OpenSSL)
+require "ffi" unless defined?(FFI)
 
 # Adapted from Puppet, Copyright (c) Puppet Labs Inc,
 # licensed under the Apache License, Version 2.0.
@@ -24,13 +24,13 @@ class RestClient::Windows::RootCerts
   # @yieldparam cert [OpenSSL::X509::Certificate] each root certificate
   # @api public
   def each
-    @roots.each {|cert| yield cert}
+    @roots.each { |cert| yield cert }
   end
 
   # Returns a new instance.
   # @return [RestClient::Windows::RootCerts] object constructed from current root certificates
   def self.instance
-    new(self.load_certs)
+    new(load_certs)
   end
 
   # Returns an array of root certificates.
@@ -45,7 +45,7 @@ class RestClient::Windows::RootCerts
     ptr = FFI::Pointer::NULL
     store = CertOpenSystemStoreA(nil, "ROOT")
     begin
-      while (ptr = CertEnumCertificatesInStore(store, ptr)) and not ptr.null?
+      while (ptr = CertEnumCertificatesInStore(store, ptr)) && (not ptr.null?)
         context = CERT_CONTEXT.new(ptr)
         cert_buf = context[:pbCertEncoded].read_bytes(context[:cbCertEncoded])
         begin
@@ -60,8 +60,6 @@ class RestClient::Windows::RootCerts
 
     certs
   end
-
-  private
 
   # typedef ULONG_PTR HCRYPTPROV_LEGACY;
   # typedef void *HCERTSTORE;
@@ -83,7 +81,7 @@ class RestClient::Windows::RootCerts
   #   __in LPCSTR szSubsystemProtocol
   #   );
   ffi_lib :crypt32
-  attach_function :CertOpenSystemStoreA, [:pointer, :string], :handle
+  attach_function :CertOpenSystemStoreA, %i{pointer string}, :handle
 
   # PCCERT_CONTEXT
   # WINAPI
@@ -92,7 +90,7 @@ class RestClient::Windows::RootCerts
   #   __in_opt PCCERT_CONTEXT pPrevCertContext
   #   );
   ffi_lib :crypt32
-  attach_function :CertEnumCertificatesInStore, [:handle, :pointer], :pointer
+  attach_function :CertEnumCertificatesInStore, %i{handle pointer}, :pointer
 
   # BOOL
   # WINAPI
@@ -101,5 +99,5 @@ class RestClient::Windows::RootCerts
   #   __in DWORD dwFlags
   #   );
   ffi_lib :crypt32
-  attach_function :CertCloseStore, [:handle, :dword], :bool
+  attach_function :CertCloseStore, %i{handle dword}, :bool
 end

@@ -1,12 +1,12 @@
-require 'tempfile'
-require 'securerandom'
-require 'stringio'
+require "tempfile" unless defined?(Tempfile)
+require "securerandom" unless defined?(SecureRandom)
+require "stringio" unless defined?(StringIO)
 
 begin
   # Use mime/types/columnar if available, for reduced memory usage
-  require 'mime/types/columnar'
+  require "mime/types/columnar"
 rescue LoadError
-  require 'mime/types'
+  require "mime/types" unless defined?(MIME::Types)
 end
 
 module RestClient
@@ -42,15 +42,16 @@ module RestClient
       unless params.is_a?(Hash)
         raise ArgumentError.new("Must pass Hash, not #{params.inspect}")
       end
+
       _has_file?(params)
     end
 
     def _has_file?(obj)
       case obj
       when Hash, ParamsArray
-        obj.any? {|_, v| _has_file?(v) }
+        obj.any? { |_, v| _has_file?(v) }
       when Array
-        obj.any? {|v| _has_file?(v) }
+        obj.any? { |v| _has_file?(v) }
       else
         obj.respond_to?(:path) && obj.respond_to?(:read)
       end
@@ -77,7 +78,7 @@ module RestClient
       end
 
       def headers
-        {'Content-Length' => size.to_s}
+        { "Content-Length" => size.to_s }
       end
 
       def size
@@ -134,17 +135,17 @@ module RestClient
       end
 
       def headers
-        super.merge({'Content-Type' => 'application/x-www-form-urlencoded'})
+        super.merge({ "Content-Type" => "application/x-www-form-urlencoded" })
       end
     end
 
     class Multipart < Base
-      EOL = "\r\n"
+      EOL = "\r\n".freeze
 
       def build_stream(params)
-        b = '--' + boundary
+        b = "--" + boundary
 
-        @stream = Tempfile.new('rest-client.multipart.')
+        @stream = Tempfile.new("rest-client.multipart.")
         @stream.binmode
         @stream.write(b + EOL)
 
@@ -166,7 +167,7 @@ module RestClient
           @stream.write(EOL + b)
           @stream.write(EOL) unless last_index == index
         end
-        @stream.write('--')
+        @stream.write("--")
         @stream.write(EOL)
         @stream.seek(0)
       end
@@ -179,23 +180,21 @@ module RestClient
       end
 
       def create_file_field(s, k, v)
-        begin
-          s.write("Content-Disposition: form-data;")
-          s.write(" name=\"#{k}\";") unless (k.nil? || k=='')
-          s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
-          s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
-          s.write(EOL)
-          while (data = v.read(8124))
-            s.write(data)
-          end
-        ensure
-          v.close if v.respond_to?(:close)
+        s.write("Content-Disposition: form-data;")
+        s.write(" name=\"#{k}\";") unless k.nil? || k == ""
+        s.write(" filename=\"#{v.respond_to?(:original_filename) ? v.original_filename : File.basename(v.path)}\"#{EOL}")
+        s.write("Content-Type: #{v.respond_to?(:content_type) ? v.content_type : mime_for(v.path)}#{EOL}")
+        s.write(EOL)
+        while (data = v.read(8124))
+          s.write(data)
         end
+      ensure
+        v.close if v.respond_to?(:close)
       end
 
       def mime_for(path)
         mime = MIME::Types.type_for path
-        mime.empty? ? 'text/plain' : mime[0].content_type
+        mime.empty? ? "text/plain" : mime[0].content_type
       end
 
       def boundary
@@ -205,9 +204,9 @@ module RestClient
         # alphanumeric characters, replacing `+` `/` with `A` `B` (included in
         # the list twice) to round out the set of 64.
         s = SecureRandom.base64(12)
-        s.tr!('+/', 'AB')
+        s.tr!("+/", "AB")
 
-        @boundary = '----RubyFormBoundary' + s
+        @boundary = "----RubyFormBoundary" + s
       end
 
       # for Multipart do not escape the keys
@@ -218,12 +217,12 @@ module RestClient
       # Further discussion of multipart encoding:
       # https://github.com/rest-client/rest-client/pull/403#issuecomment-156976930
       #
-      def handle_key key
+      def handle_key(key)
         key
       end
 
       def headers
-        super.merge({'Content-Type' => %Q{multipart/form-data; boundary=#{boundary}}})
+        super.merge({ "Content-Type" => %Q{multipart/form-data; boundary=#{boundary}} })
       end
 
       def close

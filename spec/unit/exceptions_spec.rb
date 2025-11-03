@@ -1,4 +1,4 @@
-require_relative '_lib'
+require_relative "_lib"
 
 describe RestClient::Exception do
   it "returns a 'message' equal to the class name if the message is not set, because 'message' should not be nil" do
@@ -14,7 +14,7 @@ describe RestClient::Exception do
   end
 
   it "sets the exception message to ErrorMessage" do
-    expect(RestClient::ResourceNotFound.new.message).to eq 'Not Found'
+    expect(RestClient::ResourceNotFound.new.message).to eq "Not Found"
   end
 
   it "contains exceptions in RestClient" do
@@ -26,13 +26,13 @@ end
 describe RestClient::ServerBrokeConnection do
   it "should have a default message of 'Server broke connection'" do
     e = RestClient::ServerBrokeConnection.new
-    expect(e.message).to eq 'Server broke connection'
+    expect(e.message).to eq "Server broke connection"
   end
 end
 
 describe RestClient::RequestFailed do
   before do
-    @response = double('HTTP Response', :code => '502')
+    @response = double("HTTP Response", code: "502")
   end
 
   it "stores the http response on the exception" do
@@ -50,7 +50,7 @@ describe RestClient::RequestFailed do
 
   it "http_body convenience method for fetching the body (decoding when necessary)" do
     expect(RestClient::RequestFailed.new(@response).http_code).to eq 502
-    expect(RestClient::RequestFailed.new(@response).message).to eq 'HTTP status code 502'
+    expect(RestClient::RequestFailed.new(@response).message).to eq "HTTP status code 502"
   end
 
   it "shows the status code in the message" do
@@ -68,9 +68,9 @@ describe RestClient::ResourceNotFound do
     end
   end
 
-  it 'stores the body on the response of the exception' do
+  it "stores the body on the response of the exception" do
     body = "body"
-    stub_request(:get, "www.example.com").to_return(:body => body, :status => 404)
+    stub_request(:get, "www.example.com").to_return(body: body, status: 404)
     begin
       RestClient.get "www.example.com"
       raise
@@ -81,22 +81,22 @@ describe RestClient::ResourceNotFound do
 end
 
 describe "backwards compatibility" do
-  it 'aliases RestClient::NotFound as ResourceNotFound' do
+  it "aliases RestClient::NotFound as ResourceNotFound" do
     expect(RestClient::ResourceNotFound).to eq RestClient::NotFound
   end
 
-  it 'aliases old names for HTTP 413, 414, 416' do
+  it "aliases old names for HTTP 413, 414, 416" do
     expect(RestClient::RequestEntityTooLarge).to eq RestClient::PayloadTooLarge
     expect(RestClient::RequestURITooLong).to eq RestClient::URITooLong
     expect(RestClient::RequestedRangeNotSatisfiable).to eq RestClient::RangeNotSatisfiable
   end
 
-  it 'subclasses NotFound from RequestFailed, ExceptionWithResponse' do
+  it "subclasses NotFound from RequestFailed, ExceptionWithResponse" do
     expect(RestClient::NotFound).to be < RestClient::RequestFailed
     expect(RestClient::NotFound).to be < RestClient::ExceptionWithResponse
   end
 
-  it 'subclasses timeout from RestClient::RequestTimeout, RequestFailed, EWR' do
+  it "subclasses timeout from RestClient::RequestTimeout, RequestFailed, EWR" do
     expect(RestClient::Exceptions::OpenTimeout).to be < RestClient::Exceptions::Timeout
     expect(RestClient::Exceptions::ReadTimeout).to be < RestClient::Exceptions::Timeout
 

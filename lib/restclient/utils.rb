@@ -1,4 +1,4 @@
-require 'http/accept'
+require "http/accept"
 
 module RestClient
   # Various utility methods
@@ -27,11 +27,11 @@ module RestClient
       return nil unless type_header
 
       # TODO: remove this hack once we drop support for Ruby 2.0
-      if RUBY_VERSION.start_with?('2.0')
+      if RUBY_VERSION.start_with?("2.0")
         _content_type, params = deprecated_cgi_parse_header(type_header)
 
-        if params.include?('charset')
-          return params.fetch('charset').gsub(/(\A["']*)|(["']*\z)/, '')
+        if params.include?("charset")
+          params.fetch("charset").gsub(/(\A["']*)|(["']*\z)/, "")
         end
 
       else
@@ -39,9 +39,9 @@ module RestClient
         begin
           _content_type, params = cgi_parse_header(type_header)
         rescue HTTP::Accept::ParseError
-          return nil
+          nil
         else
-          params['charset']
+          params["charset"]
         end
       end
     end
@@ -75,13 +75,13 @@ module RestClient
     def self._cgi_parseparam(s)
       return enum_for(__method__, s) unless block_given?
 
-      while s[0] == ';'
+      while s[0] == ";"
         s = s[1..-1]
-        ends = s.index(';')
+        ends = s.index(";")
         while ends && ends > 0 \
               && (s[0...ends].count('"') -
-                  s[0...ends].scan('\"').count) % 2 != 0
-          ends = s.index(';', ends + 1)
+                  s[0...ends].scan('\"').count).odd?
+          ends = s.index(";", ends + 1)
         end
         if ends.nil?
           ends = s.length
@@ -110,19 +110,19 @@ module RestClient
     # @todo remove this method when dropping support for Ruby 2.0
     #
     def self.deprecated_cgi_parse_header(line)
-      parts = _cgi_parseparam(';' + line)
+      parts = _cgi_parseparam(";" + line)
       key = parts.next
       pdict = {}
 
       begin
         while (p = parts.next)
-          i = p.index('=')
+          i = p.index("=")
           if i
             name = p[0...i].strip.downcase
-            value = p[i+1..-1].strip
+            value = p[i + 1..-1].strip
             if value.length >= 2 && value[0] == '"' && value[-1] == '"'
               value = value[1...-1]
-              value = value.gsub('\\\\', '\\').gsub('\\"', '"')
+              value = value.gsub("\\\\", "\\").gsub('\\"', '"')
             end
             pdict[name] = value
           end
@@ -204,7 +204,7 @@ module RestClient
     #   => 'foo[a]=1&foo[a]=2'
     #
     def self.encode_query_string(object)
-      flatten_params(object, true).map {|k, v| v.nil? ? k : "#{k}=#{v}" }.join('&')
+      flatten_params(object, true).map { |k, v| v.nil? ? k : "#{k}=#{v}" }.join("&")
     end
 
     # Transform deeply nested param containers into a flat array of [key,
@@ -222,10 +222,10 @@ module RestClient
     # @param uri_escape [Boolean] Whether to URI escape keys and values
     # @param parent_key [String] Should not be passed (used for recursion)
     #
-    def self.flatten_params(object, uri_escape=false, parent_key=nil)
+    def self.flatten_params(object, uri_escape = false, parent_key = nil)
       unless object.is_a?(Hash) || object.is_a?(ParamsArray) ||
-             (parent_key && object.is_a?(Array))
-        raise ArgumentError.new('expected Hash or ParamsArray, got: ' + object.inspect)
+          (parent_key && object.is_a?(Array))
+        raise ArgumentError.new("expected Hash or ParamsArray, got: " + object.inspect)
       end
 
       # transform empty collections into nil, where possible

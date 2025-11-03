@@ -1,11 +1,13 @@
 source "https://rubygems.org"
 
-if !!File::ALT_SEPARATOR
-  gemspec :name => 'rest-client.windows'
+gemspec name: "rest-client"
+
+if RUBY_PLATFORM =~ /mingw|mswin/
+  gem "fiddle", "= 1.1.0"
 else
-  gemspec :name => 'rest-client'
+  gem "fiddle", "~> 1.1.8"
 end
 
 group :test do
-  gem 'rake'
+  gem "rake"
 end

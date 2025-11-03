@@ -1,8 +1,44 @@
----
-inherit_from:
-- .rubocop-disables.yml
-
 AllCops:
+  TargetRubyVersion: 3.1
+
   Exclude:
-    - 'tmp/*.rb'
+    - 'appveyor.yml'
+    - 'Vagrantfile'
+    - 'scripts/**/*'
     - 'vendor/**/*'
+
+Style/Encoding:
+  Enabled: true
+
+Style/NumericLiterals:
+  Enabled: false
+
+Layout/EndOfLine:
+  Enabled: false
+
+Layout/HeredocIndentation:
+  Enabled: false
+
+Metrics/BlockLength:
+  Max: 200
+
+Layout/LineLength:
+  Max: 120
+
+Metrics/MethodLength:
+  Max: 20
+
+Metrics/ModuleLength:
+  Max: 250
+
+Naming/HeredocDelimiterNaming:
+  Enabled: false
+
+Naming/FileName:
+  Enabled: false
+
+Metrics/ClassLength:
+  Max: 250
+
+Metrics/AbcSize:
+  Max: 26

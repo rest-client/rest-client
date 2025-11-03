@@ -46,8 +46,8 @@ module RestClient
     # @param [Net::HTTPResponse] net_http_res
     # @param [RestClient::Request] request
     # @param [Time] start_time
-    def self.create(body, net_http_res, request, start_time=nil)
-      result = self.new(body || '')
+    def self.create(body, net_http_res, request, start_time = nil)
+      result = new(body || "")
 
       result.response_set_vars(net_http_res, request, start_time)
       fix_encoding(result)
@@ -81,7 +81,7 @@ module RestClient
     def body_truncated(length)
       b = body
       if b.length > length
-        b[0..length] + '...'
+        b[0..length] + "..."
       else
         b
       end

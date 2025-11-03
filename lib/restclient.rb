@@ -1,20 +1,20 @@
-require 'net/http'
-require 'openssl'
-require 'stringio'
-require 'uri'
+require "net/http" unless defined?(Net::HTTP)
+require "openssl" unless defined?(OpenSSL)
+require "stringio" unless defined?(StringIO)
+require "uri" unless defined?(URI)
 
-require File.dirname(__FILE__) + '/restclient/version'
-require File.dirname(__FILE__) + '/restclient/platform'
-require File.dirname(__FILE__) + '/restclient/exceptions'
-require File.dirname(__FILE__) + '/restclient/utils'
-require File.dirname(__FILE__) + '/restclient/request'
-require File.dirname(__FILE__) + '/restclient/abstract_response'
-require File.dirname(__FILE__) + '/restclient/response'
-require File.dirname(__FILE__) + '/restclient/raw_response'
-require File.dirname(__FILE__) + '/restclient/resource'
-require File.dirname(__FILE__) + '/restclient/params_array'
-require File.dirname(__FILE__) + '/restclient/payload'
-require File.dirname(__FILE__) + '/restclient/windows'
+require File.dirname(__FILE__) + "/restclient/version"
+require File.dirname(__FILE__) + "/restclient/platform"
+require File.dirname(__FILE__) + "/restclient/exceptions"
+require File.dirname(__FILE__) + "/restclient/utils"
+require File.dirname(__FILE__) + "/restclient/request"
+require File.dirname(__FILE__) + "/restclient/abstract_response"
+require File.dirname(__FILE__) + "/restclient/response"
+require File.dirname(__FILE__) + "/restclient/raw_response"
+require File.dirname(__FILE__) + "/restclient/resource"
+require File.dirname(__FILE__) + "/restclient/params_array"
+require File.dirname(__FILE__) + "/restclient/payload"
+require File.dirname(__FILE__) + "/restclient/windows"
 
 # This module's static methods are the entry point for using the REST client.
 #
@@ -62,32 +62,32 @@ require File.dirname(__FILE__) + '/restclient/windows'
 #
 module RestClient
 
-  def self.get(url, headers={}, &block)
-    Request.execute(:method => :get, :url => url, :headers => headers, &block)
+  def self.get(url, headers = {}, &block)
+    Request.execute(method: :get, url: url, headers: headers, &block)
   end
 
-  def self.post(url, payload, headers={}, &block)
-    Request.execute(:method => :post, :url => url, :payload => payload, :headers => headers, &block)
+  def self.post(url, payload, headers = {}, &block)
+    Request.execute(method: :post, url: url, payload: payload, headers: headers, &block)
   end
 
-  def self.patch(url, payload, headers={}, &block)
-    Request.execute(:method => :patch, :url => url, :payload => payload, :headers => headers, &block)
+  def self.patch(url, payload, headers = {}, &block)
+    Request.execute(method: :patch, url: url, payload: payload, headers: headers, &block)
   end
 
-  def self.put(url, payload, headers={}, &block)
-    Request.execute(:method => :put, :url => url, :payload => payload, :headers => headers, &block)
+  def self.put(url, payload, headers = {}, &block)
+    Request.execute(method: :put, url: url, payload: payload, headers: headers, &block)
   end
 
-  def self.delete(url, headers={}, &block)
-    Request.execute(:method => :delete, :url => url, :headers => headers, &block)
+  def self.delete(url, headers = {}, &block)
+    Request.execute(method: :delete, url: url, headers: headers, &block)
   end
 
-  def self.head(url, headers={}, &block)
-    Request.execute(:method => :head, :url => url, :headers => headers, &block)
+  def self.head(url, headers = {}, &block)
+    Request.execute(method: :head, url: url, headers: headers, &block)
   end
 
-  def self.options(url, headers={}, &block)
-    Request.execute(:method => :options, :url => url, :headers => headers, &block)
+  def self.options(url, headers = {}, &block)
+    Request.execute(method: :options, url: url, headers: headers, &block)
   end
 
   # A global proxy URL to use for all requests. This can be overridden on a
@@ -113,25 +113,25 @@ module RestClient
   # Setup the log for RestClient calls.
   # Value should be a logger but can can be stdout, stderr, or a filename.
   # You can also configure logging by the environment variable RESTCLIENT_LOG.
-  def self.log= log
+  def self.log=(log)
     @@log = create_log log
   end
 
   # Create a log that respond to << like a logger
   # param can be 'stdout', 'stderr', a string (then we will log to that file) or a logger (then we return it)
-  def self.create_log param
+  def self.create_log(param)
     if param
       if param.is_a? String
-        if param == 'stdout'
+        if param == "stdout"
           stdout_logger = Class.new do
-            def << obj
+            def <<(obj)
               STDOUT.puts obj
             end
           end
           stdout_logger.new
-        elsif param == 'stderr'
+        elsif param == "stderr"
           stderr_logger = Class.new do
-            def << obj
+            def <<(obj)
               STDERR.puts obj
             end
           end
@@ -140,8 +140,8 @@ module RestClient
           file_logger = Class.new do
             attr_writer :target_file
 
-            def << obj
-              File.open(@target_file, 'a') { |f| f.puts obj }
+            def <<(obj)
+              File.open(@target_file, "a") { |f| f.puts obj }
             end
           end
           logger = file_logger.new
@@ -154,7 +154,7 @@ module RestClient
     end
   end
 
-  @@env_log = create_log ENV['RESTCLIENT_LOG']
+  @@env_log = create_log ENV["RESTCLIENT_LOG"]
 
   @@log = nil
 
@@ -166,8 +166,9 @@ module RestClient
 
   # Add a Proc to be called before each request in executed.
   # The proc parameters will be the http request and the request params.
-  def self.add_before_execution_proc &proc
-    raise ArgumentError.new('block is required') unless proc
+  def self.add_before_execution_proc(&proc)
+    raise ArgumentError.new("block is required") unless proc
+
     @@before_execution_procs << proc
   end
 

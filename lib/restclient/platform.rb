@@ -1,4 +1,4 @@
-require 'rbconfig'
+require "rbconfig" unless defined?(RbConfig)
 
 module RestClient
   module Platform
@@ -7,7 +7,7 @@ module RestClient
     #
     # @return [Boolean]
     def self.mac_mri?
-      RUBY_PLATFORM.include?('darwin')
+      RUBY_PLATFORM.include?("darwin")
     end
 
     # Return true if we are running on Windows.
@@ -26,16 +26,16 @@ module RestClient
     #
     def self.jruby?
       # defined on mri >= 1.9
-      RUBY_ENGINE == 'jruby'
+      RUBY_ENGINE == "jruby"
     end
 
     def self.architecture
-      "#{RbConfig::CONFIG['host_os']} #{RbConfig::CONFIG['host_cpu']}"
+      "#{RbConfig::CONFIG["host_os"]} #{RbConfig::CONFIG["host_cpu"]}"
     end
 
     def self.ruby_agent_version
       case RUBY_ENGINE
-      when 'jruby'
+      when "jruby"
         "jruby/#{JRUBY_VERSION} (#{RUBY_VERSION}p#{RUBY_PATCHLEVEL})"
       else
         "#{RUBY_ENGINE}/#{RUBY_VERSION}p#{RUBY_PATCHLEVEL}"
