@@ -1,0 +1,20 @@
+# Recorded order lifecycle — REQ-N02 fixture used by sequence_spec.rb.
+# The vendor returned 201 (open order), then the rate-limit window was
+# visible, then the order showed up filled.
+name: order lifecycle
+steps:
+  - call: create_order
+    params: { quantity: 10, order_type: 'LIMIT' }
+    response:
+      status: 201
+      body: { order_id: 'o-1', status: 'open' }
+    expect_request:
+      json_include: { quantity: 10, order_type: 'LIMIT' }
+  - call: get_order
+    params: { order_id: 'o-1' }
+    response:
+      status: 200
+      headers: { X-RateLimit-Remaining: '4', X-RateLimit-Reset: '1790000000' }
+      body: { order_id: 'o-1', status: 'filled' }
+    expect_request:
+      path: /orders/o-1

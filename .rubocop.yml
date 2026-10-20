@@ -1,8 +1,69 @@
----
-inherit_from:
-- .rubocop-disables.yml
+inherit_from: .rubocop_todo.yml
+
+# RuboCop baseline for contractful.
+#
+# Adoption strategy for an inherited codebase: existing violations are
+# quarantined in .rubocop_todo.yml, generated with:
+#
+#   bundle exec rubocop --auto-gen-config --no-exclude-limit
+#
+# and committed. The lint job in CI fails on any offense that is NOT in the
+# baseline, so new code cannot add violations. Fix offenses opportunistically
+# and regenerate the baseline to shrink it; never disable a cop ad hoc
+# without a comment explaining why, and never mass-autocorrect at the cost
+# of behavioral churn (see AGENTS.md testing discipline).
+#
+# Plugin policy: only plugins for tooling this repository actually uses.
+# It is a plain Ruby gem with RSpec, so rubocop-rspec is loaded and the
+# Rails/RSpec-Rails/Performance plugin families are deliberately not.
+
+
+plugins:
+  - rubocop-rspec
 
 AllCops:
+  TargetRubyVersion: 3.0
+  NewCops: enable
+  # The excluded plugin families above are a deliberate policy, not an
+  # oversight, so do not print "suggest extensions" warnings on every run.
+  SuggestExtensions: false
   Exclude:
-    - 'tmp/*.rb'
+    - 'pkg/**/*'
+    - 'rdoc/**/*'
+    - 'tmp/**/*'
     - 'vendor/**/*'
+
+# AGENTS.md hard rule 2: the magic comment is mandatory on every file under
+# lib/ and spec/. Every existing file already complies; this keeps it that
+# way instead of relying on review alone.
+Style/FrozenStringLiteralComment:
+  Enabled: true
+
+# --- Documented, permanent decisions (kept out of the auto-generated todo) ---
+
+Lint/RescueException:
+  # request.rb invalidates the pooled connection and re-raises immediately;
+  # catching ::Exception there is deliberate so that even non-StandardError
+  # failures cannot leave a poisoned persistent connection behind.
+  Exclude:
+    - 'lib/contractful/request.rb'
+
+RSpec/RemoveConst:
+  # The to_ruby round-trip spec evaluates generated client source in a
+  # sandbox and must install/remove the top-level Acme namespace around
+  # each example.
+  Exclude:
+    - 'spec/unit/contract/openapi_import_spec.rb'
+
+Naming/VariableNumber:
+  # Symbol names like :TLSv1_2 mirror the OpenSSL constant spellings and are
+  # looked up verbatim (SSL_VERSION_CONSTANTS); do_thing_2 comes from
+  # de-duplicating imported operationIds. Only symbol numbering is exempted.
+  CheckSymbols: false
+
+Naming/PredicatePrefix:
+  # has_file? (Payload) and has_default? (Contract::Param) are public API
+  # since 2.x; renaming them to file?/default? would break consumers.
+  Exclude:
+    - 'lib/contractful/payload.rb'
+    - 'lib/contractful/contract/param.rb'

@@ -1,0 +1,15 @@
+# YARD configuration for contractful.
+#
+# `yard doc` / `yard server` render the public API from the lib/ sources;
+# the README and history are included as narrative files so rubydoc.info
+# (which reads this file) shows the same set. Markdown rendering needs the
+# redcarpet gem (development group, require: false).
+--markup markdown
+--markup-provider redcarpet
+--no-private
+--protected
+--embed-mixins
+lib/**/*.rb
+-
+README.md
+history.md

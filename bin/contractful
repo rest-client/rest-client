@@ -1,0 +1,94 @@
+#!/usr/bin/env ruby
+
+$LOAD_PATH.unshift File.dirname(__FILE__) + '/../lib'
+
+require 'rubygems'
+require 'contractful'
+require 'yaml'
+
+def usage(why = nil)
+  puts "failed for reason: #{why}" if why
+  puts 'usage: contractful [get|put|post|delete] url|name [username] [password]'
+  puts "  The verb is optional, if you leave it off you'll get an interactive shell."
+  puts '  put and post both take the input body on stdin.'
+  exit(1)
+end
+
+POSSIBLE_VERBS = %w[get put post delete]
+
+if POSSIBLE_VERBS.include? ARGV.first
+  @verb = ARGV.shift
+else
+  @verb = nil
+end
+
+@url = ARGV.shift || 'http://localhost:4567'
+
+config = begin
+           YAML.load_file(ENV.fetch('HOME') + '/.contractful')
+rescue StandardError
+           {}
+end
+
+if (c = config[@url])
+  @url = c['url']
+  @username = c['username']
+  @password = c['password']
+else
+  @url, @username, @password = [@url, * ARGV]
+end
+
+usage("invalid url '#{@url}") unless @url =~ /^https?/
+usage('too few args') unless ARGV.size < 3
+
+def r
+  @r ||= Contractful::Resource.new(@url, @username, @password)
+end
+
+r # force rc to load
+
+if @verb
+  begin
+    if %w[put post].include? @verb
+      puts r.send(@verb, $stdin.read)
+    else
+      puts r.send(@verb)
+    end
+    exit 0
+  rescue Contractful::Exception => e
+    puts e.response.body if e.respond_to?(:response) && e.response
+    raise
+  end
+end
+
+POSSIBLE_VERBS.each do |m|
+  define_method(m.to_sym) do |path, *args, &b|
+    r[path].public_send(m.to_sym, *args, &b)
+  end
+end
+
+def method_missing(sym, ...)
+  if POSSIBLE_VERBS.include? sym
+    begin
+      r.send(sym, ...)
+    rescue Contractful::RequestFailed => e
+      print $stderr, e.response.body
+      raise e
+    end
+  else
+    super
+  end
+end
+
+require 'irb'
+require 'irb/completion'
+
+ENV['IRBRC'] = '.irbrc' if File.exist? '.irbrc'
+
+rcfile = File.expand_path('~/.contractfulrc')
+load(rcfile) if File.exist?(rcfile)
+
+ARGV.clear
+
+IRB.start
+exit!
